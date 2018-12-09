@@ -1,0 +1,8 @@
+[package]
+name = "rtoy-samples"
+version = "0.1.0"
+authors = ["Tomasz Stachowiak <h3@h3.gd>"]
+edition = "2018"
+
+[dependencies]
+rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
