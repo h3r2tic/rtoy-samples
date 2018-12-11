@@ -13,13 +13,13 @@ fn main() {
 
     let gradients_tex = compute_tex(
         tex_key,
-        load_cs("gradients.glsl".into()),
+        load_cs(asset!("shaders/gradients.glsl")),
         shader_uniforms!("time": time_asset),
     );
 
     let blurred_tex = compute_tex(
         tex_key,
-        load_cs("blur.glsl".into()),
+        load_cs(asset!("shaders/blur.glsl")),
         shader_uniforms!(
             "inputImage": gradients_tex,
             "blurRadius": 4,
@@ -27,12 +27,16 @@ fn main() {
         ),
     );
 
-    let temporal_tex = init_named!("Temporal texture", load_tex("black.png".into()));
+    let temporal_tex = init_named!(
+        "Temporal texture",
+        load_tex(asset!("rendertoy::images/black.png"))
+    );
+
     redef_named!(
         temporal_tex,
         compute_tex(
             tex_key,
-            load_cs("blend.glsl".into()),
+            load_cs(asset!("shaders/blend.glsl")),
             shader_uniforms!(
                 "inputTex1": temporal_tex,
                 "inputTex2": blurred_tex,

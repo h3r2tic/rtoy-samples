@@ -11,13 +11,13 @@ fn main() {
 
     let gradients_tex = compute_tex(
         tex_key,
-        load_cs("gradients.glsl".into()),
+        load_cs(asset!("shaders/gradients.glsl")),
         shader_uniforms!(),
     );
 
     let blurred_tex = compute_tex(
         tex_key,
-        load_cs("blur.glsl".into()),
+        load_cs(asset!("shaders/blur.glsl")),
         shader_uniforms!(
             "inputImage": gradients_tex,
             "blurRadius": 4,
