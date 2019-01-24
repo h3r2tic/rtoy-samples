@@ -10,4 +10,5 @@ license = "MIT"
 repository = "https://github.com/h3r2tic/rtoy-samples"
 
 [dependencies]
-rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
+#rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
+rendertoy = { path = "../rendertoy" }
