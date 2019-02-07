@@ -8,8 +8,8 @@ fn main() {
     let frame_index = init_named!("Frame index", const_u32(0));
 
     let tex_key_f16 = TextureKey {
-        width: 1280,
-        height: 720,
+        width: rtoy.width(),
+        height: rtoy.height(),
         format: gl::RGBA16F,
     };
 

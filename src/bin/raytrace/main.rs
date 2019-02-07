@@ -1,0 +1,230 @@
+use bvh::{
+    aabb::{Bounded, AABB},
+    bounding_hierarchy::BHShape,
+    bvh::{BVHNode, BVH},
+};
+use nalgebra as na;
+use obj::raw::object::Polygon;
+use obj::*;
+use rendertoy::*;
+
+type Point3 = na::Point3<f32>;
+type Vector3 = na::Vector3<f32>;
+type Matrix4 = na::Matrix4<f32>;
+type Isometry3 = na::Isometry3<f32>;
+
+pub struct Triangle {
+    pub a: Point3,
+    pub b: Point3,
+    pub c: Point3,
+    node_index: usize,
+}
+
+impl Triangle {
+    pub fn new(a: Point3, b: Point3, c: Point3) -> Triangle {
+        Triangle {
+            a: a,
+            b: b,
+            c: c,
+            node_index: 0,
+        }
+    }
+}
+
+impl Bounded for Triangle {
+    fn aabb(&self) -> AABB {
+        AABB::empty().grow(&self.a).grow(&self.b).grow(&self.c)
+    }
+}
+
+impl BHShape for Triangle {
+    fn set_bh_node_index(&mut self, index: usize) {
+        self.node_index = index;
+    }
+
+    fn bh_node_index(&self) -> usize {
+        self.node_index
+    }
+}
+
+impl FromRawVertex for Triangle {
+    fn process(
+        vertices: Vec<(f32, f32, f32, f32)>,
+        _: Vec<(f32, f32, f32)>,
+        polygons: Vec<Polygon>,
+    ) -> ObjResult<(Vec<Self>, Vec<u16>)> {
+        // Convert the vertices to `Point3`s.
+        let points = vertices
+            .into_iter()
+            .map(|v| Point3::new(v.0, v.1, v.2))
+            .collect::<Vec<_>>();
+
+        // Estimate for the number of triangles, assuming that each polygon is a triangle.
+        let mut triangles = Vec::with_capacity(polygons.len());
+        {
+            let mut push_triangle = |indices: &Vec<usize>| {
+                let mut indices_iter = indices.iter();
+                let anchor = points[*indices_iter.next().unwrap()];
+                let mut second = points[*indices_iter.next().unwrap()];
+                for third_index in indices_iter {
+                    let third = points[*third_index];
+                    triangles.push(Triangle::new(anchor, second, third));
+                    second = third;
+                }
+            };
+
+            // Iterate over the polygons and populate the `Triangle`s vector.
+            for polygon in polygons.into_iter() {
+                match polygon {
+                    Polygon::P(ref vec) => push_triangle(vec),
+                    Polygon::PT(ref vec) | Polygon::PN(ref vec) => {
+                        push_triangle(&vec.iter().map(|vertex| vertex.0).collect())
+                    }
+                    Polygon::PTN(ref vec) => {
+                        push_triangle(&vec.iter().map(|vertex| vertex.0).collect())
+                    }
+                }
+            }
+        }
+        Ok((triangles, Vec::new()))
+    }
+}
+
+pub fn load_obj_scene() -> (Vec<Triangle>, AABB) {
+    use std::fs::File;
+    use std::io::BufReader;
+
+    let file_input =
+        BufReader::new(File::open("assets/meshes/teapot.obj").expect("Failed to open .obj file."));
+    let obj: Obj<Triangle> = load_obj(file_input).expect("Failed to decode .obj file data.");
+    let triangles = obj.vertices;
+
+    let mut bounds = AABB::empty();
+    for triangle in &triangles {
+        bounds.join_mut(&triangle.aabb());
+    }
+
+    (triangles, bounds)
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct Constants {
+    clip_to_view: Matrix4,
+    view_to_world: Matrix4,
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct BvhNode {
+    box_min: (f32, f32, f32, f32),
+    box_max: (f32, f32, f32, f32),
+}
+
+fn calculate_view_consants(width: u32, height: u32, yaw: f32) -> Constants {
+    let view_to_clip = {
+        let fov = 35.0f32.to_radians();
+        let znear = 0.01;
+
+        let h = (0.5 * fov).cos() / (0.5 * fov).sin();
+        let w = h * (height as f32 / width as f32);
+
+        let mut m = Matrix4::zeros();
+        m.m11 = w;
+        m.m22 = h;
+        m.m34 = znear;
+        m.m43 = -1.0;
+        m
+    };
+    let clip_to_view = view_to_clip.try_inverse().unwrap();
+
+    let distance = 200.0;
+    let look_at_height = 30.0;
+
+    //let view_to_world = Matrix4::new_translation(&Vector3::new(0.0, 0.0, -2.0));
+    let world_to_view = Isometry3::look_at_rh(
+        &Point3::new(
+            yaw.cos() * distance,
+            look_at_height + distance * 0.5,
+            yaw.sin() * distance,
+        ),
+        &Point3::new(0.0, look_at_height, 0.0),
+        &Vector3::y(),
+    );
+    let view_to_world: Matrix4 = world_to_view.inverse().into();
+    let world_to_view: Matrix4 = world_to_view.into();
+
+    Constants {
+        clip_to_view,
+        view_to_world,
+    }
+}
+
+fn main() {
+    let (mut triangles, bounds) = load_obj_scene();
+    let bvh = BVH::build(&mut triangles);
+    bvh.flatten();
+
+    let mut rtoy = Rendertoy::new();
+
+    let tex_key = TextureKey {
+        width: 320,
+        height: 240,
+        format: gl::RGBA16F,
+    };
+
+    let viewport_constants = init_named!(
+        "ViewportConstants",
+        upload_buffer(to_byte_vec(vec![calculate_view_consants(
+            tex_key.width,
+            tex_key.height,
+            0.0
+        )]))
+    );
+
+    let mut bvh_nodes: Vec<BvhNode> = Vec::new();
+    let mut convert_box = |nbox: &AABB| {
+        bvh_nodes.push(BvhNode {
+            box_min: (nbox.min.x, nbox.min.y, nbox.min.z, 0.0),
+            box_max: (nbox.max.x, nbox.max.y, nbox.max.z, 0.0),
+        });
+    };
+
+    for n in bvh.nodes.iter() {
+        if let BVHNode::Node { .. } = n {
+            convert_box(&n.child_l_aabb());
+            convert_box(&n.child_r_aabb());
+        }
+    }
+
+    /*convert_box(&bvh.nodes[0].child_l_aabb());
+    convert_box(&bvh.nodes[0].child_r_aabb());
+
+    convert_box(&bvh.nodes[bvh.nodes[0].child_l()].child_l_aabb());
+    convert_box(&bvh.nodes[bvh.nodes[0].child_l()].child_r_aabb());
+
+    convert_box(&bvh.nodes[bvh.nodes[0].child_r()].child_l_aabb());
+    convert_box(&bvh.nodes[bvh.nodes[0].child_r()].child_r_aabb());*/
+
+    let rt_tex = compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/raytrace.glsl")),
+        shader_uniforms!(
+            "constants": viewport_constants,
+            "bvh": upload_buffer(to_byte_vec(bvh_nodes)),
+        ),
+    );
+
+    rtoy.forever(|snapshot, frame_state| {
+        draw_fullscreen_texture(&*snapshot.get(rt_tex));
+
+        redef_named!(
+            viewport_constants,
+            upload_buffer(to_byte_vec(vec![calculate_view_consants(
+                tex_key.width,
+                tex_key.height,
+                frame_state.mouse_pos.x.to_radians() * 0.2
+            )]))
+        );
+    });
+}
