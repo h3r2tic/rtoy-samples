@@ -15,3 +15,4 @@ rendertoy = { path = "../rendertoy" }
 nalgebra = "0.16"
 obj-rs = "0.4"
 bvh = "0.3.0"
+#openssl = { version = "0.10", features = ["vendored"] }

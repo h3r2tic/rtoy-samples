@@ -8,6 +8,10 @@ layout(std430) buffer constants {
     mat4 view_to_world;
 };
 
+layout(std430) buffer bvh_meta {
+    uint bvh_node_count;
+};
+
 struct BvhNode {
     vec4 box_min;
     vec4 box_max;
@@ -22,7 +26,7 @@ struct Ray {
 	vec3 d;
 };
 
-bool intersect_ray_aabb(Ray r, vec3 pmin, vec3 pmax)
+bool intersect_ray_aabb(Ray r, vec3 pmin, vec3 pmax, inout float t)
 {
 	const vec3 f = (pmax.xyz - r.o.xyz) / r.d;
 	const vec3 n = (pmin.xyz - r.o.xyz) / r.d;
@@ -33,6 +37,7 @@ bool intersect_ray_aabb(Ray r, vec3 pmin, vec3 pmax)
 	const float t1 = min(tmax.x, min(tmax.y, tmax.z));
 	const float t0 = max(max(tmin.x, max(tmin.y, tmin.z)), 0.0);
 
+    t = t0;
 	return t1 >= t0;
 }
 
@@ -54,14 +59,56 @@ void main() {
 
 	vec4 col = vec4(r.d * 0.5 + 0.5, 1.0) * 0.5;
 
-    for (uint i = 26; i < 256 * 256; i += 64) {
+#if 0
+    for (uint i = 26 + pix.x % 13; i < 128 * 256; i += 64) {
         BvhNode node = bvh_nodes[i];
         bool intersects_box = intersect_ray_aabb(r, node.box_min.xyz, node.box_max.xyz);
 
         if (intersects_box) {
-            col += 0.1;
+            col += 0.3;
         }
     }
+#else
+    uint node_idx = 0;
+    {
+        vec3 absdir = abs(r.d);
+        float maxcomp = max(absdir.x, max(absdir.y, absdir.z));
+        node_idx += absdir.x == maxcomp ? (r.d.x > 0.0 ? 0 : 1) : 0;
+        node_idx += absdir.y == maxcomp ? (r.d.y > 0.0 ? 2 : 3) : 0;
+        node_idx += absdir.z == maxcomp ? (r.d.z > 0.0 ? 4 : 5) : 0;
+        node_idx *= bvh_node_count;
+    }
+
+    uint end_idx = node_idx + bvh_node_count;
+    
+    float tmin = 1.0e10;
+
+    uint iter = 0;
+    for (; iter < 1024 && node_idx < end_idx; ++iter) {
+        BvhNode node = bvh_nodes[node_idx];
+        float t = 0;
+        bool intersects_box = intersect_ray_aabb(r, node.box_min.xyz, node.box_max.xyz, t) && t < tmin;
+
+        uint miss_offset = floatBitsToUint(node.box_min.w);
+        bool is_leaf = floatBitsToUint(node.box_max.w) != 0;
+
+        if (intersects_box) {
+            tmin = is_leaf ? t : tmin;
+        }
+
+        if (is_leaf || intersects_box) {
+            node_idx += 1;
+        } else {
+            node_idx += miss_offset;
+        }
+    }
+#endif
+
+    if (tmin != 1.0e10) {
+        col = (max(0.0, tmin - 100.0) * 0.004).xxxx;
+    }
+
+    //col.r = iter * 0.01;
 
     //col = vec4(uv, 0, 1);
 
