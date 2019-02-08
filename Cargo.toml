@@ -10,8 +10,8 @@ license = "MIT"
 repository = "https://github.com/h3r2tic/rtoy-samples"
 
 [dependencies]
-#rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
-rendertoy = { path = "../rendertoy" }
+rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
+#rendertoy = { path = "../rendertoy" }
 nalgebra = "0.16"
 obj-rs = "0.4"
 bvh = "0.3.0"
