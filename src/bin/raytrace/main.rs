@@ -247,8 +247,8 @@ fn main() {
     let mut rtoy = Rendertoy::new();
 
     let tex_key = TextureKey {
-        width: 320,
-        height: 240,
+        width: rtoy.width(),
+        height: rtoy.height(),
         format: gl::RGBA16F,
     };
 
@@ -268,14 +268,6 @@ fn main() {
         |a: &AABB, b: &AABB| a.min.y + a.max.y > b.min.y + b.max.y,
         |a: &AABB, b: &AABB| a.min.z + a.max.z < b.min.z + b.max.z,
         |a: &AABB, b: &AABB| a.min.z + a.max.z > b.min.z + b.max.z,
-        /*
-        |a: &AABB, b: &AABB| a.min.x < b.min.x,
-        |a: &AABB, b: &AABB| a.max.x > b.max.x,
-        |a: &AABB, b: &AABB| a.min.y < b.min.y,
-        |a: &AABB, b: &AABB| a.max.y > b.max.y,
-        |a: &AABB, b: &AABB| a.min.z < b.min.z,
-        |a: &AABB, b: &AABB| a.max.z > b.max.z,
-        */
     );
 
     let mut bvh_nodes: Vec<BvhNode> = Vec::with_capacity(bvh.nodes.len() * 6);

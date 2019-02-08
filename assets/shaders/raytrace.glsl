@@ -50,8 +50,9 @@ void main() {
     vec4 ray_origin_ws = view_to_world * (clip_to_view * ray_origin_cs);
     ray_origin_ws /= ray_origin_ws.w;
 
-    vec3 camera_pos_ws = (view_to_world * vec4(0, 0, 0, 1)).xyz;
-    vec3 v = normalize(camera_pos_ws - ray_origin_ws.xyz);
+    vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
+    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+    vec3 v = -normalize(ray_dir_ws.xyz);
 
     Ray r;
     r.o = ray_origin_ws.xyz;
@@ -73,9 +74,13 @@ void main() {
     {
         vec3 absdir = abs(r.d);
         float maxcomp = max(absdir.x, max(absdir.y, absdir.z));
-        node_idx += absdir.x == maxcomp ? (r.d.x > 0.0 ? 0 : 1) : 0;
-        node_idx += absdir.y == maxcomp ? (r.d.y > 0.0 ? 2 : 3) : 0;
-        node_idx += absdir.z == maxcomp ? (r.d.z > 0.0 ? 4 : 5) : 0;
+        if (absdir.x == maxcomp) {
+            node_idx = r.d.x > 0.0 ? 0 : 1;
+        } else if (absdir.y == maxcomp) {
+            node_idx = r.d.y > 0.0 ? 2 : 3;
+        } else if (absdir.z == maxcomp) {
+            node_idx = r.d.z > 0.0 ? 4 : 5;
+        }
         node_idx *= bvh_node_count;
     }
 
@@ -108,7 +113,8 @@ void main() {
         col = (max(0.0, tmin - 100.0) * 0.004).xxxx;
     }
 
-    //col.r = iter * 0.01;
+    col.r = iter * 0.01;
+    col.a = 1;
 
     //col = vec4(uv, 0, 1);
 
