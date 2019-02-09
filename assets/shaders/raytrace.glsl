@@ -69,7 +69,9 @@ bool intersect_ray_tri(Ray r, Triangle tri, inout float t, inout vec3 barycentri
     	uvt.xyz = uvt.xyz / det;
     	uvt.w = 1.0 - uvt.x - uvt.y;
 
-    	if (all(greaterThanEqual(uvt, vec4(0.0))) && uvt.z < t)
+        float barycentric_eps = -1e-4;
+
+    	if (all(greaterThanEqual(uvt, vec4(barycentric_eps.xxx, 0.0))) && uvt.z < t)
     	{
     		barycentric = uvt.ywx;
             t = uvt.z;
@@ -95,24 +97,14 @@ bool intersect_ray_aabb(Ray r, vec3 pmin, vec3 pmax, float t)
     return tmin <= tmax && tmin < t && tmax >= 0.0;
 }
 
-layout (local_size_x = 8, local_size_y = 8) in;
-void main() {
-	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
-    vec2 uv = get_uv(outputTex_size);
-    vec4 ray_origin_cs = vec4(uv_to_cs(uv), 1.0, 1.0);
-    vec4 ray_origin_ws = view_to_world * (clip_to_view * ray_origin_cs);
-    ray_origin_ws /= ray_origin_ws.w;
+struct RtHit {
+    float t;
+    vec3 barycentric;
+    uint tri_idx;
+    uint debug_iter_count;
+};
 
-    vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
-    vec3 v = -normalize(ray_dir_ws.xyz);
-
-    Ray r;
-    r.o = ray_origin_ws.xyz;
-    r.d = -v;
-
-	vec4 col = vec4(r.d * 0.5 + 0.5, 1.0) * 0.5;
-
+bool raytrace(Ray r, inout RtHit hit) {
     uint node_idx = 0;
     {
         vec3 absdir = abs(r.d);
@@ -153,13 +145,56 @@ void main() {
         }
     }
 
+    hit.debug_iter_count = iter;
+
     if (hit_tri != 0xffffffff) {
-        Triangle tri = unpack_triangle(bvh_triangles[hit_tri]);
-        vec3 normal = normalize(cross(tri.e0, tri.e1));
-        col.rgb = normal * 0.5 + 0.5;
+        hit.t = tmin;
+        hit.barycentric = barycentric;
+        hit.tri_idx = hit_tri;
+        return true;
     }
 
-    //col.r = iter * 0.01;
+    return false;
+}
+
+layout (local_size_x = 8, local_size_y = 8) in;
+void main() {
+	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
+    vec2 uv = get_uv(outputTex_size);
+    vec4 ray_origin_cs = vec4(uv_to_cs(uv), 1.0, 1.0);
+    vec4 ray_origin_ws = view_to_world * (clip_to_view * ray_origin_cs);
+    ray_origin_ws /= ray_origin_ws.w;
+
+    vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
+    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+    vec3 v = -normalize(ray_dir_ws.xyz);
+
+    Ray r;
+    r.o = ray_origin_ws.xyz;
+    r.d = -v;
+
+	vec4 col = vec4(r.d * 0.5 + 0.5, 1.0) * 0.5;
+
+    RtHit hit;
+    if (raytrace(r, hit)) {
+        Triangle tri = unpack_triangle(bvh_triangles[hit.tri_idx]);
+        vec3 normal = normalize(cross(tri.e0, tri.e1));
+        vec3 l = normalize(vec3(1, 1, -1));
+        float ndotl = max(0.0, dot(normal, l));
+        uint iter = hit.debug_iter_count;
+
+        r.o += r.d * hit.t;
+        r.o -= r.d * 1e-6 * length(r.o);
+        r.d = l;
+        bool shadowed = raytrace(r, hit);
+        //iter = hit.debug_iter_count;
+
+        col.rgb = ndotl.xxx * (shadowed ? 0.0 : 1.0) + 0.02;
+
+        //col.rgb *= 0.1;
+        //col.r = iter * 0.01;
+    }
+
     col.a = 1;
 
 	imageStore(outputTex, pix, col);

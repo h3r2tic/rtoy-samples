@@ -93,21 +93,25 @@ impl FromRawVertex for Triangle {
     }
 }
 
-pub fn load_obj_scene() -> (Vec<Triangle>, AABB) {
+pub fn load_obj_scene(path: &str) -> Vec<Triangle> {
+    use lzma::LzmaReader;
     use std::fs::File;
-    use std::io::BufReader;
+    use std::io::{BufRead, BufReader};
+    use std::path::Path;
 
-    let file_input =
-        BufReader::new(File::open("assets/meshes/teapot.obj").expect("Failed to open .obj file."));
-    let obj: Obj<Triangle> = load_obj(file_input).expect("Failed to decode .obj file data.");
-    let triangles = obj.vertices;
+    let f: Box<dyn BufRead> = if Path::new(path).extension().unwrap() == "xz" {
+        let f = File::open(path).unwrap();
+        let f = LzmaReader::new_decompressor(f).unwrap();
+        Box::new(std::io::BufReader::new(f))
+    } else {
+        Box::new(BufReader::new(
+            File::open(path).expect("Failed to open .obj file."),
+        ))
+    };
 
-    let mut bounds = AABB::empty();
-    for triangle in &triangles {
-        bounds.join_mut(&triangle.aabb());
-    }
+    let obj: Obj<Triangle> = load_obj(f).expect("Failed to decode .obj file data.");
 
-    (triangles, bounds)
+    obj.vertices
 }
 
 #[derive(Clone, Copy)]
@@ -183,8 +187,8 @@ fn calculate_view_consants(width: u32, height: u32, yaw: f32) -> Constants {
     };
     let clip_to_view = view_to_clip.try_inverse().unwrap();
 
-    let distance = 200.0;
-    let look_at_height = 35.0;
+    let distance = 200.0 * 5.0;
+    let look_at_height = 30.0 * 5.0;
 
     //let view_to_world = Matrix4::new_translation(&Vector3::new(0.0, 0.0, -2.0));
     let world_to_view = Isometry3::look_at_rh(
@@ -267,7 +271,7 @@ fn convert_bvh<BoxOrderFn>(
 }
 
 fn main() {
-    let (mut triangles, _) = load_obj_scene();
+    let mut triangles = load_obj_scene("assets/meshes/lighthouse.obj.xz");
     let bvh = BVH::build(&mut triangles);
     bvh.flatten();
 

@@ -16,3 +16,4 @@ nalgebra = "0.17"
 obj-rs = "0.4"
 bvh = { git = "https://github.com/h3r2tic/bvh", rev = "afbaaddfd15344a5e422183ac567263e3c21a08d" }
 static_assertions = "0.3.1"
+rust-lzma = "0.4.0"
