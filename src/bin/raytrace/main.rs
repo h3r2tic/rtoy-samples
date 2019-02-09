@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate static_assertions;
+
 use bvh::{
     aabb::{Bounded, AABB},
     bounding_hierarchy::BHShape,
@@ -116,24 +119,52 @@ struct Constants {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-struct BvhNode {
-    box_min: (f32, f32, f32, u32),
-    box_max: (f32, f32, f32, u32),
+struct GpuBvhNode {
+    bbox_min: Point3,
+    exit_idx: u32,
+    bbox_max: Point3,
+    prim_id: u32,
 }
 
-impl BvhNode {
+assert_eq_size!(bvh_node_size_check; GpuBvhNode, [u8; 32]);
+
+impl GpuBvhNode {
+    fn new_leaf(bbox_min: Point3, bbox_max: Point3, prim_id: usize) -> Self {
+        Self {
+            bbox_min,
+            exit_idx: 0,
+            bbox_max,
+            prim_id: prim_id as u32,
+        }
+    }
+
+    fn new_interior(bbox_min: Point3, bbox_max: Point3) -> Self {
+        Self {
+            bbox_min,
+            exit_idx: 0,
+            bbox_max,
+            prim_id: std::u32::MAX,
+        }
+    }
+
     fn set_exit_idx(&mut self, idx: usize) {
-        self.box_min.3 = idx as u32;
+        self.exit_idx = idx as u32;
     }
 
     fn get_exit_idx(&mut self) -> usize {
-        self.box_min.3 as usize
-    }
-
-    fn set_is_leaf(&mut self, value: bool) {
-        self.box_max.3 = if value { 1 } else { 0 };
+        self.exit_idx as usize
     }
 }
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct GpuTriangle {
+    v: Point3,
+    e0: Vector3,
+    e1: Vector3,
+}
+
+assert_eq_size!(triangle_size_check; GpuTriangle, [u8; 9 * 4]);
 
 fn calculate_view_consants(width: u32, height: u32, yaw: f32) -> Constants {
     let view_to_clip = {
@@ -179,23 +210,23 @@ fn convert_bvh<BoxOrderFn>(
     nbox: &AABB,
     nodes: &[BVHNode],
     are_boxes_correctly_ordered: &BoxOrderFn,
-    res: &mut Vec<BvhNode>,
+    res: &mut Vec<GpuBvhNode>,
 ) where
     BoxOrderFn: Fn(&AABB, &AABB) -> bool,
 {
     let initial_node_count = res.len();
+    let n = &nodes[node];
 
     let node_res_idx = if node != 0 {
-        res.push(BvhNode {
-            box_min: (nbox.min.x, nbox.min.y, nbox.min.z, 0),
-            box_max: (nbox.max.x, nbox.max.y, nbox.max.z, 0),
+        res.push(if let BVHNode::Node { .. } = n {
+            GpuBvhNode::new_interior(nbox.min, nbox.max)
+        } else {
+            GpuBvhNode::new_leaf(nbox.min, nbox.max, n.shape_index())
         });
         Some(initial_node_count)
     } else {
         None
     };
-
-    let n = &nodes[node];
 
     if let BVHNode::Node { .. } = n {
         let boxes = [&n.child_l_aabb(), &n.child_r_aabb()];
@@ -221,10 +252,6 @@ fn convert_bvh<BoxOrderFn>(
             are_boxes_correctly_ordered,
             res,
         );
-    } else {
-        if let Some(node_res_idx) = node_res_idx {
-            res[node_res_idx].set_is_leaf(true);
-        }
     }
 
     if let Some(node_res_idx) = node_res_idx {
@@ -270,7 +297,7 @@ fn main() {
         |a: &AABB, b: &AABB| a.min.z + a.max.z > b.min.z + b.max.z,
     );
 
-    let mut bvh_nodes: Vec<BvhNode> = Vec::with_capacity(bvh.nodes.len() * 6);
+    let mut bvh_nodes: Vec<GpuBvhNode> = Vec::with_capacity(bvh.nodes.len() * 6);
 
     macro_rules! ordered_flatten_bvh {
         ($order: expr) => {{
@@ -291,6 +318,15 @@ fn main() {
     ordered_flatten_bvh!(orderings.4);
     ordered_flatten_bvh!(orderings.5);
 
+    let bvh_triangles = triangles
+        .iter()
+        .map(|t| GpuTriangle {
+            v: t.a,
+            e0: t.b - t.a,
+            e1: t.c - t.a,
+        })
+        .collect::<Vec<_>>();
+
     let rt_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/raytrace.glsl")),
@@ -298,6 +334,7 @@ fn main() {
             "constants": viewport_constants,
             "bvh_meta": upload_buffer(to_byte_vec(vec![(bvh_nodes.len() / 6) as u32])),
             "bvh": upload_buffer(to_byte_vec(bvh_nodes)),
+            "triangles": upload_buffer(to_byte_vec(bvh_triangles)),
         ),
     );
 

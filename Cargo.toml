@@ -12,7 +12,7 @@ repository = "https://github.com/h3r2tic/rtoy-samples"
 [dependencies]
 rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
 #rendertoy = { path = "../rendertoy" }
-nalgebra = "0.16"
+nalgebra = "0.17"
 obj-rs = "0.4"
-bvh = "0.3.0"
-#openssl = { version = "0.10", features = ["vendored"] }
+bvh = { git = "https://github.com/h3r2tic/bvh", rev = "afbaaddfd15344a5e422183ac567263e3c21a08d" }
+static_assertions = "0.3.1"
