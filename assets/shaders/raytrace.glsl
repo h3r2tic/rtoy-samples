@@ -1,4 +1,4 @@
-#include "rendertoy::shaders/rt.inc"
+#include "rtoy-rt::shaders/rt.inc"
 #include "inc/uv.inc"
 
 uniform restrict writeonly image2D outputTex;

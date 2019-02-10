@@ -1,4 +1,5 @@
 use rendertoy::*;
+use rtoy_rt::*;
 
 fn calculate_view_consants(width: u32, height: u32, yaw: f32, frame_idx: u32) -> Constants {
     use rand::{distributions::StandardNormal, rngs::SmallRng, Rng, SeedableRng};
@@ -58,8 +59,8 @@ struct Constants {
 }
 
 fn main() {
-    //let scene_file = "assets/meshes/flying_trabant.obj.gz";
-    let scene_file = "assets/meshes/lighthouse.obj.gz";
+    let scene_file = "assets/meshes/flying_trabant.obj.gz";
+    //let scene_file = "assets/meshes/lighthouse.obj.gz";
 
     let bvh = build_gpu_bvh(load_obj_scene(scene_file.to_string()));
 

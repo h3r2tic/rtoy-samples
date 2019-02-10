@@ -136,7 +136,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "bvh"
 version = "0.3.0"
-source = "git+https://github.com/h3r2tic/bvh?branch=immutable-build#9a8d2821e780de3cf9f7360738ac88cca473a2e7"
+source = "git+https://github.com/h3r2tic/bvh?branch=immutable-build#29c3642ef93882debdd49214d3760f5422334ee6"
 dependencies = [
  "approx 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1516,16 +1516,14 @@ dependencies = [
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#43f88caa6e7ea4567df9e289dab8312e4c05ae17"
+source = "git+https://github.com/h3r2tic/rendertoy#9e03f38f9b95d7f89e790a72d4ff71af42dc12a9"
 dependencies = [
  "bincode 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)",
  "cargo 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "half 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.20.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libflate 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1538,6 +1536,17 @@ dependencies = [
  "serde_derive 1.0.87 (registry+https://github.com/rust-lang/crates.io-index)",
  "shader-prepper 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
+]
+
+[[package]]
+name = "rtoy-rt"
+version = "0.1.0"
+source = "git+https://github.com/h3r2tic/rtoy-rt#7af078d6dcc91cd227a44c0e38ac8fe3509fea82"
+dependencies = [
+ "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)",
+ "half 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
+ "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
  "static_assertions 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1547,6 +1556,7 @@ version = "0.1.0"
 dependencies = [
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
+ "rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
 ]
 
@@ -2282,6 +2292,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum relative-path 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0e7790c7f1cc73d831d28dc5a7deb316a006e7848e6a7f467cdb10a0a9e0fb1c"
 "checksum remove_dir_all 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3488ba1b9a2084d38645c4c08276a1752dcbf2c7130d74f1569681ad5d2799c5"
 "checksum rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)" = "<none>"
+"checksum rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)" = "<none>"
 "checksum rustc-demangle 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "adacaae16d02b6ec37fdc7acfcddf365978de76d1983d3ee22afc260e1ca9619"
 "checksum rustc-workspace-hack 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc71d2faa173b74b232dedc235e3ee1696581bb132fc116fa3626d6151a1a8fb"
 "checksum rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
