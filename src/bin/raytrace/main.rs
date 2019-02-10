@@ -1,3 +1,5 @@
+mod rgb9e5;
+
 #[macro_use]
 extern crate static_assertions;
 
@@ -124,21 +126,51 @@ struct Constants {
 #[derive(Clone, Copy)]
 #[repr(C)]
 struct GpuBvhNode {
+    packed: [u32; 4],
+}
+
+fn pack_gpu_bvh_node(node: BvhNode) -> GpuBvhNode {
+    let bmin = (
+        half::f16::from_f32(node.bbox_min.x),
+        half::f16::from_f32(node.bbox_min.y),
+        half::f16::from_f32(node.bbox_min.z),
+    );
+
+    let box_extent_packed = {
+        // The fp16 was rounded-down, so extent will be larger than for fp32
+        let extent =
+            node.bbox_max - Vector3::new(bmin.0.to_f32(), bmin.1.to_f32(), bmin.2.to_f32());
+
+        rgb9e5::pack_rgb9e5(extent.x, extent.y, extent.z)
+    };
+
+    assert!(node.exit_idx < (1u32 << 24));
+    assert!(node.prim_idx == std::u32::MAX || node.prim_idx < (1u32 << 24));
+
+    GpuBvhNode {
+        packed: [
+            box_extent_packed,
+            ((bmin.0.to_bits() as u32) << 16) | (bmin.1.to_bits() as u32),
+            ((bmin.2.to_bits() as u32) << 16) | ((node.prim_idx >> 8) & 0xffff),
+            ((node.prim_idx & 0xff) << 24) | node.exit_idx,
+        ],
+    }
+}
+
+struct BvhNode {
     bbox_min: Point3,
     exit_idx: u32,
     bbox_max: Point3,
-    prim_id: u32,
+    prim_idx: u32,
 }
 
-assert_eq_size!(bvh_node_size_check; GpuBvhNode, [u8; 32]);
-
-impl GpuBvhNode {
-    fn new_leaf(bbox_min: Point3, bbox_max: Point3, prim_id: usize) -> Self {
+impl BvhNode {
+    fn new_leaf(bbox_min: Point3, bbox_max: Point3, prim_idx: usize) -> Self {
         Self {
             bbox_min,
             exit_idx: 0,
             bbox_max,
-            prim_id: prim_id as u32,
+            prim_idx: prim_idx as u32,
         }
     }
 
@@ -147,7 +179,7 @@ impl GpuBvhNode {
             bbox_min,
             exit_idx: 0,
             bbox_max,
-            prim_id: std::u32::MAX,
+            prim_idx: std::u32::MAX,
         }
     }
 
@@ -214,7 +246,7 @@ fn convert_bvh<BoxOrderFn>(
     nbox: &AABB,
     nodes: &[BVHNode],
     are_boxes_correctly_ordered: &BoxOrderFn,
-    res: &mut Vec<GpuBvhNode>,
+    res: &mut Vec<BvhNode>,
 ) where
     BoxOrderFn: Fn(&AABB, &AABB) -> bool,
 {
@@ -223,9 +255,9 @@ fn convert_bvh<BoxOrderFn>(
 
     let node_res_idx = if node != 0 {
         res.push(if let BVHNode::Node { .. } = n {
-            GpuBvhNode::new_interior(nbox.min, nbox.max)
+            BvhNode::new_interior(nbox.min, nbox.max)
         } else {
-            GpuBvhNode::new_leaf(nbox.min, nbox.max, n.shape_index())
+            BvhNode::new_leaf(nbox.min, nbox.max, n.shape_index())
         });
         Some(initial_node_count)
     } else {
@@ -288,7 +320,7 @@ fn main() {
         upload_buffer(to_byte_vec(vec![calculate_view_consants(
             tex_key.width,
             tex_key.height,
-            0.0
+            4.5
         )]))
     );
 
@@ -301,7 +333,7 @@ fn main() {
         |a: &AABB, b: &AABB| a.min.z + a.max.z > b.min.z + b.max.z,
     );
 
-    let mut bvh_nodes: Vec<GpuBvhNode> = Vec::with_capacity(bvh.nodes.len() * 6);
+    let mut bvh_nodes: Vec<BvhNode> = Vec::with_capacity(bvh.nodes.len() * 6);
 
     macro_rules! ordered_flatten_bvh {
         ($order: expr) => {{
@@ -322,6 +354,8 @@ fn main() {
     ordered_flatten_bvh!(orderings.4);
     ordered_flatten_bvh!(orderings.5);
 
+    let gpu_bvh_nodes: Vec<_> = bvh_nodes.into_iter().map(pack_gpu_bvh_node).collect();
+
     let bvh_triangles = triangles
         .iter()
         .map(|t| GpuTriangle {
@@ -336,11 +370,14 @@ fn main() {
         load_cs(asset!("shaders/raytrace.glsl")),
         shader_uniforms!(
             "constants": viewport_constants,
-            "bvh_meta": upload_buffer(to_byte_vec(vec![(bvh_nodes.len() / 6) as u32])),
-            "bvh": upload_buffer(to_byte_vec(bvh_nodes)),
-            "triangles": upload_buffer(to_byte_vec(bvh_triangles)),
+            "bvh_meta_buf": upload_buffer(to_byte_vec(vec![(gpu_bvh_nodes.len() / 6) as u32])),
+            "bvh_nodes_buf": upload_buffer(to_byte_vec(gpu_bvh_nodes)),
+            "bvh_triangles_buf": upload_buffer(to_byte_vec(bvh_triangles)),
         ),
     );
+
+    let mut a = 1.0;
+    let mut gpu_time_ms = 0.0f64;
 
     rtoy.forever(|snapshot, frame_state| {
         draw_fullscreen_texture(&*snapshot.get(rt_tex));
@@ -350,8 +387,18 @@ fn main() {
             upload_buffer(to_byte_vec(vec![calculate_view_consants(
                 tex_key.width,
                 tex_key.height,
-                frame_state.mouse_pos.x.to_radians() * 0.2
+                3.5 + frame_state.mouse_pos.x.to_radians() * 0.2 + a * 1e-5
             )]))
         );
+
+        a *= -1.0;
+
+        let cur = frame_state.gpu_time_ms;
+        let prev = gpu_time_ms.max(cur * 0.85).min(cur / 0.85);
+        gpu_time_ms = prev * 0.95 + cur * 0.05;
+        print!("Frame time: {:.2} ms           \r", gpu_time_ms);
+
+        use std::io::Write;
+        let _ = std::io::stdout().flush();
     });
 }
