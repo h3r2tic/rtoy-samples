@@ -103,8 +103,7 @@ pub fn load_obj_scene(path: &str) -> Vec<Triangle> {
 
     let f: Box<dyn BufRead> = if Path::new(path).extension().unwrap() == "gz" {
         let f = File::open(path).unwrap();
-        //let f = LzmaReader::new_decompressor(f).unwrap();
-		let f = Decoder::new(f).unwrap();
+        let f = Decoder::new(f).unwrap();
         Box::new(std::io::BufReader::new(f))
     } else {
         Box::new(BufReader::new(
@@ -308,7 +307,7 @@ fn convert_bvh<BoxOrderFn>(
 }
 
 fn main() {
-    let mut triangles = load_obj_scene("assets/meshes/lighthouse.obj.gz");
+    let mut triangles = load_obj_scene("assets/meshes/flying_trabant.obj.gz");
     let bvh = BVH::build(&mut triangles);
     bvh.flatten();
 
