@@ -317,10 +317,17 @@ fn convert_bvh<BoxOrderFn>(
 }
 
 fn main() {
+    let time0 = std::time::Instant::now();
+
     let mut triangles = load_obj_scene("assets/meshes/flying_trabant.obj.gz");
     //let mut triangles = load_obj_scene("assets/meshes/lighthouse.obj.gz");
+
+    println!("Scene loaded in {:?}", time0.elapsed());
+    let time0 = std::time::Instant::now();
+
     let bvh = BVH::build(&mut triangles);
-    bvh.flatten();
+
+    println!("BVH built in {:?}", time0.elapsed());
 
     let mut rtoy = Rendertoy::new();
 
@@ -349,6 +356,8 @@ fn main() {
         |a: &AABB, b: &AABB| a.min.z + a.max.z > b.min.z + b.max.z,
     );
 
+    let time0 = std::time::Instant::now();
+
     let mut bvh_nodes: Vec<BvhNode> = Vec::with_capacity(bvh.nodes.len() * 6);
 
     macro_rules! ordered_flatten_bvh {
@@ -370,6 +379,9 @@ fn main() {
     ordered_flatten_bvh!(orderings.4);
     ordered_flatten_bvh!(orderings.5);
 
+    println!("BVH flattened in {:?}", time0.elapsed());
+    let time0 = std::time::Instant::now();
+
     let gpu_bvh_nodes: Vec<_> = bvh_nodes.into_iter().map(pack_gpu_bvh_node).collect();
 
     let bvh_triangles = triangles
@@ -380,6 +392,9 @@ fn main() {
             e1: t.c - t.a,
         })
         .collect::<Vec<_>>();
+
+    println!("BVH encoded in {:?}", time0.elapsed());
+    let time0 = std::time::Instant::now();
 
     let rt_tex = compute_tex(
         tex_key,
