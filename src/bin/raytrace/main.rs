@@ -372,13 +372,10 @@ snoozy! {
 }
 
 fn main() {
-    let time0 = std::time::Instant::now();
+    let scene_file = "assets/meshes/flying_trabant.obj.gz";
+    //let scene_file = "assets/meshes/lighthouse.obj.gz";
 
-    let triangles = load_obj_scene("assets/meshes/flying_trabant.obj.gz".to_string());
-    //let triangles = load_obj_scene("assets/meshes/lighthouse.obj.gz".to_string());
-    let bvh = (triangles);
-
-    println!("Scene loaded in {:?}", time0.elapsed());
+    let bvh = build_gpu_bvh(load_obj_scene(scene_file.to_string()));
 
     let mut rtoy = Rendertoy::new();
 
