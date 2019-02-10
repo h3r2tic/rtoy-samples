@@ -394,7 +394,6 @@ fn main() {
         .collect::<Vec<_>>();
 
     println!("BVH encoded in {:?}", time0.elapsed());
-    let time0 = std::time::Instant::now();
 
     let rt_tex = compute_tex(
         tex_key,
