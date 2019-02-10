@@ -135,8 +135,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "bvh"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.3.0"
+source = "git+https://github.com/h3r2tic/bvh?branch=immutable-build#9a8d2821e780de3cf9f7360738ac88cca473a2e7"
 dependencies = [
  "approx 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1085,6 +1085,8 @@ dependencies = [
  "num-complex 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.87 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.87 (registry+https://github.com/rust-lang/crates.io-index)",
  "typenum 1.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1139,6 +1141,7 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.87 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1513,7 +1516,7 @@ dependencies = [
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#519b146b0401427c6f26b4a3080959dd1e7b430e"
+source = "git+https://github.com/h3r2tic/rendertoy#e8fabd74293d86abc8a9cdf0c9f3d76be54b6ecf"
 dependencies = [
  "bincode 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1537,13 +1540,16 @@ dependencies = [
 name = "rtoy-samples"
 version = "0.1.0"
 dependencies = [
- "bvh 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)",
  "half 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libflate 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "obj-rs 0.4.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
+ "serde 1.0.87 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.87 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
  "static_assertions 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1722,7 +1728,7 @@ dependencies = [
 [[package]]
 name = "snoozy"
 version = "0.1.1"
-source = "git+https://github.com/h3r2tic/snoozy#e932b89ef01cfa0773465f497dc09dbbd59d9912"
+source = "git+https://github.com/h3r2tic/snoozy#46de39b1dfab23fa343b87bd090a8511db084cc9"
 dependencies = [
  "bincode 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2134,7 +2140,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "228047a76f468627ca71776ecdebd732a3423081fcf5125585bcd7c49886ce12"
 "checksum block 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 "checksum build_const 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "39092a32794787acd8525ee150305ff051b0aa6cc2abaf193924f5ab05425f39"
-"checksum bvh 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ef6d0647b95e8fbc3ec8c3b7487d8128c221efa723c7615b5d569656b9596c62"
+"checksum bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)" = "<none>"
 "checksum byteorder 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a019b10a2a7cdeb292db131fc8113e57ea2a908f6e7894b0c3c671893b65dbeb"
 "checksum bytesize 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "716960a18f978640f25101b5cbf1c6f6b0d3192fab36a2d98ca96f0ecbe41010"
 "checksum cargo 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)" = "399c966265f89b62ed12f662f51e7402c58820c86f9f1d3a9ee59a689c787d76"
