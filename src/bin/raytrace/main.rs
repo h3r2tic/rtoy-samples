@@ -217,8 +217,8 @@ fn calculate_view_consants(width: u32, height: u32, yaw: f32, frame_idx: u32) ->
         m.m43 = -1.0;
 
         // Temporal jitter
-        m.m13 = 3.0 * (rand::random::<f32>() - 0.5) / width as f32;
-        m.m23 = 3.0 * (rand::random::<f32>() - 0.5) / height as f32;
+        m.m13 = 2.0 * (rand::random::<f32>() - 0.5) / width as f32;
+        m.m23 = 2.0 * (rand::random::<f32>() - 0.5) / height as f32;
 
         m
     };
