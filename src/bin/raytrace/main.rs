@@ -228,7 +228,7 @@ fn calculate_view_consants(width: u32, height: u32, yaw: f32, frame_idx: u32) ->
     };
     let clip_to_view = view_to_clip.try_inverse().unwrap();
 
-    let distance = 180.0 * 5.0;
+    let distance = 170.0 * 5.0;
     let look_at_height = 30.0 * 5.0;
 
     //let view_to_world = Matrix4::new_translation(&Vector3::new(0.0, 0.0, -2.0));
@@ -412,11 +412,17 @@ fn main() {
         )
     );
 
+    let sharpened_tex = compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/adaptive_sharpen.glsl")),
+        shader_uniforms!("inputTex": accum_rt_tex),
+    );
+
     let mut gpu_time_ms = 0.0f64;
     let mut frame_idx = 0;
     let mut prev_mouse_pos_x = 0.0;
 
-    const MAX_ACCUMULATED_FRAMES: u32 = 1024;
+    const MAX_ACCUMULATED_FRAMES: u32 = 32 * 1024;
 
     rtoy.forever(|snapshot, frame_state| {
         if prev_mouse_pos_x != frame_state.mouse_pos.x {
@@ -436,7 +442,7 @@ fn main() {
             )]))
         );
 
-        draw_fullscreen_texture(&*snapshot.get(accum_rt_tex));
+        draw_fullscreen_texture(&*snapshot.get(sharpened_tex));
 
         let cur = frame_state.gpu_time_ms;
         let prev = gpu_time_ms.max(cur * 0.85).min(cur / 0.85);

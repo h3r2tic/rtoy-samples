@@ -94,7 +94,7 @@ void main() {
 #if 1
 		vec3 t0 = normalize(perp_hm(normal));
 		vec3 t1 = cross(t0, normal);
-		vec3 l = normalize(vec3(1, 1, -1));
+		vec3 l = normalize(vec3(1, -1, -1));
 
 		{
 			// Angular diameter of sun is 0.5 degrees, tangent of half that is ~0.0043
