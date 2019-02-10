@@ -5,18 +5,6 @@ float calculate_luma(vec3 col) {
 	return dot(vec3(0.299, 0.587, 0.114), col);
 }
 
-vec3 rgb_to_ycbcr(vec3 col) {
-	return vec3(
-		dot(col, vec3(0.299, 0.587, 0.114)),
-		dot(col, vec3(-0.168736,-0.331264,0.5)),
-		dot(col, vec3(0.5,-0.418688,-0.0813124))
-	);
-}
-
-vec3 ycbcr_to_rgb(vec3 col) {
-	return mul(mat3(1.0, 0, 1.402, 1.0, -0.344136, -0.714136, 1.0, 1.772, 0.0), col);
-}
-
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
