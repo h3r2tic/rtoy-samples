@@ -96,14 +96,15 @@ impl FromRawVertex for Triangle {
 }
 
 pub fn load_obj_scene(path: &str) -> Vec<Triangle> {
-    use lzma::LzmaReader;
+    use libflate::gzip::Decoder;
     use std::fs::File;
     use std::io::{BufRead, BufReader};
     use std::path::Path;
 
-    let f: Box<dyn BufRead> = if Path::new(path).extension().unwrap() == "xz" {
+    let f: Box<dyn BufRead> = if Path::new(path).extension().unwrap() == "gz" {
         let f = File::open(path).unwrap();
-        let f = LzmaReader::new_decompressor(f).unwrap();
+        //let f = LzmaReader::new_decompressor(f).unwrap();
+		let f = Decoder::new(f).unwrap();
         Box::new(std::io::BufReader::new(f))
     } else {
         Box::new(BufReader::new(
@@ -307,7 +308,7 @@ fn convert_bvh<BoxOrderFn>(
 }
 
 fn main() {
-    let mut triangles = load_obj_scene("assets/meshes/lighthouse.obj.xz");
+    let mut triangles = load_obj_scene("assets/meshes/lighthouse.obj.gz");
     let bvh = BVH::build(&mut triangles);
     bvh.flatten();
 
