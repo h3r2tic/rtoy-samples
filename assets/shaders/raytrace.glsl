@@ -1,5 +1,5 @@
+#include "rendertoy::shaders/rt.inc"
 #include "inc/uv.inc"
-#include "inc/rt.inc"
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
