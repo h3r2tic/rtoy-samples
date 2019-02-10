@@ -203,6 +203,10 @@ struct GpuTriangle {
 assert_eq_size!(triangle_size_check; GpuTriangle, [u8; 9 * 4]);
 
 fn calculate_view_consants(width: u32, height: u32, yaw: f32, frame_idx: u32) -> Constants {
+    use rand::{distributions::StandardNormal, rngs::SmallRng, Rng, SeedableRng};
+
+    let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
+
     let view_to_clip = {
         let fov = 35.0f32.to_radians();
         let znear = 0.01;
@@ -217,21 +221,21 @@ fn calculate_view_consants(width: u32, height: u32, yaw: f32, frame_idx: u32) ->
         m.m43 = -1.0;
 
         // Temporal jitter
-        m.m13 = 2.0 * (rand::random::<f32>() - 0.5) / width as f32;
-        m.m23 = 2.0 * (rand::random::<f32>() - 0.5) / height as f32;
+        m.m13 = (1.0 * rng.sample(StandardNormal)) as f32 / width as f32;
+        m.m23 = (1.0 * rng.sample(StandardNormal)) as f32 / height as f32;
 
         m
     };
     let clip_to_view = view_to_clip.try_inverse().unwrap();
 
-    let distance = 200.0 * 5.0;
+    let distance = 180.0 * 5.0;
     let look_at_height = 30.0 * 5.0;
 
     //let view_to_world = Matrix4::new_translation(&Vector3::new(0.0, 0.0, -2.0));
     let world_to_view = Isometry3::look_at_rh(
         &Point3::new(
             yaw.cos() * distance,
-            look_at_height + distance * 0.2,
+            look_at_height + distance * 0.1,
             yaw.sin() * distance,
         ),
         &Point3::new(0.0, look_at_height, 0.0),
@@ -323,7 +327,7 @@ fn main() {
     let tex_key = TextureKey {
         width: rtoy.width(),
         height: rtoy.height(),
-        format: gl::RGBA16F,
+        format: gl::RGBA32F,
     };
 
     let viewport_constants = init_named!(
@@ -393,6 +397,8 @@ fn main() {
         load_tex(asset!("rendertoy::images/black.png"))
     );
 
+    let temporal_blend = init_named!("Temporal blend", const_f32(1f32));
+
     redef_named!(
         accum_rt_tex,
         compute_tex(
@@ -401,29 +407,36 @@ fn main() {
             shader_uniforms!(
                 "inputTex1": accum_rt_tex,
                 "inputTex2": rt_tex,
-                "blendAmount": 0.03f32,
+                "blendAmount": temporal_blend,
             )
         )
     );
 
-    let mut a = 1.0;
     let mut gpu_time_ms = 0.0f64;
     let mut frame_idx = 0;
+    let mut prev_mouse_pos_x = 0.0;
+
+    const MAX_ACCUMULATED_FRAMES: u32 = 1024;
 
     rtoy.forever(|snapshot, frame_state| {
-        draw_fullscreen_texture(&*snapshot.get(accum_rt_tex));
+        if prev_mouse_pos_x != frame_state.mouse_pos.x {
+            frame_idx = 0;
+            prev_mouse_pos_x = frame_state.mouse_pos.x;
+        }
+
+        redef_named!(temporal_blend, const_f32(1.0 / (frame_idx as f32 + 1.0)));
 
         redef_named!(
             viewport_constants,
             upload_buffer(to_byte_vec(vec![calculate_view_consants(
                 tex_key.width,
                 tex_key.height,
-                3.5 + frame_state.mouse_pos.x.to_radians() * 0.2 + a * 1e-5,
+                3.5 + frame_state.mouse_pos.x.to_radians() * 0.2,
                 frame_idx
             )]))
         );
 
-        a *= -1.0;
+        draw_fullscreen_texture(&*snapshot.get(accum_rt_tex));
 
         let cur = frame_state.gpu_time_ms;
         let prev = gpu_time_ms.max(cur * 0.85).min(cur / 0.85);
@@ -433,6 +446,6 @@ fn main() {
         use std::io::Write;
         let _ = std::io::stdout().flush();
 
-        frame_idx += 1;
+        frame_idx = (frame_idx + 1).min(MAX_ACCUMULATED_FRAMES);
     });
 }

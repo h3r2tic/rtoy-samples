@@ -52,6 +52,20 @@ float n2rand_faster(float nrnd0)
     return nrnd0 - sign(orig) + 0.5;
 }
 
+vec3 uniform_sample_sphere(vec2 urand) {
+    const float PI2 = 6.28318530718;
+    float z = 1.0 - 2.0 * urand.x;
+    float xy = sqrt(max(0.0, 1.0 - z * z));
+    float sn = sin(PI2 * urand.y);
+	float cs = cos(PI2 * urand.y);
+	return vec3(sn * xy, cs * xy, z);
+}
+
+vec3 sample_environment_light(vec3 dir) {
+	dir = normalize(dir);
+	return (dir * 0.5 + 0.5) * 0.75;
+}
+
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
@@ -68,9 +82,9 @@ void main() {
     r.o = ray_origin_ws.xyz;
     r.d = -v;
 
-	vec4 col = vec4(r.d * 0.5 + 0.5, 1.0) * 0.5;
+	const float direct_light_amount = 1.25;
 
-	uint seed0 = hash(hash(frame_idx ^ hash(pix.x)) ^ pix.y);
+	vec4 col = vec4(sample_environment_light(r.d), 1.0);
 
     RtHit hit;
     if (raytrace(r, hit)) {
@@ -83,9 +97,14 @@ void main() {
 		vec3 l = normalize(vec3(1, 1, -1));
 
 		{
+			// Angular diameter of sun is 0.5 degrees, tangent of half that is ~0.0043
+			// Scale up as an artistic license to account for scattering in the sky
+			const float cone_angle_tan = 0.0043 * 1.5;
+
+			uint seed0 = hash(hash(frame_idx ^ hash(pix.x)) ^ pix.y);
 			uint seed1 = hash(seed0);
 			float theta = rand_float(seed0) * 6.28318530718;
-			float r = 0.5 * sqrt(rand_float(seed1));
+			float r = cone_angle_tan * sqrt(rand_float(seed1));
 			l += r * t0 * cos(theta) + r * t1 * sin(theta);
 		}
 
@@ -97,22 +116,40 @@ void main() {
         float ndotl = max(0.0, dot(normal, l));
         uint iter = hit.debug_iter_count;
 
-        r.o += r.d * hit.t;
-        r.o -= r.d * 1e-4 * length(r.o);
+		vec3 hit_pos = r.o + r.d * hit.t;
+		hit_pos -= r.d * 1e-4 * length(hit_pos);
+
+        r.o = hit_pos;
         r.d = l;
         bool shadowed = raytrace(r, hit);
         //iter = hit.debug_iter_count;
 
-		const float ambient = 0.1;
+		float diffuse_albedo = 0.7;
 
-        col.rgb = ndotl.xxx * 0.8 * (shadowed ? 0.0 : 1.0) + mix(normal * 0.5 + 0.5, 0.5.xxx, 0.5.xxx) * ambient;
+		vec3 ambient = 0.0.xxx;
+
+		{
+			uint seed0 = hash(hash(frame_idx ^ hash(pix.x) ^ 19329) ^ pix.y);
+			uint seed1 = hash(seed0);
+			vec3 sr = uniform_sample_sphere(vec2(rand_float(seed0), rand_float(seed1)));
+			vec3 ao_dir = normal + sr;
+			r.o = hit_pos;
+			r.d = ao_dir;
+
+			if (!raytrace(r, hit)) {
+				ambient += sample_environment_light(ao_dir);
+			}
+		}
+
+        col.rgb = (direct_light_amount * ndotl.xxx * (shadowed ? 0.0 : 1.0) + ambient) * diffuse_albedo;
 
         //col.rgb *= 0.1;
     }
 
 	{
+		uint seed0 = hash(hash(pix.x) ^ pix.y);
 		float rnd = rand_float(seed0);
-		col.rgb += (rnd - 0.5) * 0.05;
+		col.rgb += (rnd - 0.5) / 256.0;
 	}
 
     //col.r = hit.debug_iter_count * 0.01;
