@@ -257,7 +257,11 @@ fn convert_bvh<BoxOrderFn>(
         res.push(if let BVHNode::Node { .. } = n {
             BvhNode::new_interior(nbox.min, nbox.max)
         } else {
-            BvhNode::new_leaf(nbox.min, nbox.max, n.shape_index())
+            BvhNode::new_leaf(
+                nbox.min,
+                nbox.max,
+                n.shape_index().expect("bvh leaf shape index"),
+            )
         });
         Some(initial_node_count)
     } else {

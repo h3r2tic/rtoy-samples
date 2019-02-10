@@ -134,8 +134,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "bvh"
-version = "0.3.0"
-source = "git+https://github.com/h3r2tic/bvh?rev=afbaaddfd15344a5e422183ac567263e3c21a08d#afbaaddfd15344a5e422183ac567263e3c21a08d"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "approx 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1502,6 +1502,7 @@ dependencies = [
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
+source = "git+https://github.com/h3r2tic/rendertoy#519b146b0401427c6f26b4a3080959dd1e7b430e"
 dependencies = [
  "bincode 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1525,11 +1526,11 @@ dependencies = [
 name = "rtoy-samples"
 version = "0.1.0"
 dependencies = [
- "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?rev=afbaaddfd15344a5e422183ac567263e3c21a08d)",
+ "bvh 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "half 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "obj-rs 0.4.20 (registry+https://github.com/rust-lang/crates.io-index)",
- "rendertoy 0.1.0",
+ "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
  "rust-lzma 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "static_assertions 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2120,7 +2121,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "228047a76f468627ca71776ecdebd732a3423081fcf5125585bcd7c49886ce12"
 "checksum block 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 "checksum build_const 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "39092a32794787acd8525ee150305ff051b0aa6cc2abaf193924f5ab05425f39"
-"checksum bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?rev=afbaaddfd15344a5e422183ac567263e3c21a08d)" = "<none>"
+"checksum bvh 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ef6d0647b95e8fbc3ec8c3b7487d8128c221efa723c7615b5d569656b9596c62"
 "checksum byteorder 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a019b10a2a7cdeb292db131fc8113e57ea2a908f6e7894b0c3c671893b65dbeb"
 "checksum bytesize 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "716960a18f978640f25101b5cbf1c6f6b0d3192fab36a2d98ca96f0ecbe41010"
 "checksum cargo 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)" = "399c966265f89b62ed12f662f51e7402c58820c86f9f1d3a9ee59a689c787d76"
@@ -2268,6 +2269,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum regex-syntax 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)" = "8c2f35eedad5295fdf00a63d7d4b238135723f92b434ec06774dad15c7ab0861"
 "checksum relative-path 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0e7790c7f1cc73d831d28dc5a7deb316a006e7848e6a7f467cdb10a0a9e0fb1c"
 "checksum remove_dir_all 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3488ba1b9a2084d38645c4c08276a1752dcbf2c7130d74f1569681ad5d2799c5"
+"checksum rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)" = "<none>"
 "checksum rust-lzma 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c584b6338d00183ee853f099e2560eeda850925850f90ba35471423958a27ba5"
 "checksum rustc-demangle 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "adacaae16d02b6ec37fdc7acfcddf365978de76d1983d3ee22afc260e1ca9619"
 "checksum rustc-workspace-hack 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc71d2faa173b74b232dedc235e3ee1696581bb132fc116fa3626d6151a1a8fb"

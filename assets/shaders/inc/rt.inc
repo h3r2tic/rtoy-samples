@@ -82,7 +82,7 @@ bool intersect_ray_tri(Ray r, Triangle tri, inout float t, inout vec3 barycentri
     vec3 pv = cross(r.d, tri.e1);
     float det = dot(tri.e0, pv);
 
-    const bool cull_backface = true;
+    const bool cull_backface = false;
 
     if ((cull_backface && det > 1e-10) || !cull_backface)
     {

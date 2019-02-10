@@ -36,7 +36,7 @@ void main() {
         uint iter = hit.debug_iter_count;
 
         r.o += r.d * hit.t;
-        r.o -= r.d * 1e-6 * length(r.o);
+        r.o -= r.d * 1e-4 * length(r.o);
         r.d = l;
         bool shadowed = raytrace(r, hit);
         //iter = hit.debug_iter_count;
