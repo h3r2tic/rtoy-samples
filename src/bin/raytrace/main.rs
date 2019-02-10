@@ -120,6 +120,7 @@ pub fn load_obj_scene(path: &str) -> Vec<Triangle> {
 struct Constants {
     clip_to_view: Matrix4,
     view_to_world: Matrix4,
+    frame_idx: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -201,7 +202,7 @@ struct GpuTriangle {
 
 assert_eq_size!(triangle_size_check; GpuTriangle, [u8; 9 * 4]);
 
-fn calculate_view_consants(width: u32, height: u32, yaw: f32) -> Constants {
+fn calculate_view_consants(width: u32, height: u32, yaw: f32, frame_idx: u32) -> Constants {
     let view_to_clip = {
         let fov = 35.0f32.to_radians();
         let znear = 0.01;
@@ -214,6 +215,11 @@ fn calculate_view_consants(width: u32, height: u32, yaw: f32) -> Constants {
         m.m22 = h;
         m.m34 = znear;
         m.m43 = -1.0;
+
+        // Temporal jitter
+        m.m13 = 3.0 * (rand::random::<f32>() - 0.5) / width as f32;
+        m.m23 = 3.0 * (rand::random::<f32>() - 0.5) / height as f32;
+
         m
     };
     let clip_to_view = view_to_clip.try_inverse().unwrap();
@@ -237,6 +243,7 @@ fn calculate_view_consants(width: u32, height: u32, yaw: f32) -> Constants {
     Constants {
         clip_to_view,
         view_to_world,
+        frame_idx,
     }
 }
 
@@ -307,6 +314,7 @@ fn convert_bvh<BoxOrderFn>(
 
 fn main() {
     let mut triangles = load_obj_scene("assets/meshes/flying_trabant.obj.gz");
+    //let mut triangles = load_obj_scene("assets/meshes/lighthouse.obj.gz");
     let bvh = BVH::build(&mut triangles);
     bvh.flatten();
 
@@ -323,7 +331,8 @@ fn main() {
         upload_buffer(to_byte_vec(vec![calculate_view_consants(
             tex_key.width,
             tex_key.height,
-            4.5
+            4.5,
+            0
         )]))
     );
 
@@ -379,18 +388,38 @@ fn main() {
         ),
     );
 
+    let accum_rt_tex = init_named!(
+        "Accum rt texture",
+        load_tex(asset!("rendertoy::images/black.png"))
+    );
+
+    redef_named!(
+        accum_rt_tex,
+        compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/blend.glsl")),
+            shader_uniforms!(
+                "inputTex1": accum_rt_tex,
+                "inputTex2": rt_tex,
+                "blendAmount": 0.03f32,
+            )
+        )
+    );
+
     let mut a = 1.0;
     let mut gpu_time_ms = 0.0f64;
+    let mut frame_idx = 0;
 
     rtoy.forever(|snapshot, frame_state| {
-        draw_fullscreen_texture(&*snapshot.get(rt_tex));
+        draw_fullscreen_texture(&*snapshot.get(accum_rt_tex));
 
         redef_named!(
             viewport_constants,
             upload_buffer(to_byte_vec(vec![calculate_view_consants(
                 tex_key.width,
                 tex_key.height,
-                3.5 + frame_state.mouse_pos.x.to_radians() * 0.2 + a * 1e-5
+                3.5 + frame_state.mouse_pos.x.to_radians() * 0.2 + a * 1e-5,
+                frame_idx
             )]))
         );
 
@@ -403,5 +432,7 @@ fn main() {
 
         use std::io::Write;
         let _ = std::io::stdout().flush();
+
+        frame_idx += 1;
     });
 }
