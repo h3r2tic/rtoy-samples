@@ -101,14 +101,13 @@ pub fn load_obj_scene(path: &str) -> Vec<Triangle> {
     use std::io::{BufRead, BufReader};
     use std::path::Path;
 
+    let f = BufReader::new(File::open(path).expect("Failed to open scene file."));
+
     let f: Box<dyn BufRead> = if Path::new(path).extension().unwrap() == "gz" {
-        let f = File::open(path).unwrap();
         let f = Decoder::new(f).unwrap();
         Box::new(std::io::BufReader::new(f))
     } else {
-        Box::new(BufReader::new(
-            File::open(path).expect("Failed to open .obj file."),
-        ))
+        Box::new(f)
     };
 
     let obj: Obj<Triangle> = load_obj(f).expect("Failed to decode .obj file data.");

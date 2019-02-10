@@ -41,7 +41,9 @@ void main() {
         bool shadowed = raytrace(r, hit);
         //iter = hit.debug_iter_count;
 
-        col.rgb = ndotl.xxx * 0.8 * (shadowed ? 0.0 : 1.0) + mix(normal * 0.5 + 0.5, 0.6.xxx, 0.7.xxx) * 0.08;
+		const float ambient = 0.1;
+
+        col.rgb = ndotl.xxx * 0.8 * (shadowed ? 0.0 : 1.0) + mix(normal * 0.5 + 0.5, 0.5.xxx, 0.5.xxx) * ambient;
 
         //col.rgb *= 0.1;
     }
