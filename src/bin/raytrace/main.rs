@@ -59,9 +59,9 @@ struct Constants {
 }
 
 fn main() {
-    //let scene_file = "assets/meshes/flying_trabant.obj.gz";
+    let scene_file = "assets/meshes/flying_trabant.obj.gz";
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
-    let scene_file = "assets/meshes/pica.obj.gz";
+    //let scene_file = "assets/meshes/pica.obj.gz";
 
     let bvh = build_gpu_bvh(load_obj_scene(scene_file.to_string()));
 

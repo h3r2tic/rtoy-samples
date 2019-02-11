@@ -122,7 +122,9 @@ void main() {
 
         r.o = hit_pos;
         r.d = l;
-        bool shadowed = raytrace(r, hit);
+
+        RtHit shadow_hit;
+        bool shadowed = raytrace(r, shadow_hit);
         //iter = hit.debug_iter_count;
 
 		float diffuse_albedo = 0.7;
@@ -137,7 +139,8 @@ void main() {
 			r.o = hit_pos;
 			r.d = ao_dir;
 
-			if (!raytrace(r, hit)) {
+            RtHit diffuse_hit;
+			if (!raytrace(r, diffuse_hit)) {
 				ambient += sample_environment_light(ao_dir);
 			}
 		}
