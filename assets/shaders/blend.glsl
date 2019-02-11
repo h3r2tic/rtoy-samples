@@ -11,5 +11,10 @@ void main() {
 
 	vec4 a = textureLod(inputTex1, uv, 0);
 	vec4 b = textureLod(inputTex2, uv, 0);
-	imageStore(outputTex, pix, mix(a, b, blendAmount));
+    vec4 c = b * blendAmount;
+    if (blendAmount != 1.0) {
+        c += a * (1.0 - blendAmount);
+    }
+
+	imageStore(outputTex, pix, c);
 }
