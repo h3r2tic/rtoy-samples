@@ -10,7 +10,8 @@ layout(std430) buffer constants {
 	uint frame_idx;
 };
 
-vec3 perp_hm(vec3 u) {
+// "perp_hm" from https://blog.selfshadow.com/2011/10/17/perp-vectors/
+vec3 build_orthonormal_basis(vec3 u) {
     vec3 a = abs(u);
     vec3 v;
     if (a.x <= a.y && a.x <= a.z)
@@ -92,9 +93,9 @@ void main() {
         vec3 normal = normalize(cross(tri.e0, tri.e1));
 
 #if 1
-		vec3 t0 = normalize(perp_hm(normal));
-		vec3 t1 = cross(t0, normal);
 		vec3 l = normalize(vec3(1, -1, -1));
+		vec3 t0 = normalize(build_orthonormal_basis(l));
+		vec3 t1 = cross(t0, l);
 
 		{
 			// Angular diameter of sun is 0.5 degrees, tangent of half that is ~0.0043
