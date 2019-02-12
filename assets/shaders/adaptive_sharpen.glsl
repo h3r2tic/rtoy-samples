@@ -33,6 +33,6 @@ void main() {
 
 	float sharpened_luma = max(0, center * (wt_sum * sharpen_amount + 1) - neighbors * sharpen_amount);
 
-	col *= max(0.0, sharpened_luma / max(1e-5, center));
+	col.rgb *= max(0.0, sharpened_luma / max(1e-5, center));
 	imageStore(outputTex, pix, col);
 }
