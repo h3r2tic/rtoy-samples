@@ -121,7 +121,7 @@ fn main() {
         t += 0.01;
         fidx += 1;
         redef_named!(time, const_f32(t));
-        redef_named!(mouse_x, const_f32(frame_state.mouse_pos.x));
+        redef_named!(mouse_x, const_f32(frame_state.mouse.pos.x));
         redef_named!(frame_index, const_u32(fidx));
     });
 }

@@ -5,7 +5,7 @@ fn main() {
 
     let tex = load_tex(asset!("images/cornell_box_render.jpg"));
 
-    rtoy.forever(|snapshot, frame_state| {
+    rtoy.forever(|snapshot, _frame_state| {
         draw_fullscreen_texture(&*snapshot.get(tex));
     });
 }

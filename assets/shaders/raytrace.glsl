@@ -5,9 +5,12 @@ uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
-    mat4 clip_to_view;
-    mat4 view_to_world;
 	uint frame_idx;
+    uint pad[3];
+    mat4 view_to_clip;
+    mat4 clip_to_view;
+    mat4 world_to_view;
+    mat4 view_to_world;
 };
 
 // "perp_hm" from https://blog.selfshadow.com/2011/10/17/perp-vectors/
