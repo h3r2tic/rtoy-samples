@@ -1514,6 +1514,7 @@ dependencies = [
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
+source = "git+https://github.com/h3r2tic/rendertoy#a6d0630a83c4dc72c9c4763beafb13b9bae5a765"
 dependencies = [
  "bincode 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1538,10 +1539,11 @@ dependencies = [
 [[package]]
 name = "rtoy-rt"
 version = "0.1.0"
+source = "git+https://github.com/h3r2tic/rtoy-rt#7af078d6dcc91cd227a44c0e38ac8fe3509fea82"
 dependencies = [
  "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)",
  "half 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rendertoy 0.1.0",
+ "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
  "static_assertions 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1551,8 +1553,8 @@ name = "rtoy-samples"
 version = "0.1.0"
 dependencies = [
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "rendertoy 0.1.0",
- "rtoy-rt 0.1.0",
+ "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
+ "rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
 ]
 
@@ -2287,6 +2289,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum regex-syntax 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)" = "8c2f35eedad5295fdf00a63d7d4b238135723f92b434ec06774dad15c7ab0861"
 "checksum relative-path 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0e7790c7f1cc73d831d28dc5a7deb316a006e7848e6a7f467cdb10a0a9e0fb1c"
 "checksum remove_dir_all 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3488ba1b9a2084d38645c4c08276a1752dcbf2c7130d74f1569681ad5d2799c5"
+"checksum rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)" = "<none>"
+"checksum rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)" = "<none>"
 "checksum rustc-demangle 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "adacaae16d02b6ec37fdc7acfcddf365978de76d1983d3ee22afc260e1ca9619"
 "checksum rustc-workspace-hack 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc71d2faa173b74b232dedc235e3ee1696581bb132fc116fa3626d6151a1a8fb"
 "checksum rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
