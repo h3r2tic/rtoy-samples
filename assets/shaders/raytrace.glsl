@@ -17,7 +17,9 @@ layout(std430) buffer constants {
 
 vec3 sample_environment_light(vec3 dir) {
     dir = normalize(dir);
-    return (dir * 0.5 + 0.5) * 0.75;
+    vec3 col = (dir.zyx * vec3(1, 1, -1) * 0.5 + vec3(0.6, 0.5, 0.5)) * 0.75;
+    col = mix(col, 1.3 * dot(col, vec3(0.2, 0.7, 0.1)).xxx, smoothstep(0.3, 0.8, col.g).xxx);
+    return col;
 }
 
 layout (local_size_x = 8, local_size_y = 8) in;
