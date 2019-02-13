@@ -1512,7 +1512,7 @@ dependencies = [
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#e7647a6f3b08fc84729db392b1314dfc385d334f"
+source = "git+https://github.com/h3r2tic/rendertoy#955b719d49d36782f8de312edcfccdd0cb0c55c0"
 dependencies = [
  "bincode 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
