@@ -75,11 +75,9 @@ void main() {
         r.o = hit_pos;
         r.d = l;
 
-        RtHit shadow_hit;
-        bool shadowed = raytrace(r, shadow_hit);
+        bool shadowed = raytrace_intersects_any(r);
 
 		float diffuse_albedo = 0.7;
-
 		vec3 ambient = 0.0.xxx;
 
 		{
@@ -90,8 +88,7 @@ void main() {
 			r.o = hit_pos;
 			r.d = ao_dir;
 
-            RtHit diffuse_hit;
-			if (!raytrace(r, diffuse_hit)) {
+			if (!raytrace_intersects_any(r)) {
 				ambient += sample_environment_light(ao_dir);
 			}
 		}
