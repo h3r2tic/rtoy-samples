@@ -117,7 +117,7 @@ fn main() {
     let mut fidx = 0u32;
 
     rtoy.forever(|snapshot, frame_state| {
-        draw_fullscreen_texture(&*snapshot.get(final_tex));
+        draw_fullscreen_texture(&*snapshot.get(final_tex), frame_state.window_size_pixels);
         t += 0.01;
         fidx += 1;
         redef_named!(time, const_f32(t));

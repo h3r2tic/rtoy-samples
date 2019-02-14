@@ -46,8 +46,8 @@ fn main() {
     );
 
     let mut t = 0.0f32;
-    rtoy.forever(|snapshot, _frame_state| {
-        draw_fullscreen_texture(&*snapshot.get(temporal_tex));
+    rtoy.forever(|snapshot, frame_state| {
+        draw_fullscreen_texture(&*snapshot.get(temporal_tex), frame_state.window_size_pixels);
         t += 0.01;
         redef_named!(time_asset, const_f32(t));
     });

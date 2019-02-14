@@ -122,7 +122,7 @@ fn main() {
         );
 
         // Finaly display the result.
-        draw_fullscreen_texture(&*snapshot.get(sharpened_tex));
+        draw_fullscreen_texture(&*snapshot.get(sharpened_tex), frame_state.window_size_pixels);
 
         frame_idx += 1;
     });

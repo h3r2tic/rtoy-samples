@@ -25,7 +25,7 @@ fn main() {
         ),
     );
 
-    rtoy.forever(|snapshot, _frame_state| {
-        draw_fullscreen_texture(&*snapshot.get(blurred_tex));
+    rtoy.forever(|snapshot, frame_state| {
+        draw_fullscreen_texture(&*snapshot.get(blurred_tex), frame_state.window_size_pixels);
     });
 }

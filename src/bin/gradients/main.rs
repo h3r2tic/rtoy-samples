@@ -15,7 +15,10 @@ fn main() {
         shader_uniforms!(),
     );
 
-    rtoy.forever(|snapshot, _frame_state| {
-        draw_fullscreen_texture(&*snapshot.get(gradients_tex));
+    rtoy.forever(|snapshot, frame_state| {
+        draw_fullscreen_texture(
+            &*snapshot.get(gradients_tex),
+            frame_state.window_size_pixels,
+        );
     });
 }
