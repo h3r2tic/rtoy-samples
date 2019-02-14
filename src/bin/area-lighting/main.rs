@@ -116,12 +116,13 @@ fn main() {
     let mut t = 0.0f32;
     let mut fidx = 0u32;
 
-    rtoy.forever(|snapshot, frame_state| {
-        draw_fullscreen_texture(&*snapshot.get(final_tex), frame_state.window_size_pixels);
+    rtoy.draw_forever(|frame_state| {
         t += 0.01;
         fidx += 1;
         redef_named!(time, const_f32(t));
         redef_named!(mouse_x, const_f32(frame_state.mouse.pos.x));
         redef_named!(frame_index, const_u32(fidx));
+
+        final_tex
     });
 }

@@ -79,13 +79,8 @@ fn main() {
     let mut frame_idx = 0;
 
     // Start the main loop
-    rtoy.forever(|snapshot, frame_state| {
-        camera.update(
-            FirstPersonCameraInput::from_frame_state(&frame_state),
-            1.0 / 60.0,
-        );
-
-        let camera_matrices = camera.calc_matrices();
+    rtoy.draw_forever(|frame_state| {
+        camera.update(frame_state, 1.0 / 60.0);
 
         // If the camera is moving/rotating, reset image accumulation.
         if !camera.is_converged() {
@@ -105,10 +100,9 @@ fn main() {
         );
 
         // Calculate the new viewport constants from the latest state
-        let viewport_constants =
-            ViewportConstants::build(camera_matrices, tex_key.width, tex_key.height)
-                .pixel_offset(jitter)
-                .finish();
+        let viewport_constants = ViewportConstants::build(&camera, tex_key.width, tex_key.height)
+            .pixel_offset(jitter)
+            .finish();
 
         // Redefine the viewport constants parameter. This invalidates all dependent assets,
         // and causes the next frame to be rendered.
@@ -121,9 +115,9 @@ fn main() {
             },]))
         );
 
-        // Finaly display the result.
-        draw_fullscreen_texture(&*snapshot.get(sharpened_tex), frame_state.window_size_pixels);
-
         frame_idx += 1;
+
+        // Finaly display the result.
+        sharpened_tex
     });
 }

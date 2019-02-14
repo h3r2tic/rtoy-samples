@@ -1,11 +1,5 @@
 use rendertoy::*;
 
-#[derive(Clone, Copy)]
-#[repr(C)]
-struct Constants {
-    viewport_constants: ViewportConstants,
-}
-
 fn main() {
     let mut rtoy = Rendertoy::new();
 
@@ -18,8 +12,7 @@ fn main() {
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
     let scene_file = "assets/meshes/flying_trabant.obj.gz";
 
-    let mut camera =
-        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
+    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
 
     let viewport_constants_buf =
         init_named!("ViewportConstants", upload_buffer(to_byte_vec(vec![0])));
@@ -36,22 +29,17 @@ fn main() {
         ),
     );
 
-    rtoy.forever(|snapshot, frame_state| {
-        camera.update(
-            FirstPersonCameraInput::from_frame_state(&frame_state),
-            1.0 / 60.0,
-        );
-
-        let camera_matrices = camera.calc_matrices();
+    rtoy.draw_forever(|frame_state| {
+        camera.update(frame_state, 1.0 / 60.0);
 
         let viewport_constants =
-            ViewportConstants::build(camera_matrices, tex_key.width, tex_key.height).finish();
+            ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();
 
         redef_named!(
             viewport_constants_buf,
-            upload_buffer(to_byte_vec(vec![Constants { viewport_constants },]))
+            upload_buffer(to_byte_vec(vec![viewport_constants]))
         );
 
-        draw_fullscreen_texture(&*snapshot.get(out_tex), frame_state.window_size_pixels);
+        out_tex
     });
 }
