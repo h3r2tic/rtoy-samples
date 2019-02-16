@@ -34,7 +34,7 @@ fn main() {
 
     // Make a named slot for viewport constants. By giving it a unique name,
     // we can re-define it at runtime, and keep the lazy evaluation graph structure.
-    let viewport_constants_buf = init_dynamic!(upload_array_buffer(vec![0]));
+    let viewport_constants_buf = init_dynamic!(upload_buffer(&0u32));
 
     // Define the raytrace output texture. Since it depends on viewport constants,
     // it will get re-generated whenever they change.
