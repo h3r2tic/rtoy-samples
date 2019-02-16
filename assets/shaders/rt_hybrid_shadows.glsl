@@ -29,7 +29,8 @@ void main() {
 
     if (gbuffer.a != 0.0) {
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
-        vec4 ray_origin_ws = view_to_world * (clip_to_view * ray_origin_cs);
+        vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
+        vec4 ray_origin_ws = view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 
         vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
@@ -39,7 +40,7 @@ void main() {
         Ray r;
         r.d = l;
         r.o = ray_origin_ws.xyz;
-        r.o += v * (1e-4 * length(r.o));
+        r.o += (v + r.d) * (1e-4 * max(length(r.o), abs(ray_origin_vs.z / ray_origin_vs.w)));
 
         if (raytrace_intersects_any(r)) {
             col.rgb *= 0.1;
