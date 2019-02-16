@@ -5,12 +5,14 @@ float calculate_luma(vec3 col) {
 	return dot(vec3(0.299, 0.587, 0.114), col);
 }
 
+layout(std430) buffer constants {
+    float sharpen_amount;
+};
+
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
 	vec4 col = texelFetch(inputTex, pix, 0);
-
-	const float sharpen_amount = 0.5;
 
 	float neighbors = 0;
 	float wt_sum = 0;

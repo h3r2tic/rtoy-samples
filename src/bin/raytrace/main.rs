@@ -34,7 +34,7 @@ fn main() {
 
     // Make a named slot for viewport constants. By giving it a unique name,
     // we can re-define it at runtime, and keep the lazy evaluation graph structure.
-    let viewport_constants_buf = init_dynamic!(upload_buffer(&0u32));
+    let viewport_constants_buf = init_dynamic!(upload_buffer(0.0f32));
 
     // Define the raytrace output texture. Since it depends on viewport constants,
     // it will get re-generated whenever they change.
@@ -65,11 +65,16 @@ fn main() {
         )
     );
 
+    let sharpen_constants_buf = init_dynamic!(upload_buffer(0.0f32));
+
     // Finally, chain a post-process sharpening effect to the output.
     let sharpened_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/adaptive_sharpen.glsl")),
-        shader_uniforms!("inputTex": accum_rt_tex),
+        shader_uniforms!(
+            "inputTex": accum_rt_tex,
+            "constants": sharpen_constants_buf
+        ),
     );
 
     let mut frame_idx = 0;
@@ -99,6 +104,9 @@ fn main() {
         let viewport_constants = ViewportConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
             .finish();
+
+        let sharpen_amount = (frame_idx as f32 / 1024.0).min(0.5);
+        redef_dynamic!(sharpen_constants_buf, upload_buffer(sharpen_amount));
 
         // Redefine the viewport constants parameter. This invalidates all dependent assets,
         // and causes the next frame to be rendered.
