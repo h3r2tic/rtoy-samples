@@ -14,7 +14,7 @@ layout(std430) buffer buf1 {
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
-    vec2 uv = getUv(outputTex_size);
+    vec2 uv = get_uv(outputTex_size);
 	vec4 col = bg_col + smoothstep(0.25, 0.245, length(circle_center - uv));
 	imageStore(outputTex, pix, col);
 }

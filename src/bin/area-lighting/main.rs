@@ -3,9 +3,9 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    let time = init_named!("Time", const_f32(0f32));
-    let mouse_x = init_named!("Mouse X", const_f32(0f32));
-    let frame_index = init_named!("Frame index", const_u32(0));
+    let time = init_dynamic!(const_f32(0f32));
+    let mouse_x = init_dynamic!(const_f32(0f32));
+    let frame_index = init_dynamic!(const_u32(0));
 
     let tex_key_f16 = TextureKey {
         width: rtoy.width(),
@@ -90,12 +90,9 @@ fn main() {
         ),
     );
 
-    let accum_lighting_tex = init_named!(
-        "Accumulated lighting",
-        load_tex(asset!("rendertoy::images/black.png"))
-    );
+    let accum_lighting_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
 
-    redef_named!(
+    redef_dynamic!(
         accum_lighting_tex,
         compute_tex(
             tex_key_f32,
@@ -119,9 +116,9 @@ fn main() {
     rtoy.draw_forever(|frame_state| {
         t += 0.01;
         fidx += 1;
-        redef_named!(time, const_f32(t));
-        redef_named!(mouse_x, const_f32(frame_state.mouse.pos.x));
-        redef_named!(frame_index, const_u32(fidx));
+        redef_dynamic!(time, const_f32(t));
+        redef_dynamic!(mouse_x, const_f32(frame_state.mouse.pos.x));
+        redef_dynamic!(frame_index, const_u32(fidx));
 
         final_tex
     });

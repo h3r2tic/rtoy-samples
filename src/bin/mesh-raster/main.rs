@@ -14,8 +14,7 @@ fn main() {
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
 
-    let viewport_constants_buf =
-        init_named!("ViewportConstants", upload_buffer(to_byte_vec(vec![0])));
+    let viewport_constants_buf = init_dynamic!(upload_buffer(to_byte_vec(vec![0])));
 
     let out_tex = raster_tex(
         tex_key,
@@ -35,7 +34,7 @@ fn main() {
         let viewport_constants =
             ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();
 
-        redef_named!(
+        redef_dynamic!(
             viewport_constants_buf,
             upload_buffer(to_byte_vec(vec![viewport_constants]))
         );

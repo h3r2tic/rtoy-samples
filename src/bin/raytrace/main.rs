@@ -34,8 +34,7 @@ fn main() {
 
     // Make a named slot for viewport constants. By giving it a unique name,
     // we can re-define it at runtime, and keep the lazy evaluation graph structure.
-    let viewport_constants_buf =
-        init_named!("ViewportConstants", upload_buffer(to_byte_vec(vec![0])));
+    let viewport_constants_buf = init_dynamic!(upload_buffer(to_byte_vec(vec![0])));
 
     // Define the raytrace output texture. Since it depends on viewport constants,
     // it will get re-generated whenever they change.
@@ -46,17 +45,14 @@ fn main() {
     );
 
     // We temporally accumulate raytraced images. The blend factor gets re-defined every frame.
-    let temporal_blend = init_named!("Temporal blend", const_f32(1f32));
+    let temporal_blend = init_dynamic!(const_f32(1f32));
 
     // Need a valid value for the accumulation history. Black will do.
-    let accum_rt_tex = init_named!(
-        "Accum rt texture",
-        load_tex(asset!("rendertoy::images/black.png"))
-    );
+    let accum_rt_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
 
     // Re-define the resource with a cycle upon itself -- every time it gets evaluated,
     // it will use its previous value for "history", and produce a new value.
-    redef_named!(
+    redef_dynamic!(
         accum_rt_tex,
         compute_tex(
             tex_key,
@@ -88,7 +84,7 @@ fn main() {
         }
 
         // Set the new blend factor such that we calculate a uniform average of all the traced frames.
-        redef_named!(temporal_blend, const_f32(1.0 / (frame_idx as f32 + 1.0)));
+        redef_dynamic!(temporal_blend, const_f32(1.0 / (frame_idx as f32 + 1.0)));
 
         // Jitter the image in a Gaussian kernel in order to anti-alias the result. This is why we have
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post
@@ -106,7 +102,7 @@ fn main() {
 
         // Redefine the viewport constants parameter. This invalidates all dependent assets,
         // and causes the next frame to be rendered.
-        redef_named!(
+        redef_dynamic!(
             viewport_constants_buf,
             upload_buffer(to_byte_vec(vec![Constants {
                 frame_idx,
