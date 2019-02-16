@@ -35,10 +35,16 @@ layout(std430) buffer mesh_vertex_buf {
 };
 
 out vec3 v_normal;
+out vec3 v_world_position;
+out vec4 v_clip_position;
 
 void main() {
     Vertex vertex = unpack_vertex(vertices[gl_VertexID]);
     v_normal = vertex.normal;
 	vec3 world_position = vertex.position;
-	gl_Position = view_to_clip * world_to_view * vec4(world_position, 1.0);
+    v_world_position = world_position;
+
+    vec4 clip_position = view_to_clip * world_to_view * vec4(world_position, 1.0);
+    v_clip_position = clip_position;
+	gl_Position = clip_position;
 }
