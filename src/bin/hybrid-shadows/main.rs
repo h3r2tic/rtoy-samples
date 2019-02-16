@@ -25,10 +25,11 @@ fn main() {
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
 
-    let viewport_constants_buf = init_dynamic!(upload_buffer(&0u32));
+    let rt_constants_buf = init_dynamic!(upload_buffer(&0u32));
+    let raster_constants_buf = init_dynamic!(upload_buffer(&0u32));
 
     let raster_uniforms = shader_uniforms!(
-        "constants": viewport_constants_buf,
+        "constants": raster_constants_buf,
         "": make_raster_mesh(scene)
     );
 
@@ -42,7 +43,7 @@ fn main() {
     );
 
     let rt_uniforms = shader_uniforms!(
-        "constants": viewport_constants_buf,
+        "constants": rt_constants_buf,
         "": bvh,
         "inputTex": gbuffer_tex,
     );
@@ -64,7 +65,12 @@ fn main() {
         light_angle += 0.01;
 
         redef_dynamic!(
-            viewport_constants_buf,
+            raster_constants_buf,
+            upload_buffer(viewport_constants)
+        );
+
+        redef_dynamic!(
+            rt_constants_buf,
             upload_buffer(Constants {
                 viewport_constants,
                 light_dir: Vector4::new(light_angle.cos(), 0.5, light_angle.sin(), 0.0)
