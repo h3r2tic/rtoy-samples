@@ -30,7 +30,7 @@ fn main() {
 
     let raster_uniforms = shader_uniforms!(
         "constants": raster_constants_buf,
-        "": make_raster_mesh(scene)
+        "": upload_raster_mesh(make_raster_mesh(scene))
     );
 
     let gbuffer_tex = raster_tex(
@@ -44,7 +44,7 @@ fn main() {
 
     let rt_uniforms = shader_uniforms!(
         "constants": rt_constants_buf,
-        "": bvh,
+        "": upload_bvh(bvh),
         "inputTex": gbuffer_tex,
     );
 
@@ -64,10 +64,7 @@ fn main() {
 
         light_angle += 0.01;
 
-        redef_dynamic!(
-            raster_constants_buf,
-            upload_buffer(viewport_constants)
-        );
+        redef_dynamic!(raster_constants_buf, upload_buffer(viewport_constants));
 
         redef_dynamic!(
             rt_constants_buf,

@@ -10,12 +10,12 @@ license = "MIT"
 repository = "https://github.com/h3r2tic/rtoy-samples"
 
 [dependencies]
-rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
-#rendertoy = { path = "../rendertoy" }
-rtoy-rt = { git = "https://github.com/h3r2tic/rtoy-rt" }
-#rtoy-rt = { path = "../rtoy-rt" }
+#rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
+rendertoy = { path = "../rendertoy" }
+#rtoy-rt = { git = "https://github.com/h3r2tic/rtoy-rt" }
+rtoy-rt = { path = "../rtoy-rt" }
 rand = "0.6.5"
-snoozy = { git = "https://github.com/h3r2tic/snoozy" }
-#snoozy = { path = "../snoozy" }
+#snoozy = { git = "https://github.com/h3r2tic/snoozy" }
+snoozy = { path = "../snoozy" }
 #serde = "1.0.80"
 #serde_derive = "1.0"

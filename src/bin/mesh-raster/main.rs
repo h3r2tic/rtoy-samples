@@ -24,7 +24,7 @@ fn main() {
         ]),
         shader_uniforms!(
             "constants": viewport_constants_buf,
-            "": make_raster_mesh(load_obj_scene(scene_file.to_string()))
+            "": upload_raster_mesh(make_raster_mesh(load_obj_scene(scene_file.to_string())))
         ),
     );
 

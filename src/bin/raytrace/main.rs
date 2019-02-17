@@ -30,7 +30,7 @@ fn main() {
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
 
     // Build a BVH and acquire a bundle of GPU buffers.
-    let bvh = build_gpu_bvh(load_obj_scene(scene_file.to_string()));
+    let bvh = upload_bvh(build_gpu_bvh(load_obj_scene(scene_file.to_string())));
 
     // Make a named slot for viewport constants. By giving it a unique name,
     // we can re-define it at runtime, and keep the lazy evaluation graph structure.
