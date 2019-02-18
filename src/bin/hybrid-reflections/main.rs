@@ -1,13 +1,6 @@
 use rendertoy::*;
 use rtoy_rt::*;
 
-#[allow(dead_code)]
-#[derive(Clone, Copy)]
-struct Constants {
-    viewport_constants: ViewportConstants,
-    light_dir: Vector4,
-}
-
 fn main() {
     let mut rtoy = Rendertoy::new();
 
@@ -23,10 +16,10 @@ fn main() {
     let scene = load_obj_scene(scene_file.to_string());
     let bvh = build_gpu_bvh(scene);
 
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
+    let mut camera =
+        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
 
-    let rt_constants_buf = init_dynamic!(upload_buffer(0u32));
-    let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
+    let constants_buf = init_dynamic!(upload_buffer(0u32));
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -35,7 +28,7 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": raster_constants_buf,
+            "constants": constants_buf,
             "": upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
@@ -44,13 +37,12 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/rt_hybrid_reflections.glsl")),
         shader_uniforms!(
-            "constants": rt_constants_buf,
-            "": upload_bvh(bvh),
+            "constants": constants_buf,
             "inputTex": gbuffer_tex,
+            "": upload_raster_mesh(make_raster_mesh(scene)),
+            "": upload_bvh(bvh),
         ),
     );
-
-    let mut light_angle = 0.0f32;
 
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state, 1.0 / 60.0);
@@ -58,17 +50,7 @@ fn main() {
         let viewport_constants =
             ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();
 
-        light_angle += 0.01;
-
-        redef_dynamic!(raster_constants_buf, upload_buffer(viewport_constants));
-
-        redef_dynamic!(
-            rt_constants_buf,
-            upload_buffer(Constants {
-                viewport_constants,
-                light_dir: Vector4::new(light_angle.cos(), 0.5, light_angle.sin(), 0.0)
-            })
-        );
+        redef_dynamic!(constants_buf, upload_buffer(viewport_constants));
 
         shadowed_tex
     });

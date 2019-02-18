@@ -2,6 +2,7 @@
 #include "rendertoy::shaders/sampling.inc"
 #include "rtoy-rt::shaders/rt.inc"
 #include "inc/uv.inc"
+#include "inc/mesh_vertex.inc"
 
 uniform sampler2D inputTex;
 
@@ -13,8 +14,15 @@ layout(std430) buffer constants {
     mat4 clip_to_view;
     mat4 world_to_view;
     mat4 view_to_world;
-    vec4 light_dir_pad;
 };
+
+layout(std430) buffer mesh_vertex_buf {
+    VertexPacked vertices[];
+};
+
+vec3 diffuse_at_normal(vec3 n) {
+    return 0.3 + max(0.0, dot(n, normalize(vec3(1, 1, -1)))).xxx;
+}
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
@@ -28,6 +36,8 @@ void main() {
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
     vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
     vec3 v = -normalize(ray_dir_ws.xyz);
+
+    const float albedo_scale = 0.04;
 
     if (gbuffer.a != 0.0) {
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
@@ -48,7 +58,7 @@ void main() {
         if (raytrace(r, hit)) {
             Triangle tri = unpack_triangle(bvh_triangles[hit.tri_idx]);
             vec3 hit_normal = normalize(cross(tri.e0, tri.e1));
-            refl_col = (hit_normal * 0.5 + 0.5) * 0.03;
+            refl_col = diffuse_at_normal(hit_normal) * albedo_scale;
         }
 
         float schlick = 1.0 - abs(ndotv);
@@ -56,12 +66,10 @@ void main() {
         float fresnel = mix(0.04, 1.0, schlick);
 
         col.rgb += refl_col * fresnel;
-        col.rgb += (gbuffer.xyz * 0.5 + 0.5) * (1.0 - fresnel) * 0.03;
+        col.rgb += diffuse_at_normal(gbuffer.xyz) * (1.0 - fresnel) * albedo_scale;
     } else {
         col.rgb = -v * 0.5 + 0.5;
     }
-
-    col.rgb *= 0.5;
 
     imageStore(outputTex, pix, col);
 }
