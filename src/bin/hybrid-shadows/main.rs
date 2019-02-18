@@ -28,30 +28,26 @@ fn main() {
     let rt_constants_buf = init_dynamic!(upload_buffer(0u32));
     let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
 
-    let raster_uniforms = shader_uniforms!(
-        "constants": raster_constants_buf,
-        "": upload_raster_mesh(make_raster_mesh(scene))
-    );
-
     let gbuffer_tex = raster_tex(
         tex_key,
         make_raster_pipeline(vec![
             load_vs(asset!("shaders/raster_simple_vs.glsl")),
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
-        raster_uniforms,
-    );
-
-    let rt_uniforms = shader_uniforms!(
-        "constants": rt_constants_buf,
-        "": upload_bvh(bvh),
-        "inputTex": gbuffer_tex,
+        shader_uniforms!(
+            "constants": raster_constants_buf,
+            "": upload_raster_mesh(make_raster_mesh(scene))
+        ),
     );
 
     let shadowed_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/rt_hybrid_shadows.glsl")),
-        rt_uniforms,
+        shader_uniforms!(
+            "constants": rt_constants_buf,
+            "": upload_bvh(bvh),
+            "inputTex": gbuffer_tex,
+        ),
     );
 
     let mut light_angle = 0.0f32;
