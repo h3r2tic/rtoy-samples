@@ -13,5 +13,5 @@ in vec4 v_clip_position;
 
 void main() {
     float z_over_w = v_clip_position.z / v_clip_position.w;
-    out_color = vec4(v_normal, z_over_w);
+    out_color = vec4(normalize(v_normal), z_over_w);
 }
