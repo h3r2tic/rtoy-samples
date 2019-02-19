@@ -1,6 +1,13 @@
 use rendertoy::*;
 use rtoy_rt::*;
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct Constants {
+    viewport_constants: ViewportConstants,
+    frame_idx: u32,
+}
+
 fn main() {
     let mut rtoy = Rendertoy::new();
 
@@ -44,14 +51,23 @@ fn main() {
         ),
     );
 
+    let mut frame_idx = 0u32;
+
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state, 1.0 / 60.0);
 
         let viewport_constants =
             ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();
 
-        redef_dynamic!(constants_buf, upload_buffer(viewport_constants));
+        redef_dynamic!(
+            constants_buf,
+            upload_buffer(Constants {
+                viewport_constants,
+                frame_idx
+            })
+        );
 
+        frame_idx += 1;
         shadowed_tex
     });
 }
