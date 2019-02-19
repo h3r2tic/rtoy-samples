@@ -41,7 +41,7 @@ struct BrdfEvalResult {
     vec3 direction;
 };
 
-vec3 brdf_value(BrdfEvalResult e) {
+float brdf_value(BrdfEvalResult e) {
     return e.value_over_pdf * e.pdf;
 }
 
