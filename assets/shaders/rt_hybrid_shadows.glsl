@@ -2,6 +2,7 @@
 #include "rendertoy::shaders/sampling.inc"
 #include "rtoy-rt::shaders/rt.inc"
 #include "inc/uv.inc"
+#include "inc/pack_unpack.inc"
 
 uniform sampler2D inputTex;
 
@@ -21,11 +22,12 @@ void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
     vec4 gbuffer = texelFetch(inputTex, pix, 0);
+    vec3 normal = unpack_normal_11_10_11(gbuffer.x);
 
     vec3 l = normalize(light_dir_pad.xyz);
 
-    vec4 col = vec4(gbuffer.xyz * 0.5 + 0.5, 1);
-    col.rgb *= max(0.0, dot(gbuffer.xyz, l));
+    vec4 col = vec4(normal * 0.5 + 0.5, 1);
+    col.rgb *= max(0.0, dot(normal, l));
 
     if (gbuffer.a != 0.0) {
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);

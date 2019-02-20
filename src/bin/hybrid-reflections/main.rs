@@ -9,6 +9,30 @@ struct Constants {
     frame_idx: u32,
 }
 
+fn temporal_accumulate(
+    input: SnoozyRef<Texture>,
+    tex_key: TextureKey,
+) -> (SnoozyRef<f32>, SnoozyRef<Texture>) {
+    let temporal_blend = init_dynamic!(const_f32(1f32));
+
+    let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
+
+    redef_dynamic!(
+        accum_tex,
+        compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/blend.glsl")),
+            shader_uniforms!(
+                "inputTex1": accum_tex,
+                "inputTex2": input,
+                "blendAmount": temporal_blend,
+            )
+        )
+    );
+
+    (temporal_blend, accum_tex)
+}
+
 fn main() {
     let mut rtoy = Rendertoy::new();
 
@@ -40,7 +64,7 @@ fn main() {
         ),
     );
 
-    let reflected_tex = compute_tex(
+    let out_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/rt_hybrid_reflections.glsl")),
         shader_uniforms!(
@@ -51,29 +75,19 @@ fn main() {
         ),
     );
 
-    // We temporally accumulate raytraced images. The blend factor gets re-defined every frame.
-    let temporal_blend = init_dynamic!(const_f32(1f32));
+    let (temporal_blend, out_tex) = temporal_accumulate(out_tex, tex_key);
 
-    // Need a valid value for the accumulation history. Black will do.
-    let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
-
-    // Re-define the resource with a cycle upon itself -- every time it gets evaluated,
-    // it will use its previous value for "history", and produce a new value.
-    redef_dynamic!(
-        accum_tex,
-        compute_tex(
-            tex_key,
-            load_cs(asset!("shaders/blend.glsl")),
-            shader_uniforms!(
-                "inputTex1": accum_tex,
-                "inputTex2": reflected_tex,
-                "blendAmount": temporal_blend,
-            )
-        )
+    // Finally, chain a post-process sharpening effect to the output.
+    let out_tex = compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/adaptive_sharpen.glsl")),
+        shader_uniforms!(
+            "inputTex": out_tex,
+            "constants": init_dynamic!(upload_buffer(0.4f32)),
+        ),
     );
 
     let mut frame_idx = 0u32;
-
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state, 1.0 / 60.0);
 
@@ -108,6 +122,6 @@ fn main() {
         );
 
         frame_idx += 1;
-        accum_tex
+        out_tex
     });
 }

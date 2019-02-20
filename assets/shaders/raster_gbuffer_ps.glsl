@@ -1,3 +1,5 @@
+#include "inc/pack_unpack.inc"
+
 layout(location = 0) out vec4 out_color;
 
 layout(std430) buffer constants {
@@ -13,5 +15,11 @@ in vec4 v_clip_position;
 
 void main() {
     float z_over_w = v_clip_position.z / v_clip_position.w;
-    out_color = vec4(normalize(v_normal), z_over_w);
+    float roughness = 0.1;
+
+    vec4 res = 0.0.xxxx;
+    res.x = pack_normal_11_10_11(normalize(v_normal));
+    res.y = roughness;
+    res.w = z_over_w;
+    out_color = res;
 }
