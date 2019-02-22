@@ -34,14 +34,17 @@ vec3 diffuse_at_point(vec3 pos, vec3 normal, vec3 v) {
     vec3 col = 0.0.xxx;
 
     vec3 l = normalize(vec3(0.5, 0.3, -0.6));
+    float ndotl = max(0.0, dot(l, normal));
 
-    Ray sr;
-    sr.d = l;
-    sr.o = pos.xyz;
-    sr.o += (v + sr.d) * (1e-4 * length(sr.o));
+    if (ndotl > 0.0) {
+        Ray sr;
+        sr.d = l;
+        sr.o = pos.xyz;
+        sr.o += (v + sr.d) * (1e-4 * length(sr.o));
 
-    if (!raytrace_intersects_any(sr)) {
-        col += max(0.0, dot(sr.d, normal)) * 20.0;
+        if (!raytrace_intersects_any(sr)) {
+            col += ndotl * 20.0;
+        }
     }
 
     col += sample_environment_light(normal);

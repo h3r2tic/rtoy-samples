@@ -74,10 +74,13 @@ void main() {
         vec3 hit_pos = r.o + r.d * hit.t;
         hit_pos -= r.d * 1e-4 * length(hit_pos);
 
-        r.o = hit_pos;
-        r.d = l;
+        bool shadowed = true;
+        if (ndotl > 0.0) {
+            r.o = hit_pos;
+            r.d = l;
 
-        bool shadowed = raytrace_intersects_any(r);
+            shadowed = raytrace_intersects_any(r);
+        }
 
         float diffuse_albedo = 0.7;
         vec3 ambient = 0.0.xxx;

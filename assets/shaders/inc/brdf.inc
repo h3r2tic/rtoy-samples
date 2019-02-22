@@ -8,8 +8,8 @@ struct BrdfSampleParams {
 
 struct BrdfEvalParams {
     vec3 normal;
-    vec3 outgoing;
-    vec3 incident;
+    vec3 outgoing;  // "towards light"
+    vec3 incident;  // "towards eye"
     vec3 microfacet_normal;
 };
 
@@ -18,7 +18,7 @@ vec3 calculate_microfacet_normal(vec3 incident, vec3 outgoing) {
 }
 
 struct BrdfEvalResult {
-	// Defined wrt the projected solid angle measure.
+	// Defined wrt the projected solid angle measure (no ndotl)
     float value;
 	float value_over_pdf;
 	float pdf;
@@ -92,7 +92,7 @@ BrdfEvalResult evaluate_ggx(BrdfEvalParams params, GgxParams brdf_params) {
 		/ (ndotm * jacobian)
 		* g_smith_ggx(ndotv, ndotl, brdf_params.roughness)
 		/ (4 * ndotv * ndotl);
-        
+
     eval.ldotm = ldotm;
 
     return eval;
