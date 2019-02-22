@@ -8,8 +8,8 @@ struct BrdfSampleParams {
 
 struct BrdfEvalParams {
     vec3 normal;
-    vec3 outgoing;  // "towards light"
-    vec3 incident;  // "towards eye"
+    vec3 outgoing;  // "towards eye"
+    vec3 incident;  // "towards light"
     vec3 microfacet_normal;
 };
 
@@ -61,7 +61,7 @@ float g_smith_ggx_correlated(float ndotv, float ndotl, float alpha_g)
 
 float g_smith_ggx(float ndotv, float ndotl, float alpha_g)
 {
-#if 1
+#if 0
 	return g_smith_ggx_correlated(ndotl, ndotv, alpha_g);
 #else
 	return g_smith_ggx1(ndotl, alpha_g) * g_smith_ggx1(ndotv, alpha_g);
@@ -72,7 +72,7 @@ BrdfEvalResult evaluate_ggx(BrdfEvalParams params, GgxParams brdf_params) {
     float a2 = brdf_params.roughness * brdf_params.roughness;
     vec3 m = params.microfacet_normal;
 
-    float ndotv = dot(params.normal, params.outgoing);
+    float ndotv = abs(dot(params.normal, params.outgoing));
     float ndotl = dot(params.normal, params.incident);
     float ndotm = dot(params.normal, m);
     float ldotm = dot(params.incident, m);
@@ -83,15 +83,24 @@ BrdfEvalResult evaluate_ggx(BrdfEvalParams params, GgxParams brdf_params) {
 	float jacobian = 1.0 / (4.0 * ldotm);
 
     BrdfEvalResult eval;
-	eval.pdf = d_val * ndotm * jacobian;
-    eval.value = 1.0
-		* d_val
-		* g_smith_ggx(ndotv, ndotl, brdf_params.roughness)
-		/ (4 * ndotv * ndotl);
-	eval.value_over_pdf = 1.0
-		/ (ndotm * jacobian)
-		* g_smith_ggx(ndotv, ndotl, brdf_params.roughness)
-		/ (4 * ndotv * ndotl);
+    float denom = 4 * ndotv * ndotl;
+
+    if (denom > 0.0) {
+    	eval.pdf = d_val * ndotm * jacobian;
+        eval.value = 1.0
+    		* d_val
+    		* g_smith_ggx(ndotv, ndotl, brdf_params.roughness)
+    		/ denom
+            ;
+    	eval.value_over_pdf = 1.0
+    		/ (ndotm * jacobian)
+    		* g_smith_ggx(ndotv, ndotl, brdf_params.roughness)
+    		/ denom;
+    } else {
+        eval.pdf = 0.0;
+        eval.value = 0.0;
+        eval.value_over_pdf = 0.0;
+    }
 
     eval.ldotm = ldotm;
 
