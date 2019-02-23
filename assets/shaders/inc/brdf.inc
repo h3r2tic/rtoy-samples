@@ -72,10 +72,10 @@ BrdfEvalResult evaluate_ggx(BrdfEvalParams params, GgxParams brdf_params) {
     float a2 = brdf_params.roughness * brdf_params.roughness;
     vec3 m = params.microfacet_normal;
 
-    float ndotv = abs(dot(params.normal, params.outgoing));
-    float ndotl = dot(params.normal, params.incident);
-    float ndotm = dot(params.normal, m);
-    float ldotm = dot(params.incident, m);
+    float ndotv = max(0.0, dot(params.normal, params.outgoing));
+    float ndotl = max(0.0, dot(params.normal, params.incident));
+    float ndotm = max(0.0, dot(params.normal, m));
+    float ldotm = max(0.0, dot(params.incident, m));
 
     float d_val = d_ggx(a2, ndotm);
 

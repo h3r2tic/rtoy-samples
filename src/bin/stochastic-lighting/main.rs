@@ -42,8 +42,8 @@ fn main() {
         format: gl::RGBA32F,
     };
 
-    //let scene_file = "assets/meshes/flying_trabant.obj.gz";
-    let scene_file = "assets/meshes/veach-mis-scaled.obj";
+    let scene_file = "assets/meshes/flying_trabant.obj.gz";
+    //let scene_file = "assets/meshes/veach-mis-scaled.obj";
 
     let scene = load_obj_scene(scene_file.to_string());
     let bvh = build_gpu_bvh(scene);

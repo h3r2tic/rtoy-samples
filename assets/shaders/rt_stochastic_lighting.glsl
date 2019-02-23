@@ -24,9 +24,10 @@ layout(std430) buffer mesh_vertex_buf {
 };
 
 Triangle get_light_source() {
-    float size = 200.0;
+    float size = 1000.0;
     Triangle tri;
-    tri.v = vec3(-200, 100, -99);
+    //tri.v = vec3(-200, 100, -99);
+    tri.v = vec3(-200, 200, 0);
     tri.e0 = vec3(0, 0, 1) * size;
     tri.e1 = vec3(0, -1, 0.5) * size;
     return tri;
@@ -73,7 +74,7 @@ void main() {
     vec4 gbuffer = texelFetch(inputTex, pix, 0);
 
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
-    float roughness = gbuffer.y;
+    float roughness = 0.1;//gbuffer.y;
     vec4 col = vec4(0.0.xxx, 1);
 
     vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
@@ -95,48 +96,90 @@ void main() {
 
         uint seed0 = hash(pix.x);
         seed0 = hash(seed0 ^ pix.y);
-        seed0 = hash(seed0 ^ (frame_idx));
-        uint seed1 = hash(seed0);
+        seed0 = seed0 ^ (frame_idx);
+        uint seed1 = seed0;
 
-        vec3 basis0 = normalize(build_orthonormal_basis(normal));
-        vec3 basis1 = cross(basis0, normal);
-        mat3 basis = mat3(basis0, basis1, normal);
+        const uint light_sample_count = 1;
 
-        vec2 urand = vec2(rand_float(seed0), rand_float(seed1));
-        LightSampleResult light_sample = sample_light(get_light_source(), urand);
-        vec3 to_light = light_sample.pos - ray_origin_ws.xyz;
-        float to_light_sqlen = dot(to_light, to_light);
-        vec3 l = to_light / sqrt(to_light_sqlen);
-        float emission = max(0.0, dot(-l, light_sample.normal));
+        float reservoir_lpdf = -1.0;
+        vec3 reservoir_point_on_light = vec3(0);
+        float reservoir_rate_sum = 0.0;
+        //float reservoir_emission = 0.0;
+
+        for (uint light_sample_i = 0; light_sample_i < light_sample_count; ++light_sample_i) {
+            seed0 = hash(seed1);
+            seed1 = hash(seed0);
+
+            vec2 urand = vec2(rand_float(seed0), rand_float(seed1));
+            LightSampleResult light_sample = sample_light(get_light_source(), urand);
+            vec3 to_light = light_sample.pos - ray_origin_ws.xyz;
+            float to_light_sqlen = dot(to_light, to_light);
+            vec3 l = to_light / sqrt(to_light_sqlen);
+            //float emission = max(0.0, dot(-l, light_sample.normal));
+
+            vec3 microfacet_normal = calculate_microfacet_normal(l, v);
+
+            float bpdf = d_ggx(roughness * roughness, dot(microfacet_normal, normal));
+
+            float vis_term = max(0.0, dot(-l, light_sample.normal)) * max(0.0, dot(normal, l)) / to_light_sqlen;
+			float light_sel_rate = bpdf * vis_term;
+            //float light_sel_rate = 1.0;
+            //float light_sel_rate = max(1e-20, bpdf);
+
+            float light_sel_prob = light_sel_rate / (reservoir_rate_sum + light_sel_rate);
+            float light_sel_dart = rand_float(hash(seed0 ^ seed1));
+
+            reservoir_rate_sum += light_sel_rate;
+
+            if (light_sel_prob < light_sel_dart) {
+                continue;
+            }
+
+            float pdf = light_sample.pdf;
+
+            // Convert from area measure to projected solid angle measure
+            pdf /= vis_term;
+
+            reservoir_lpdf = pdf * light_sel_rate;
+            reservoir_point_on_light = light_sample.pos;
+            //reservoir_emission = emission;
+        }
+        
+        vec3 l = normalize(reservoir_point_on_light - ray_origin_ws.xyz);
 
         Ray r;
         r.o = ray_origin_ws.xyz + l * (1e-4 * length(ray_origin_ws.xyz));
-        r.d = (light_sample.pos - r.o) - l * (1e-4 * length(light_sample.pos));
-        
+        r.d = (reservoir_point_on_light - r.o) - l * (1e-4 * length(reservoir_point_on_light));
+
         if (!raytrace_intersects_any(r))
         {
+            vec3 microfacet_normal = calculate_microfacet_normal(l, v);
+
             BrdfEvalParams brdf_eval_params;
             brdf_eval_params.normal = normal;
             brdf_eval_params.outgoing = v;
             brdf_eval_params.incident = l;
-            brdf_eval_params.microfacet_normal = calculate_microfacet_normal(l, v);
+            brdf_eval_params.microfacet_normal = microfacet_normal;
 
             GgxParams ggx_params;
-            ggx_params.roughness = 0.1;
+            ggx_params.roughness = roughness;
 
             BrdfEvalResult brdf_result = evaluate_ggx(brdf_eval_params, ggx_params);
             float refl = brdf_result.value;
-            float pdf = light_sample.pdf;
-
-            // Convert from area measure to projected solid angle measure
-            pdf /= max(0.0, dot(-l, light_sample.normal)) * max(0.0, dot(normal, l)) / to_light_sqlen;
+            float pdf = reservoir_lpdf / reservoir_rate_sum;
 
             if (pdf > 0.0) {
-                col.rgb += emission * refl * max(0.0, dot(normal, l)) / pdf;
+                col.rgb += 1.0
+                * 0.5
+                //* reservoir_emission
+                * refl
+                //* max(0.0, dot(normal, l))
+                / pdf
+                / light_sample_count;
             }
         }
 
-        col.rgb += 0.01;
+        //col.rgb += 0.01;
     }
 
     {
@@ -146,7 +189,7 @@ void main() {
         vec3 barycentric;
         if (intersect_ray_tri(r, get_light_source(), distance_to_surface, barycentric))
         {
-            col.rgb = vec3(1, 0, 0);
+            col.rgb = 0.5.xxx;
         }
     }
 
