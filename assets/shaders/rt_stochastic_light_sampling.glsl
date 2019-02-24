@@ -24,12 +24,12 @@ layout(std430) buffer mesh_vertex_buf {
 };
 
 Triangle get_light_source() {
-    float size = 2000.0;
+    float size = 400.0;
     Triangle tri;
     //tri.v = vec3(-300, 100, -99);
-    tri.v = vec3(0, -803, 300);
-    tri.e0 = vec3(-0.5, 1, -1) * size;
-    tri.e1 = vec3(-0.5, 1, 1) * size;
+    tri.v = vec3(-300.0, -size * 8.0 / 20.0, size * 3.0 / 20.0);
+    tri.e0 = vec3(0.0, 1, -1) * size;
+    tri.e1 = vec3(0.0, 1, 1) * size;
     return tri;
 }
 
@@ -175,7 +175,7 @@ void main() {
 
             vec2 urand = vec2(rand_float(seed0), rand_float(seed1));
             
-            #if 1
+            #if 0
             LightSampleResultAm light_sample = sample_light(get_light_source(), urand);
             #else
             LightSampleResultSam light_sample = sample_light_sam(ray_origin_ws.xyz, get_light_source(), urand);
@@ -193,10 +193,14 @@ void main() {
             float lndotl = max(0.0, dot(-l, light_sample.normal));
             
             float vis_term = ndotl * lndotl / to_light_sqlen;
-            float light_sel_rate = bpdf;
-			//float light_sel_rate = bpdf * vis_term;
+            //float light_sel_rate = bpdf;
+			float light_sel_rate = bpdf * vis_term;
             //float light_sel_rate = 1.0;
             //float light_sel_rate = max(1e-20, bpdf);
+            //float light_sel_rate = max(1.0, bpdf);
+
+            // TODO: why does this produce more stable results?
+            light_sel_rate = sqrt(light_sel_rate);
 
             float light_sel_prob = light_sel_rate / (reservoir_rate_sum + light_sel_rate);
             float light_sel_dart = rand_float(hash(seed0 ^ seed1));
@@ -221,7 +225,8 @@ void main() {
             r.o = ray_origin_ws.xyz + l * (1e-4 * length(ray_origin_ws.xyz));
             r.d = (reservoir_point_on_light - r.o) - l * (1e-4 * length(reservoir_point_on_light));
 
-            if (!raytrace_intersects_any(r, 1.0)) {
+            if (!raytrace_intersects_any(r, 1.0))
+            {
                 col = vec4(reservoir_point_on_light, reservoir_lpdf / reservoir_rate_sum * light_sample_count);
             }
         }

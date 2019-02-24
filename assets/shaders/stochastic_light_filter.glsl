@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/random.inc"
 #include "inc/uv.inc"
 #include "inc/pack_unpack.inc"
 #include "inc/math.inc"
@@ -109,7 +110,7 @@ struct SurfaceInfo2 {
 
 void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility, inout int scount, inout vec3 lcol, inout float wsum)
 {
-    float k = 11.0;
+    float k = 6.0;
 
 	//ivec2 xyoff = ivec2((rotate2d(material.seed * PI) * poissonOffsets[sidx]) * k);
 	ivec2 xyoff = ivec2(poissonOffsets[sidx] * k);
@@ -118,8 +119,10 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
 	float w = 1.0;
 	//float w = exp(-0.02 * dot(vec2(xyoff), vec2(xyoff)));
 
+    ivec2 sample_px = ivec2(px) + xyoff;
+
 	//vec4 hit_data = texelFetch(iChannel0, ivec2(px) + ivec2(xoff * km, yoff * km), 0);
-	vec4 hit_data = texelFetch(g_lightSamplesTex, ivec2(px) + xyoff, 0);
+	vec4 hit_data = texelFetch(g_lightSamplesTex, sample_px, 0);
 
 	float lpdf = hit_data.w;
 	vec3 hitOffset = hit_data.xyz - surface.point;
@@ -132,9 +135,10 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
 		vec4 surfacePckd = texelFetch(g_primaryVisTex, ivec2(px) + xyoff, 0);
 		vec3 neighPoint = unpackSurfacePoint(surfacePckd,  ivec2(px) + xyoff);*/
         vec3 neighPoint;
+        vec3 neighNorm;
         {
-            vec4 gbuffer_packed = texelFetch(g_primaryVisTex, ivec2(px) + xyoff, 0);
-            vec2 uv = get_uv(ivec2(px) + xyoff, outputTex_size);
+            vec4 gbuffer_packed = texelFetch(g_primaryVisTex, sample_px, 0);
+            vec2 uv = get_uv(sample_px, outputTex_size);
 
             Gbuffer gbuffer;
             unpack_gbuffer(gbuffer_packed, gbuffer);
@@ -144,24 +148,24 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
             ray_origin_ws /= ray_origin_ws.w;
 
             neighPoint = ray_origin_ws.xyz;
+            neighNorm = gbuffer.normal;
         }
 
 		lpdf *= hitOffsetLenSq / max(1e-10, dist_squared(neighPoint, hit_data.xyz));
 
-		// Approximate shadowing
-		vec3 surfaceOffset = neighPoint - surface.point;
+#if 0
+        float cutoff_threshold = 0.9;
+        float cutoff_value = dot(neighNorm, surface.normal);
+#else
+        float a2 = surface.roughness * surface.roughness;
+        float cutoff_threshold = d_ggx(a2, 1.0) * 0.1;
+        float cutoff_value = d_ggx(a2, dot(neighNorm, surface.normal));
+#endif
 
-		/*if (dot(hitOffset, surface.normal) * 0.2 / length(hitOffset) < dot(surfaceOffset, surface.normal) / length(surfaceOffset))
-		{
-			w = 0;
-		}*/
-
-		// TODO: what of non-overlapping horizons?
-
-		//lpdf /= max(1e-5, dot(neighSurface.normal, normalize(hit_data.xyz - neighPoint)));
-		/*if (dot(surface.normal, hit_data.xyz - surface.point) <= 0.0) {
-			lpdf = -1;
-		}*/
+        if (cutoff_value < cutoff_threshold)
+        {
+            lpdf = -1;
+        }
 	}
 
 	vec3 lightSample = hitOffset / sqrt(hitOffsetLenSq);
@@ -195,9 +199,15 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
 
         p *= brdf_result.value;
 		p /= lpdf;
-        //p *= bdf_result.value_over_pdf;
 
 		p *= saturate(ndotl);
+
+        {
+            // TEMP: Renormalize; fit by Patapom (https://patapom.com/blog/BRDF/MSBRDFEnergyCompensation/)
+            float a = surface.roughness;
+            float energy = PI - 0.446898 * a - 5.72019 * a * a + 6.61848 * a * a * a - 2.41727 * a * a * a * a;
+            p *= PI / energy;
+        }
 
 		//if (p.x > 0.)
 		{
@@ -310,7 +320,7 @@ void main() {
 
 
 
-    finalColor.rgb *= 0.5;
+    finalColor.rgb *= 0.75;
 
     //finalColor.rgb /= 2;
 
