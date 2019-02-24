@@ -12,8 +12,8 @@ repository = "https://github.com/h3r2tic/rtoy-samples"
 [dependencies]
 rendertoy = { git = "https://github.com/h3r2tic/rendertoy" }
 #rendertoy = { path = "../rendertoy" }
-#rtoy-rt = { git = "https://github.com/h3r2tic/rtoy-rt" }
-rtoy-rt = { path = "../rtoy-rt" }
+rtoy-rt = { git = "https://github.com/h3r2tic/rtoy-rt" }
+#rtoy-rt = { path = "../rtoy-rt" }
 snoozy = { git = "https://github.com/h3r2tic/snoozy" }
 #snoozy = { path = "../snoozy" }
 rand = "0.6.5"

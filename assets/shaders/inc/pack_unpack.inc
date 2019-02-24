@@ -1,7 +1,3 @@
-float saturate(float a) {
-    return clamp(a, 0.0, 1.0);
-}
-
 float unpack_unorm(uint pckd, uint bitCount) {
 	uint maxVal = (1u << bitCount) - 1;
 	return float(pckd & maxVal) / maxVal;
@@ -9,7 +5,7 @@ float unpack_unorm(uint pckd, uint bitCount) {
 
 uint pack_unorm(float val, uint bitCount) {
 	uint maxVal = (1u << bitCount) - 1;
-	return uint(saturate(val) * maxVal);
+	return uint(clamp(val, 0.0, 1.0) * maxVal);
 }
 
 float pack_normal_11_10_11(vec3 n) {

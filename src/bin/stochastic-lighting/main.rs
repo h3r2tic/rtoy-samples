@@ -65,16 +65,40 @@ fn main() {
         ),
     );
 
-    let out_tex = compute_tex(
-        tex_key,
-        load_cs(asset!("shaders/rt_stochastic_lighting.glsl")),
-        shader_uniforms!(
-            "constants": constants_buf,
-            "inputTex": gbuffer_tex,
-            "": upload_raster_mesh(make_raster_mesh(scene)),
-            "": upload_bvh(bvh),
-        ),
-    );
+    let out_tex = if false {
+        compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/rt_stochastic_lighting.glsl")),
+            shader_uniforms!(
+                "constants": constants_buf,
+                "inputTex": gbuffer_tex,
+                "": upload_raster_mesh(make_raster_mesh(scene)),
+                "": upload_bvh(bvh),
+            ),
+        )
+    } else {
+        let out_tex = compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/rt_stochastic_light_sampling.glsl")),
+            shader_uniforms!(
+                "constants": constants_buf,
+                "inputTex": gbuffer_tex,
+                "": upload_raster_mesh(make_raster_mesh(scene)),
+                "": upload_bvh(bvh),
+            ),
+        );
+
+        compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/stochastic_light_filter.glsl")),
+            shader_uniforms!(
+                //"g_frameIndex": frame_index,
+                //"g_mouseX": mouse_x,
+                "g_primaryVisTex": gbuffer_tex,
+                "g_lightSamplesTex": out_tex,
+            ),
+        )
+    };
 
     let (temporal_blend, out_tex) = temporal_accumulate(out_tex, tex_key);
 

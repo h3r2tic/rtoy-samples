@@ -6,6 +6,10 @@ vec2 get_uv(vec4 texSize) {
 	return (vec2(pix) + 0.5) * texSize.zw;
 }
 
+vec2 get_uv(ivec2 pix, vec4 texSize) {
+	return (vec2(pix) + 0.5) * texSize.zw;
+}
+
 vec2 cs_to_uv(vec2 cs)
 {
 	return cs * vec2(0.5, 0.5) + vec2(0.5, 0.5);

@@ -135,11 +135,11 @@ layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
-
     vec4 gbuffer = texelFetch(inputTex, pix, 0);
+
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
-    float roughness = gbuffer.y;
-    vec4 col = vec4(0.0.xxx, 1);
+    float roughness = 0.08;//gbuffer.y;
+    vec4 col = -1.0.xxxx;
 
     vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
 
@@ -150,6 +150,8 @@ void main() {
     float distance_to_surface = 1e10;
 
     if (gbuffer.a != 0.0) {
+        col = 0.0.xxxx;
+
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
         vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
         vec4 ray_origin_ws = view_to_world * ray_origin_vs;
@@ -161,7 +163,7 @@ void main() {
         seed0 = hash(seed0 + 15488981u * uint(pix.x));
         seed0 = seed0 + 1302391u * uint(pix.y);
 
-        const uint light_sample_count = 8;
+        const uint light_sample_count = 32;
 
         float reservoir_lpdf = -1.0;
         vec3 reservoir_point_on_light = vec3(0);
@@ -173,7 +175,7 @@ void main() {
 
             vec2 urand = vec2(rand_float(seed0), rand_float(seed1));
             
-            #if 0
+            #if 1
             LightSampleResultAm light_sample = sample_light(get_light_source(), urand);
             #else
             LightSampleResultSam light_sample = sample_light_sam(ray_origin_ws.xyz, get_light_source(), urand);
@@ -205,59 +207,25 @@ void main() {
                 continue;
             }
 
-            float pdf = to_projected_solid_angle_measure(light_sample.pdf, ndotl, lndotl, to_light_sqlen);
+            //float pdf = to_projected_solid_angle_measure(light_sample.pdf, ndotl, lndotl, to_light_sqlen);
+            float pdf = to_projected_solid_angle_measure(light_sample.pdf, 1.0, lndotl, to_light_sqlen);
 
             reservoir_lpdf = pdf * light_sel_rate;
             reservoir_point_on_light = light_sample.pos;
         }
         
-        vec3 l = normalize(reservoir_point_on_light - ray_origin_ws.xyz);
+        if (reservoir_lpdf > 0.0) {
+            vec3 l = normalize(reservoir_point_on_light - ray_origin_ws.xyz);
 
-        Ray r;
-        r.o = ray_origin_ws.xyz + l * (1e-4 * length(ray_origin_ws.xyz));
-        r.d = (reservoir_point_on_light - r.o) - l * (1e-4 * length(reservoir_point_on_light));
+            Ray r;
+            r.o = ray_origin_ws.xyz + l * (1e-4 * length(ray_origin_ws.xyz));
+            r.d = (reservoir_point_on_light - r.o) - l * (1e-4 * length(reservoir_point_on_light));
 
-        if (reservoir_lpdf > 0.0 && !raytrace_intersects_any(r, 1.0))
-        {
-            vec3 microfacet_normal = calculate_microfacet_normal(l, v);
-
-            BrdfEvalParams brdf_eval_params;
-            brdf_eval_params.normal = normal;
-            brdf_eval_params.outgoing = v;
-            brdf_eval_params.incident = l;
-            brdf_eval_params.microfacet_normal = microfacet_normal;
-
-            GgxParams ggx_params;
-            ggx_params.roughness = roughness;
-
-            BrdfEvalResult brdf_result = evaluate_ggx(brdf_eval_params, ggx_params);
-            float refl = brdf_result.value;
-//            float refl = 1.0 / PI;
-            float pdf = reservoir_lpdf / reservoir_rate_sum;
-
-            if (pdf > 0.0) {
-                col.rgb += 1.0
-                * refl
-                / pdf
-                / light_sample_count;
+            if (!raytrace_intersects_any(r, 1.0)) {
+                col = vec4(reservoir_point_on_light, reservoir_lpdf / reservoir_rate_sum * light_sample_count);
             }
         }
-
-        //col.rgb += 0.01;
     }
-
-    {
-        Ray r;
-        r.o = eye_pos;
-        r.d = -v;
-        vec3 barycentric;
-        if (intersect_ray_tri(r, get_light_source(), distance_to_surface, barycentric))
-        {
-            col.rgb = 1.0.xxx;
-        }
-    }
-
-    col.rgb *= 0.5;
 
     imageStore(outputTex, pix, col);
 }
