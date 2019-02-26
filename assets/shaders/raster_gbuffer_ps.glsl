@@ -15,7 +15,7 @@ in vec4 v_clip_position;
 
 void main() {
     float z_over_w = v_clip_position.z / v_clip_position.w;
-    float roughness = 0.2;
+    float roughness = 0.25;
     //float roughness = 0.08 + pow(fract(v_world_position.z * 0.03), 2.0) * 0.3;
 
     vec4 res = 0.0.xxxx;

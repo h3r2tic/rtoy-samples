@@ -11,10 +11,6 @@ uniform sampler2D inputTex;
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
-const uint light_count = 3;
-const float light_size_scale = 0;//3.0 / float(light_count);
-const float light_size_bias = 1.0;
-
 layout(std430) buffer constants {
     mat4 view_to_clip;
     mat4 clip_to_view;
@@ -27,15 +23,15 @@ layout(std430) buffer mesh_vertex_buf {
     VertexPacked vertices[];
 };
 
+const uint light_count = 3;
+
 Triangle get_light_source(uint idx) {
     Triangle tri;
 
-    float smult = pow(sin(frame_idx * 0.008) * 0.45 + 0.55, 2.0) * 15.0 * light_size_scale + light_size_bias;
-
     float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01;
-    vec3 offset = vec3(cos(a), -0.4, sin(a)) * 350.0;
-    vec3 side = vec3(-sin(a), 0.0, cos(a)) * 30.0 * smult;
-    vec3 up = vec3(0.0, 1.0, 0.0) * 30.0 * smult;
+    vec3 offset = vec3(cos(a), 0.4, sin(a)) * 350.0;
+    vec3 side = vec3(-sin(a), 0.0, cos(a)) * 120.0 * sqrt(2.0) / 2.0;
+    vec3 up = vec3(0.0, 1.0, 0.0) * 120.0;
 
     tri.v = offset;
     tri.e0 = side + up;
@@ -208,9 +204,7 @@ void main() {
             float to_light_sqlen = dot(to_light, to_light);
             vec3 l = to_light / sqrt(to_light_sqlen);
 
-            float smult = pow(sin(frame_idx * 0.008) * 0.45 + 0.55, 2.0) * 15.0 * light_size_scale + light_size_bias;
-            float intens = 150.0 / pow(smult, 2.0);
-            vec3 em = light_colors[(seed2 % light_count) % 3u] * 15.0 * intens;
+            vec3 em = light_colors[(seed2 % light_count) % 3u] * 50.0 * light_count;
 
             vec3 microfacet_normal = calculate_microfacet_normal(l, v);
 

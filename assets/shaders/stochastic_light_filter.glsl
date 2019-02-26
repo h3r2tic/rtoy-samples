@@ -4,6 +4,9 @@
 #include "inc/math.inc"
 #include "inc/brdf.inc"
 
+// TEMP; only for Triangle
+#include "rtoy-rt::shaders/rt.inc"
+
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
@@ -14,8 +17,6 @@ uniform float g_mouseX;
 
 uniform sampler2D g_primaryVisTex;
 uniform sampler2D g_lightSamplesTex;
-
-uniform uint g_frameIndex;
 
 layout(std430) buffer constants {
     mat4 view_to_clip;
@@ -110,7 +111,7 @@ struct SurfaceInfo2 {
 
 void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility, uint seed, inout int scount, inout vec3 lcol, inout float wsum)
 {
-    float k = 8.0;
+    float k = 9.0;
 
 	//ivec2 xyoff = ivec2((rotate2d(rand_float(seed) * PI) * poissonOffsets[sidx]) * k);
 	//ivec2 xyoff = ivec2(poissonOffsets[sidx] * k);
@@ -234,6 +235,28 @@ vec4 reconstruct_lighting(SurfaceInfo2 surface, ivec2 px, uint seed)
     return vec4(lcol / max(1e-5, wsum), 1.0);
 }    
 
+const uint light_count = 3;
+
+Triangle get_light_source(uint idx) {
+    Triangle tri;
+
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01;
+    vec3 offset = vec3(cos(a), 0.4, sin(a)) * 350.0;
+    vec3 side = vec3(-sin(a), 0.0, cos(a)) * 120.0 * sqrt(2.0) / 2.0;
+    vec3 up = vec3(0.0, 1.0, 0.0) * 120.0;
+
+    tri.v = offset;
+    tri.e0 = side + up;
+    tri.e1 = -side + up;
+
+    return tri;
+}
+
+const vec3 light_colors[3] = vec3[](
+    vec3(0.7, 0.2, 1),
+    vec3(1, 0.5, 0.0),
+    vec3(0.2, 0.2, 1)
+);
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
@@ -244,26 +267,26 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     // SAMPLING 
     
 #if 0
-	uint useed = bobJenkinsHash(ivec3(ivec2(fragCoord) >> 1, g_frameIndex));
+	uint useed = bobJenkinsHash(ivec3(ivec2(fragCoord) >> 1, frame_idx));
     float seed = uintToUniformFloat(useed);
 #elif 0
-    float seed = g_frameIndex + hash12(uv);
+    float seed = frame_idx + hash12(uv);
 #else
 	float seed = 0;
 #endif
-    //float seed = float(floor(float(g_frameIndex)/10.));
+    //float seed = float(floor(float(frame_idx)/10.));
     
     // ----------------------------------
     // FINAL GATHER 
 
     vec4 finalColor = vec4(0.);
     
-    if (g_frameIndex > 0)
+    if (frame_idx > 0)
     {
         //finalColor = texture(iChannel2, uv);
     }
     
-    //if (g_frameIndex < 0.5)
+    //if (frame_idx < 0.5)
     {
 	    //RaySampleInfo currSample = setup_cameraRay(fragCoord, vec2(0));
         //RaySampleInfo currSample = setup_cameraRay(vec2(0));
@@ -277,6 +300,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             contrib.rgb += calc_light_emission(surface.point) * 0.07;
         }*/
 
+        float distance_to_surface = 1e10;
+        vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
+        vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+
         vec4 gbuffer_packed = texelFetch(g_primaryVisTex, pix, 0);
 
         Gbuffer gbuffer;
@@ -288,13 +315,13 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
                 vec4 ray_origin_ws = view_to_world * ray_origin_vs;
                 ray_origin_ws /= ray_origin_ws.w;
 
-                vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-                vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
-
                 surface.point = ray_origin_ws.xyz;
                 surface.normal = gbuffer.normal;
                 surface.wo = -normalize(ray_dir_ws.xyz);
                 surface.roughness = gbuffer.roughness;
+
+                vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
+                distance_to_surface = length(surface.point - eye_pos);
             }
 
             uint seed0 = hash(frame_idx);
@@ -304,6 +331,21 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
           	contrib += reconstruct_lighting(surface, pix, seed0);
         }
         
+        {
+            vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
+
+            Ray r;
+            r.o = eye_pos;
+            r.d = normalize(ray_dir_ws.xyz);
+            vec3 barycentric;
+
+            for (int i = 0; i < light_count; ++i) {
+                if (intersect_ray_tri(r, get_light_source(i), distance_to_surface, barycentric)) {
+                    contrib.rgb = light_colors[i] * 5.0;
+                }
+            }
+        }
+
         finalColor = contrib;
     }
     
@@ -317,15 +359,8 @@ void main() {
 
 	mainImage(finalColor, fragCoord);
 
-	// Temp
-	//finalColor /= max(1e-3, finalColor.a);
 	finalColor.a = 1.;
-
-
-
     finalColor.rgb *= 0.75;
-
-    //finalColor.rgb /= 2;
 
 	imageStore(outputTex, ivec2(gl_GlobalInvocationID.xy), finalColor);
 }

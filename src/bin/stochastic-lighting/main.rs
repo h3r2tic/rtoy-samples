@@ -9,6 +9,13 @@ struct Constants {
     frame_idx: u32,
 }
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct ReprojConstants {
+    viewport_constants: ViewportConstants,
+    prev_world_to_clip: Matrix4,
+}
+
 /*fn temporal_accumulate(
     input: SnoozyRef<Texture>,
     tex_key: TextureKey,
@@ -35,18 +42,22 @@ struct Constants {
 
 fn temporal_accumulate(
     input: SnoozyRef<Texture>,
+    reprojection_tex: SnoozyRef<Texture>,
     tex_key: TextureKey,
 ) -> (SnoozyRef<f32>, SnoozyRef<Texture>) {
     let temporal_blend = init_dynamic!(const_f32(1f32));
-
     let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
 
     redef_dynamic!(
         accum_tex,
         compute_tex(
             tex_key,
-            load_cs(asset!("shaders/area-lighting/temporal_accum.glsl")),
-            shader_uniforms!("g_prevOutputTex": accum_tex, "g_filteredLightingTex": input,)
+            load_cs(asset!("shaders/taa.glsl")),
+            shader_uniforms!(
+                "inputTex": input,
+                "historyTex": accum_tex,
+                "reprojectionTex": reprojection_tex,
+            )
         )
     );
 
@@ -68,10 +79,12 @@ fn main() {
     let scene = load_obj_scene(scene_file.to_string());
     let bvh = build_gpu_bvh(scene);
 
-    let mut camera =
-        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
+    //let mut camera =
+    //    CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
+    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
 
     let constants_buf = init_dynamic!(upload_buffer(0u32));
+    let reproj_constants = init_dynamic!(upload_buffer(0u32));
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -83,6 +96,16 @@ fn main() {
             "constants": constants_buf,
             "": upload_raster_mesh(make_raster_mesh(scene))
         ),
+    );
+
+    let reprojection_tex = compute_tex(
+        TextureKey {
+            width: rtoy.width(),
+            height: rtoy.height(),
+            format: gl::RGBA16F,
+        },
+        load_cs(asset!("shaders/reproject.glsl")),
+        shader_uniforms!("constants": reproj_constants, "inputTex": gbuffer_tex,),
     );
 
     let out_tex = if false {
@@ -120,7 +143,7 @@ fn main() {
         )
     };
 
-    let (temporal_blend, out_tex) = temporal_accumulate(out_tex, tex_key);
+    let (temporal_blend, out_tex) = temporal_accumulate(out_tex, reprojection_tex, tex_key);
 
     // Finally, chain a post-process sharpening effect to the output.
     let out_tex = compute_tex(
@@ -133,6 +156,8 @@ fn main() {
     );
 
     let mut frame_idx = 0u32;
+    let mut prev_world_to_clip = Matrix4::identity();
+
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state, 1.0 / 60.0);
 
@@ -167,6 +192,22 @@ fn main() {
                 frame_idx
             })
         );
+
+        redef_dynamic!(
+            reproj_constants,
+            upload_buffer(ReprojConstants {
+                viewport_constants: ViewportConstants::build(
+                    &camera,
+                    tex_key.width,
+                    tex_key.height
+                )
+                .finish(),
+                prev_world_to_clip
+            })
+        );
+
+        let m = camera.calc_matrices();
+        prev_world_to_clip = m.view_to_clip * m.world_to_view;
 
         frame_idx += 1;
         out_tex
