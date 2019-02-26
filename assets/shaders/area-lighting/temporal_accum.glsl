@@ -19,7 +19,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     vec3 nmin = center;
     vec3 nmax = center;
     
-	const int k = 1;
+	const int k = 2;
     for (int y = -k; y <= k; ++y) {
         for (int x = -k; x <= k; ++x) {
             vec3 neigh = texelFetch(g_filteredLightingTex, px + ivec2(x, y), 0).rgb;
@@ -44,9 +44,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 		if (true) {
 			vec3 clamped_history = clamp(history.rgb, nmin, nmax);
 			//clamped_history = mix(clamped_history, history.rgb, 0.6);
-			result = mix(clamped_history, center, 1.0 / 12.0);
+			result = mix(clamped_history, center, 1.0 / 16.0);
 		} else if (true) {
-			result = mix(history.rgb, center, 1.0 / 3.0);
+			result = mix(history.rgb, center, 1.0 / 16.0);
 		} else {
 			result = center;
 		}

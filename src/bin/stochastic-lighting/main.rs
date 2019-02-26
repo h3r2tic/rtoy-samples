@@ -151,13 +151,13 @@ fn main() {
         // filter perceptually sharpens it whilst keeping the image alias-free.
         let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
         let jitter = Vector2::new(
-            0.5 * rng.sample(StandardNormal) as f32,
-            0.5 * rng.sample(StandardNormal) as f32,
+            0.333 * rng.sample(StandardNormal) as f32,
+            0.333 * rng.sample(StandardNormal) as f32,
         );
 
         // Calculate the new viewport constants from the latest state
         let viewport_constants = ViewportConstants::build(&camera, tex_key.width, tex_key.height)
-            //            .pixel_offset(jitter)
+            .pixel_offset(jitter)
             .finish();
 
         redef_dynamic!(

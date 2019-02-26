@@ -11,6 +11,10 @@ uniform sampler2D inputTex;
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
+const uint light_count = 3;
+const float light_size_scale = 0;//3.0 / float(light_count);
+const float light_size_bias = 1.0;
+
 layout(std430) buffer constants {
     mat4 view_to_clip;
     mat4 clip_to_view;
@@ -23,15 +27,28 @@ layout(std430) buffer mesh_vertex_buf {
     VertexPacked vertices[];
 };
 
-Triangle get_light_source() {
-    float size = 400.0;
+Triangle get_light_source(uint idx) {
     Triangle tri;
-    //tri.v = vec3(-300, 100, -99);
-    tri.v = vec3(-300.0, -size * 8.0 / 20.0, size * 3.0 / 20.0);
-    tri.e0 = vec3(0.0, 1, -1) * size;
-    tri.e1 = vec3(0.0, 1, 1) * size;
+
+    float smult = pow(sin(frame_idx * 0.008) * 0.45 + 0.55, 2.0) * 15.0 * light_size_scale + light_size_bias;
+
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01;
+    vec3 offset = vec3(cos(a), -0.4, sin(a)) * 350.0;
+    vec3 side = vec3(-sin(a), 0.0, cos(a)) * 30.0 * smult;
+    vec3 up = vec3(0.0, 1.0, 0.0) * 30.0 * smult;
+
+    tri.v = offset;
+    tri.e0 = side + up;
+    tri.e1 = -side + up;
+
     return tri;
 }
+
+const vec3 light_colors[3] = vec3[](
+    vec3(0.7, 0.2, 1),
+    vec3(1, 0.5, 0.0),
+    vec3(0.2, 0.2, 1)
+);
 
 vec3 sample_point_on_triangle(Triangle tri, vec2 urand) {
     return urand.x + urand.y < 1
@@ -131,6 +148,10 @@ vec3 diffuse_at_point(vec3 pos, vec3 normal, vec3 v) {
     return col;
 }
 
+float calculate_luma(vec3 col) {
+	return dot(vec3(0.299, 0.587, 0.114), col);
+}
+
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
@@ -168,22 +189,28 @@ void main() {
         float reservoir_lpdf = -1.0;
         vec3 reservoir_point_on_light = vec3(0);
         float reservoir_rate_sum = 0.0;
+        vec3 reservoir_emission = 0.0.xxx;
 
         for (uint light_sample_i = 0; light_sample_i < light_sample_count; ++light_sample_i) {
-            uint seed1 = hash(seed0 * 32452559u);
-            seed0 = hash(seed1);
+            uint seed1 = hash(seed0);
+            uint seed2 = hash(seed1);
+            seed0 = hash(seed2);
 
             vec2 urand = vec2(rand_float(seed0), rand_float(seed1));
             
             #if 0
-            LightSampleResultAm light_sample = sample_light(get_light_source(), urand);
+            LightSampleResultAm light_sample = sample_light(get_light_source(seed2 % light_count), urand);
             #else
-            LightSampleResultSam light_sample = sample_light_sam(ray_origin_ws.xyz, get_light_source(), urand);
+            LightSampleResultSam light_sample = sample_light_sam(ray_origin_ws.xyz, get_light_source(seed2 % light_count), urand);
             #endif
 
             vec3 to_light = light_sample.pos - ray_origin_ws.xyz;
             float to_light_sqlen = dot(to_light, to_light);
             vec3 l = to_light / sqrt(to_light_sqlen);
+
+            float smult = pow(sin(frame_idx * 0.008) * 0.45 + 0.55, 2.0) * 15.0 * light_size_scale + light_size_bias;
+            float intens = 150.0 / pow(smult, 2.0);
+            vec3 em = light_colors[(seed2 % light_count) % 3u] * 15.0 * intens;
 
             vec3 microfacet_normal = calculate_microfacet_normal(l, v);
 
@@ -194,7 +221,7 @@ void main() {
             
             float vis_term = ndotl * lndotl / to_light_sqlen;
             //float light_sel_rate = bpdf;
-			float light_sel_rate = bpdf * vis_term;
+			float light_sel_rate = bpdf * vis_term * calculate_luma(em);
             //float light_sel_rate = 1.0;
             //float light_sel_rate = max(1e-20, bpdf);
             //float light_sel_rate = max(1.0, bpdf);
@@ -216,6 +243,7 @@ void main() {
 
             reservoir_lpdf = pdf * light_sel_rate;
             reservoir_point_on_light = light_sample.pos;
+            reservoir_emission = em;
         }
         
         if (reservoir_lpdf > 0.0) {
@@ -227,7 +255,13 @@ void main() {
 
             if (!raytrace_intersects_any(r, 1.0))
             {
-                col = vec4(reservoir_point_on_light, reservoir_lpdf / reservoir_rate_sum * light_sample_count);
+                vec3 pt = (world_to_view * vec4(reservoir_point_on_light, 1)).xyz;
+                vec3 emission = reservoir_emission;
+                col.r = uintBitsToFloat(packHalf2x16(pt.xy));
+                col.g = uintBitsToFloat(packHalf2x16(vec2(pt.z, emission.x)));
+                col.b = uintBitsToFloat(packHalf2x16(emission.yz));
+                col.a = reservoir_lpdf / reservoir_rate_sum * light_sample_count;
+                //col = vec4(pt, reservoir_lpdf / reservoir_rate_sum * light_sample_count);
             }
         }
     }

@@ -108,32 +108,33 @@ struct SurfaceInfo2 {
     float roughness;
 };
 
-void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility, inout int scount, inout vec3 lcol, inout float wsum)
+void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility, uint seed, inout int scount, inout vec3 lcol, inout float wsum)
 {
-    float k = 6.0;
+    float k = 8.0;
 
-	//ivec2 xyoff = ivec2((rotate2d(material.seed * PI) * poissonOffsets[sidx]) * k);
-	ivec2 xyoff = ivec2(poissonOffsets[sidx] * k);
-
-	//float w = exp(-1.0 * float(xyoff.x * xyoff.x + xyoff.y * xyoff.y) / float((k+1.) * (k+1.)));
+	//ivec2 xyoff = ivec2((rotate2d(rand_float(seed) * PI) * poissonOffsets[sidx]) * k);
+	//ivec2 xyoff = ivec2(poissonOffsets[sidx] * k);
+    ivec2 xyoff = ivec2((rotate2d(((px.x & 1) + 2 * (px.y & 1)) * 0.3539) * poissonOffsets[sidx]) * k);
 	float w = 1.0;
-	//float w = exp(-0.02 * dot(vec2(xyoff), vec2(xyoff)));
 
     ivec2 sample_px = ivec2(px) + xyoff;
 
-	//vec4 hit_data = texelFetch(iChannel0, ivec2(px) + ivec2(xoff * km, yoff * km), 0);
 	vec4 hit_data = texelFetch(g_lightSamplesTex, sample_px, 0);
+    vec3 point_on_light;
+    vec3 le;
+    point_on_light.xy = unpackHalf2x16(floatBitsToUint(hit_data.x));
+    point_on_light.z = unpackHalf2x16(floatBitsToUint(hit_data.y)).x;
+    le.x = unpackHalf2x16(floatBitsToUint(hit_data.y)).y;
+    le.yz = unpackHalf2x16(floatBitsToUint(hit_data.z));
+    point_on_light = (view_to_world * vec4(point_on_light, 1)).xyz;
 
 	float lpdf = hit_data.w;
-	vec3 hitOffset = hit_data.xyz - surface.point;
+	vec3 hitOffset = point_on_light - surface.point;
 	float hitOffsetLenSq = dot(hitOffset, hitOffset);
 
 	// Adjust the PDF of the borrowed sample. It's defined wrt the solid angle
 	// of the neighbor. We need to transform it into the solid angle of the current point.
 	if (approxVisibility) {
-		/*RaySampleInfo neighSample = setup_cameraRay(ivec2(px) + xyoff, vec2(0));
-		vec4 surfacePckd = texelFetch(g_primaryVisTex, ivec2(px) + xyoff, 0);
-		vec3 neighPoint = unpackSurfacePoint(surfacePckd,  ivec2(px) + xyoff);*/
         vec3 neighPoint;
         vec3 neighNorm;
         {
@@ -141,7 +142,11 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
             vec2 uv = get_uv(sample_px, outputTex_size);
 
             Gbuffer gbuffer;
-            unpack_gbuffer(gbuffer_packed, gbuffer);
+            if (!unpack_gbuffer(gbuffer_packed, gbuffer)) {
+                w = 0;
+                return;
+            }
+
             vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer_packed.w, 1.0);
             vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
             vec4 ray_origin_ws = view_to_world * ray_origin_vs;
@@ -151,16 +156,11 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
             neighNorm = gbuffer.normal;
         }
 
-		lpdf *= hitOffsetLenSq / max(1e-10, dist_squared(neighPoint, hit_data.xyz));
+		lpdf *= hitOffsetLenSq / max(1e-10, dist_squared(neighPoint, point_on_light));
 
-#if 0
-        float cutoff_threshold = 0.9;
-        float cutoff_value = dot(neighNorm, surface.normal);
-#else
         float a2 = surface.roughness * surface.roughness;
-        float cutoff_threshold = d_ggx(a2, 1.0) * 0.1;
+        float cutoff_threshold = d_ggx(a2, 1.0) * 0.8;
         float cutoff_value = d_ggx(a2, dot(neighNorm, surface.normal));
-#endif
 
         if (cutoff_value < cutoff_threshold)
         {
@@ -169,7 +169,6 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
 	}
 
 	vec3 lightSample = hitOffset / sqrt(hitOffsetLenSq);
-	vec3 le = 1.0.xxx;//calc_light_emission(hit_data.xyz);
 	float ndotl = dot(lightSample, surface.normal);
 
 	if (lpdf >= 0.0)
@@ -216,20 +215,20 @@ void eval_sample(SurfaceInfo2 surface, vec2 px, int sidx, bool approxVisibility,
 	}
 }
 
-vec4 reconstruct_lighting(SurfaceInfo2 surface, vec2 px)
+vec4 reconstruct_lighting(SurfaceInfo2 surface, ivec2 px, uint seed)
 {
     vec3 lcol = vec3(0);
     float wsum = 0.0;
     
 	int scount = 0;
 
-	eval_sample(surface, px, 0, false, scount, lcol, wsum);
+	eval_sample(surface, px, 0, false, seed, scount, lcol, wsum);
     
 	for (int sidx = 1; sidx < 16; ++sidx)
     //for (int sidx = 1; sidx < 32; ++sidx)
     //for (int sidx = 1; sidx < 1; ++sidx)
     {
-		eval_sample(surface, px, sidx, true, scount, lcol, wsum);
+		eval_sample(surface, px, sidx, true, seed, scount, lcol, wsum);
     }
 
     return vec4(lcol / max(1e-5, wsum), 1.0);
@@ -298,7 +297,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
                 surface.roughness = gbuffer.roughness;
             }
 
-          	contrib += reconstruct_lighting(surface, fragCoord);
+            uint seed0 = hash(frame_idx);
+            seed0 = hash(seed0 + 15488981u * uint(pix.x));
+            seed0 = seed0 + 1302391u * uint(pix.y);
+
+          	contrib += reconstruct_lighting(surface, pix, seed0);
         }
         
         finalColor = contrib;
