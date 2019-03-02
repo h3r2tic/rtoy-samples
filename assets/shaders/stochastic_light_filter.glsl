@@ -225,7 +225,7 @@ const uint light_count = 3;
 Triangle get_light_source(uint idx) {
     Triangle tri;
 
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01 * 0.0;
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01 * 1.0;
     vec3 offset = vec3(cos(a), 0.4, sin(a)) * 350.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 120.0 * sqrt(2.0) / 2.0;
     vec3 up = vec3(0.0, 1.0, 0.0) * 120.0;
