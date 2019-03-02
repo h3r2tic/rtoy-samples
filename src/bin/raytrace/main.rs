@@ -71,10 +71,7 @@ fn main() {
     let sharpened_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/adaptive_sharpen.glsl")),
-        shader_uniforms!(
-            "inputTex": accum_rt_tex,
-            "constants": sharpen_constants_buf
-        ),
+        shader_uniforms!("inputTex": accum_rt_tex, "constants": sharpen_constants_buf),
     );
 
     let mut frame_idx = 0;

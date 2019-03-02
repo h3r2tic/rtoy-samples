@@ -82,6 +82,8 @@ fn main() {
     //let mut camera =
     //    CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
+    camera.move_smoothness = 3.0;
+    camera.look_smoothness = 3.0;
 
     let constants_buf = init_dynamic!(upload_buffer(0u32));
     let reproj_constants = init_dynamic!(upload_buffer(0u32));

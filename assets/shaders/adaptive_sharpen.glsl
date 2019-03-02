@@ -36,5 +36,14 @@ void main() {
 	float sharpened_luma = max(0, center * (wt_sum * sharpen_amount + 1) - neighbors * sharpen_amount);
 
 	col.rgb *= max(0.0, sharpened_luma / max(1e-5, center));
+
+    // TEMP HACK: tonemap
+    {
+        float tm_luma = 1.0 - exp(-calculate_luma(col.rgb));
+        vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
+        vec3 tm1 = col.rgb = 1.0 - exp(-col.rgb);
+        col.rgb = mix(tm0, tm1, tm_luma);
+    }
+
 	imageStore(outputTex, pix, col);
 }
