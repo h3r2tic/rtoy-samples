@@ -28,7 +28,7 @@ const uint light_count = 3;
 Triangle get_light_source(uint idx) {
     Triangle tri;
 
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01;
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01 * 0.0;
     vec3 offset = vec3(cos(a), 0.4, sin(a)) * 350.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 120.0 * sqrt(2.0) / 2.0;
     vec3 up = vec3(0.0, 1.0, 0.0) * 120.0;
@@ -207,7 +207,6 @@ void main() {
             vec3 em = light_colors[(seed2 % light_count) % 3u] * 50.0 * light_count;
 
             vec3 microfacet_normal = calculate_microfacet_normal(l, v);
-
             float bpdf = d_ggx(roughness * roughness, dot(microfacet_normal, normal));
 
             float ndotl = max(0.0, dot(normal, l));
@@ -228,24 +227,24 @@ void main() {
 
             reservoir_rate_sum += light_sel_rate;
 
-            if (light_sel_prob < light_sel_dart || lndotl <= 0.0) {
-                continue;
+            if (light_sel_prob > light_sel_dart && lndotl > 0.0) {
+                //float pdf = to_projected_solid_angle_measure(light_sample.pdf, ndotl, lndotl, to_light_sqlen);
+                float pdf = to_projected_solid_angle_measure(light_sample.pdf, 1.0, lndotl, to_light_sqlen);
+
+                reservoir_lpdf = pdf * light_sel_rate;
+                reservoir_point_on_light = light_sample.pos;
+                reservoir_emission = em;
             }
-
-            //float pdf = to_projected_solid_angle_measure(light_sample.pdf, ndotl, lndotl, to_light_sqlen);
-            float pdf = to_projected_solid_angle_measure(light_sample.pdf, 1.0, lndotl, to_light_sqlen);
-
-            reservoir_lpdf = pdf * light_sel_rate;
-            reservoir_point_on_light = light_sample.pos;
-            reservoir_emission = em;
         }
         
         if (reservoir_lpdf > 0.0) {
             vec3 l = normalize(reservoir_point_on_light - ray_origin_ws.xyz);
 
+            float ray_bias = 1e-4 * length(ray_origin_ws.xyz);
+
             Ray r;
-            r.o = ray_origin_ws.xyz + l * (1e-4 * length(ray_origin_ws.xyz));
-            r.d = (reservoir_point_on_light - r.o) - l * (1e-4 * length(reservoir_point_on_light));
+            r.o = ray_origin_ws.xyz + l * ray_bias;
+            r.d = (reservoir_point_on_light - r.o) - l * ray_bias;
 
             if (!raytrace_intersects_any(r, 1.0))
             {
@@ -255,7 +254,6 @@ void main() {
                 col.g = uintBitsToFloat(packHalf2x16(vec2(pt.z, emission.x)));
                 col.b = uintBitsToFloat(packHalf2x16(emission.yz));
                 col.a = reservoir_lpdf / reservoir_rate_sum * light_sample_count;
-                //col = vec4(pt, reservoir_lpdf / reservoir_rate_sum * light_sample_count);
             }
         }
     }

@@ -133,14 +133,31 @@ fn main() {
             ),
         );
 
+        let variance_estimate = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
+        redef_dynamic!(
+            variance_estimate,
+            compute_tex(
+                tex_key,
+                load_cs(asset!("shaders/stochastic_light_variance_estimate.glsl")),
+                shader_uniforms!(
+                    "g_primaryVisTex": gbuffer_tex,
+                    "inputTex": out_tex,
+                    "historyTex": variance_estimate,
+                    "reprojectionTex": reprojection_tex,
+                )
+            )
+        );
+
         compute_tex(
             tex_key,
             load_cs(asset!("shaders/stochastic_light_filter.glsl")),
             shader_uniforms!(
                 //"g_frameIndex": frame_index,
                 //"g_mouseX": mouse_x,
+                "constants": constants_buf,
                 "g_primaryVisTex": gbuffer_tex,
                 "g_lightSamplesTex": out_tex,
+                "g_varianceEstimate": variance_estimate,
             ),
         )
     };
