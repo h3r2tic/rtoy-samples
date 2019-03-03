@@ -27,6 +27,32 @@ layout(std430) buffer constants {
     uint frame_idx;
 };
 
+const uint light_count = 3;
+
+Triangle get_light_source(uint idx) {
+    Triangle tri;
+
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 0.0;
+    vec3 offset = vec3(cos(a), 0.0, sin(a)) * 350.0;
+    vec3 side = vec3(-sin(a), 0.0, cos(a)) * 10.0 * sqrt(2.0) / 2.0;
+    vec3 up = vec3(0.0, 1.0, 0.0) * 400.0;
+
+    tri.v = offset;
+    tri.e0 = side + up;
+    tri.e1 = -side + up;
+
+    return tri;
+}
+
+const float light_intensity_scale = 50.0 * 3.0 / light_count;
+
+const vec3 light_colors[3] = vec3[](
+    mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 1.0 * light_intensity_scale,
+    mix(vec3(1, 0.5, 0.0), 1.0.xxx, 0.25) * 0.5 * light_intensity_scale,
+    mix(vec3(0.2, 0.2, 1), 1.0.xxx, 0.25) * 0.1 * light_intensity_scale
+);
+
+
 // Sorted by distance to center
 const vec2 poissonOffsets[16] = vec2[](
     vec2(0.0, 0.0),
@@ -104,8 +130,9 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
 	// Adjust the PDF of the borrowed sample. It's defined wrt the solid angle
 	// of the neighbor. We need to transform it into the solid angle of the current point.
 	if (approxVisibility) {
-        vec3 neighPoint;
-        vec3 neighNorm;
+        vec3 neigh_pos;
+        vec3 neigh_norm;
+        float neigh_roughness;
         {
             vec4 gbuffer_packed = texelFetch(g_primaryVisTex, sample_px, 0);
             vec2 uv = get_uv(sample_px, outputTex_size);
@@ -121,17 +148,21 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
             vec4 ray_origin_ws = view_to_world * ray_origin_vs;
             ray_origin_ws /= ray_origin_ws.w;
 
-            neighPoint = ray_origin_ws.xyz;
-            neighNorm = gbuffer.normal;
+            neigh_pos = ray_origin_ws.xyz;
+            neigh_norm = gbuffer.normal;
+            neigh_roughness = gbuffer.roughness;
         }
 
-		lpdf *= hitOffsetLenSq / max(1e-10, dist_squared(neighPoint, point_on_light));
+		lpdf *= hitOffsetLenSq / max(1e-10, dist_squared(neigh_pos, point_on_light));
 
         float a2 = surface.roughness * surface.roughness;
         float cutoff_threshold = d_ggx(a2, 1.0) * a2;
-        float cutoff_value = d_ggx(a2, dot(neighNorm, surface.normal));
+        float cutoff_value = d_ggx(a2, dot(neigh_norm, surface.normal));
+        float roughness_threshold = 0.4;
+        float roughness_diff = abs(surface.roughness - neigh_roughness);
 
-        if (cutoff_value < cutoff_threshold)
+        // TODO: depth-based cutoff
+        if (cutoff_value < cutoff_threshold || roughness_diff > roughness_threshold)
         {
             lpdf = -1;
         }
@@ -227,29 +258,6 @@ vec4 reconstruct_lighting(SurfaceInfo2 surface, ivec2 px, uint seed)
     return vec4(lcol, 1.0);
 }    
 
-const uint light_count = 3;
-
-Triangle get_light_source(uint idx) {
-    Triangle tri;
-
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 1.0;
-    vec3 offset = vec3(cos(a), 0.4, sin(a)) * 350.0;
-    vec3 side = vec3(-sin(a), 0.0, cos(a)) * 120.0 * sqrt(2.0) / 2.0;
-    vec3 up = vec3(0.0, 1.0, 0.0) * 120.0;
-
-    tri.v = offset;
-    tri.e0 = side + up;
-    tri.e1 = -side + up;
-
-    return tri;
-}
-
-const vec3 light_colors[3] = vec3[](
-    mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 2.0,
-    mix(vec3(1, 0.5, 0.0), 1.0.xxx, 0.25) * 0.5,
-    mix(vec3(0.2, 0.2, 1), 1.0.xxx, 0.25) * 0.1
-);
-
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
@@ -293,7 +301,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
         //finalColor.rgb = surface.normal * 0.5 + 0.5;
     }
 
-    {
+    if (false) {
         vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
 
         Ray r;

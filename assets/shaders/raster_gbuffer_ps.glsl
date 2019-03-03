@@ -44,7 +44,9 @@ void main() {
     float z_over_w = v_clip_position.z / v_clip_position.w;
     //float roughness = 0.25;
     //float roughness = 0.08 + pow(fract(v_world_position.z * 0.03), 2.0) * 0.3;
-    float roughness = clamp(metallicRoughness.y, 1e-3, 0.9);
+
+    // TODO: add BRDF sampling, reduce the lower clamp
+    float roughness = clamp(metallicRoughness.y, 0.1, 0.9);
     float metallic = metallicRoughness.z;
 
     mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);

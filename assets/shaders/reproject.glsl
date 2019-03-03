@@ -40,7 +40,11 @@ void main() {
         pix,
         vec4(
             uv_diff,
-            prev_clip.xy == clamp(prev_clip.xy, -1.0, 1.0),
+            prev_clip.xy == clamp(
+                prev_clip.xy,
+                -1.0 + outputTex_size.zw,
+                1.0 - outputTex_size.zw
+            ),
             1.0
         ));
 }

@@ -102,7 +102,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 	vec3 ex2 = vsum2 / wsum;
 	vec3 dev = sqrt(max(vec3(0.0), ex2 - ex * ex));
 
-    float box_size = mix(0.5, 2.5, smoothstep(0.05, 0.0, length(reproj.xy)));
+    float box_size = mix(0.5, 1.5, smoothstep(0.05, 0.0, length(reproj.xy)));
 
 	nmin = ex - dev * box_size;
 	nmax = ex + dev * box_size;
