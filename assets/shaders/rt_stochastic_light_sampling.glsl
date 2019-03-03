@@ -28,7 +28,7 @@ const uint light_count = 3;
 Triangle get_light_source(uint idx) {
     Triangle tri;
 
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01 * 1.0;
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 1.0;
     vec3 offset = vec3(cos(a), 0.4, sin(a)) * 350.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 120.0 * sqrt(2.0) / 2.0;
     vec3 up = vec3(0.0, 1.0, 0.0) * 120.0;
@@ -41,9 +41,9 @@ Triangle get_light_source(uint idx) {
 }
 
 const vec3 light_colors[3] = vec3[](
-    vec3(0.7, 0.2, 1),
-    vec3(1, 0.5, 0.0),
-    vec3(0.2, 0.2, 1)
+    mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 2.0,
+    mix(vec3(1, 0.5, 0.0), 1.0.xxx, 0.25) * 0.5,
+    mix(vec3(0.2, 0.2, 1), 1.0.xxx, 0.25) * 0.1
 );
 
 vec3 sample_point_on_triangle(Triangle tri, vec2 urand) {
@@ -180,7 +180,7 @@ void main() {
         seed0 = hash(seed0 + 15488981u * uint(pix.x));
         seed0 = seed0 + 1302391u * uint(pix.y);
 
-        const uint light_sample_count = 32;
+        const uint light_sample_count = 8;
 
         float reservoir_lpdf = -1.0;
         vec3 reservoir_point_on_light = vec3(0);

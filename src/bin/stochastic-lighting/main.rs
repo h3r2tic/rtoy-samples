@@ -77,15 +77,17 @@ fn main() {
     //let scene_file = "assets/meshes/veach-mis-scaled.obj";
     //let scene = load_obj_scene(scene_file.to_string());
 
-    /*let scene = load_gltf_scene(
-        "assets/meshes/flying_trabant_final_takeoff/scene.gltf".to_string(),
-        1.0,
-    );*/
+    //let scene = load_gltf_scene(asset!("meshes/flying_trabant_final_takeoff/scene.gltf"), 1.0);
+    //let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
+    //let scene = load_gltf_scene(asset!("meshes/knight_final/scene.gltf"), 100.0);
+    //let scene = load_gltf_scene(asset!("meshes/ori/scene.gltf"), 0.1);
+    //let scene = load_gltf_scene(asset!("meshes/panhard_ebr_75_mle1954/scene.gltf"), 100.0);
+    //let scene = load_gltf_scene(asset!("meshes/dieselpunk_hovercraft/scene.gltf"), 1.0);
+    let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
+    //let scene = load_gltf_scene(asset!("meshes/skull_salazar_downloadable/scene.gltf"), 100.0);
+    //let scene = load_gltf_scene(asset!("meshes/squid_ink_bottle/scene.gltf"), 20.0);
+    //let scene = load_gltf_scene(asset!("meshes/wild_west_motorcycle/scene.gltf"), 1.0);
 
-    let scene = load_gltf_scene(
-        "assets/meshes/wild_west_motorcycle/scene.gltf".to_string(),
-        1.0,
-    );
     let bvh = build_gpu_bvh(scene);
 
     //let mut camera =

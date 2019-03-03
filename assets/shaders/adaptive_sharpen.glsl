@@ -39,6 +39,7 @@ void main() {
 
     // TEMP HACK: tonemap
     {
+        col.rgb *= 3.0;
         float tm_luma = 1.0 - exp(-calculate_luma(col.rgb));
         vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
         vec3 tm1 = col.rgb = 1.0 - exp(-col.rgb);

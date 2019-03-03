@@ -49,6 +49,7 @@ const vec2 poissonOffsets[16] = vec2[](
 
 struct Gbuffer {
     float roughness;
+    float metallic;
     vec3 normal;
 };
 
@@ -56,6 +57,7 @@ bool unpack_gbuffer(vec4 gbuffer, inout Gbuffer res) {
     if (gbuffer.a != 0) {
         res.normal = unpack_normal_11_10_11(gbuffer.x);
         res.roughness = gbuffer.y;
+        res.metallic = gbuffer.z;
         return true;
     } else {
         return false;
@@ -72,6 +74,7 @@ struct SurfaceInfo2 {
     vec3 normal;
     vec3 wo;
     float roughness;
+    float metallic;
 };
 
 void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility, uint seed, inout int scount, inout vec3 lcol, inout float wsum)
@@ -125,7 +128,7 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
 		lpdf *= hitOffsetLenSq / max(1e-10, dist_squared(neighPoint, point_on_light));
 
         float a2 = surface.roughness * surface.roughness;
-        float cutoff_threshold = d_ggx(a2, 1.0) * 0.5;
+        float cutoff_threshold = d_ggx(a2, 1.0) * a2;
         float cutoff_value = d_ggx(a2, dot(neighNorm, surface.normal));
 
         if (cutoff_value < cutoff_threshold)
@@ -146,28 +149,32 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
 	{
 		++scount;
 
-            vec3 microfacet_normal = calculate_microfacet_normal(lightSample, surface.wo);
+        vec3 microfacet_normal = calculate_microfacet_normal(lightSample, surface.wo);
 
-            BrdfEvalParams brdf_eval_params;
-            brdf_eval_params.normal = surface.normal;
-            brdf_eval_params.outgoing = surface.wo;
-            brdf_eval_params.incident = lightSample;
-            brdf_eval_params.microfacet_normal = microfacet_normal;
+        BrdfEvalParams brdf_eval_params;
+        brdf_eval_params.normal = surface.normal;
+        brdf_eval_params.outgoing = surface.wo;
+        brdf_eval_params.incident = lightSample;
+        brdf_eval_params.microfacet_normal = microfacet_normal;
 
-            GgxParams ggx_params;
-            ggx_params.roughness = surface.roughness;
+        GgxParams ggx_params;
+        ggx_params.roughness = surface.roughness;
 
-            BrdfEvalResult brdf_result = evaluate_ggx(brdf_eval_params, ggx_params);
-            float refl = brdf_result.value;
+        BrdfEvalResult brdf_result = evaluate_ggx(brdf_eval_params, ggx_params);
+        float refl = brdf_result.value;
 
 		vec3 p = vec3(1.0);
 
         p *= brdf_result.value;
 		p /= lpdf;
-
 		p *= saturate(ndotl);
 
-        {
+        float schlick = 1.0 - abs(brdf_result.ldotm);
+        schlick = schlick * schlick * schlick * schlick * schlick;
+        float fresnel = mix(mix(0.04, 1.0, surface.metallic), 1.0, schlick);
+        p *= fresnel;
+
+        if (!true) {
             // TEMP: Renormalize; fit by Patapom (https://patapom.com/blog/BRDF/MSBRDFEnergyCompensation/)
             float a = surface.roughness;
             float energy = PI - 0.446898 * a - 5.72019 * a * a + 6.61848 * a * a * a - 2.41727 * a * a * a * a;
@@ -225,7 +232,7 @@ const uint light_count = 3;
 Triangle get_light_source(uint idx) {
     Triangle tri;
 
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.01 * 1.0;
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 1.0;
     vec3 offset = vec3(cos(a), 0.4, sin(a)) * 350.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 120.0 * sqrt(2.0) / 2.0;
     vec3 up = vec3(0.0, 1.0, 0.0) * 120.0;
@@ -238,9 +245,9 @@ Triangle get_light_source(uint idx) {
 }
 
 const vec3 light_colors[3] = vec3[](
-    vec3(0.7, 0.2, 1),
-    vec3(1, 0.5, 0.0),
-    vec3(0.2, 0.2, 1)
+    mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 2.0,
+    mix(vec3(1, 0.5, 0.0), 1.0.xxx, 0.25) * 0.5,
+    mix(vec3(0.2, 0.2, 1), 1.0.xxx, 0.25) * 0.1
 );
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
@@ -249,7 +256,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     vec2 uv = get_uv(outputTex_size);
         
 	float seed = 0;
-    vec4 finalColor = vec4(0.);
+    vec4 finalColor = vec4(0.05.xxx, 0.0);
 
     float distance_to_surface = 1e10;
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
@@ -270,6 +277,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             surface.normal = gbuffer.normal;
             surface.wo = -normalize(ray_dir_ws.xyz);
             surface.roughness = gbuffer.roughness;
+            surface.metallic = gbuffer.metallic;
 
             vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
             distance_to_surface = length(surface.point - eye_pos);
@@ -279,7 +287,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
         seed0 = hash(seed0 + 15488981u * uint(pix.x));
         seed0 = seed0 + 1302391u * uint(pix.y);
 
-      	finalColor += reconstruct_lighting(surface, pix, seed0);
+      	finalColor = reconstruct_lighting(surface, pix, seed0);
+
+        //finalColor.rgb = fract(surface.roughness.xxx);
+        //finalColor.rgb = surface.normal * 0.5 + 0.5;
     }
 
     {
