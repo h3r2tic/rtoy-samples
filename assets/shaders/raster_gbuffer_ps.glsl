@@ -58,6 +58,7 @@ void main() {
     res.x = pack_normal_11_10_11(normalize(tbn * ts_normal));
     res.y = roughness * roughness;      // UE4 remap
     res.z = metallic;
+    //res.z = v_material_id;
     res.w = z_over_w;
     out_color = res;
 }

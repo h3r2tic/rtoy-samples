@@ -42,7 +42,8 @@ void main() {
         float tm_luma = 1.0 - exp(-calculate_luma(col.rgb));
         vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
         vec3 tm1 = col.rgb = 1.0 - exp(-col.rgb);
-        col.rgb = mix(tm0, tm1, tm_luma);
+        col.rgb = mix(tm0, tm1, tm_luma * tm_luma);
+        col.rgb = pow(max(0.0.xxx, col.rgb), 1.1.xxx);
     }
 
 	imageStore(outputTex, pix, col);

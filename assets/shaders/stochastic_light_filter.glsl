@@ -53,25 +53,7 @@ const vec3 light_colors[3] = vec3[](
 );
 
 
-// Sorted by distance to center
-const vec2 poissonOffsets[16] = vec2[](
-    vec2(0.0, 0.0),
-    vec2(0.1518793217962363, -0.4039150022001042),
-    vec2(-0.48050868974624406, -0.06854120361397874),
-    vec2(-0.25236411891373095, 0.4296090204971095),
-    vec2(0.5120272111118559, -0.11081946551775732),
-    vec2(0.28025639448220807, 0.45628402276197544),
-    vec2(-0.2503764251086612, -0.5030819543468117),
-    vec2(0.0037964097054232517, -0.9241597866851664),
-    vec2(0.9418779871059333, 0.06879617681996429),
-    vec2(-0.7533143807237, -0.5820875051377233),
-    vec2(-0.6426261012036244, 0.7239260110726607),
-    vec2(0.4910447081406396, -0.8434546160724686),
-    vec2(0.8261908171981129, 0.5217921615083018),
-    vec2(-0.9826672958850468, 0.06512294159950414),
-    vec2(0.8664518673756076, -0.48257357628816927),
-    vec2(0.06177281215017559, 0.9926963649033903)
-);
+const uint max_sample_count = 16;
 
 struct Gbuffer {
     float roughness;
@@ -83,6 +65,7 @@ bool unpack_gbuffer(vec4 gbuffer, inout Gbuffer res) {
     if (gbuffer.a != 0) {
         res.normal = unpack_normal_11_10_11(gbuffer.x);
         res.roughness = gbuffer.y;
+        //res.metallic = 0;//gbuffer.z;
         res.metallic = gbuffer.z;
         return true;
     } else {
@@ -107,9 +90,21 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
 {
     float k = 9.0;
 
-	ivec2 xyoff = ivec2((rotate2d(rand_float(seed) * PI) * poissonOffsets[sidx]) * k);
-	//ivec2 xyoff = ivec2(poissonOffsets[sidx] * k);
-    //ivec2 xyoff = ivec2((rotate2d(((px.x & 1) + 2 * (px.y & 1)) * 0.3539) * poissonOffsets[sidx]) * k);
+    ivec2 xyoff = ivec2(0, 0);
+    if (sidx != 0) {
+        //seed = hash(128);
+        //float angle = float(sidx) / 16 * TWO_PI;
+        //angle += rand_float(seed) * TWO_PI;
+        float angle = (rand_float(seed) + float((sidx * 13) % max_sample_count) / max_sample_count) * TWO_PI;
+        float dist = float(sidx) / (max_sample_count - 1);
+        dist += rand_float(hash(seed)) / max_sample_count;
+        dist = sqrt(dist);
+        dist *= k;
+
+        vec2 off = vec2(cos(angle), sin(angle)) * dist;
+        xyoff = ivec2(off);
+    }
+
 	float w = 1.0;
 
     ivec2 sample_px = ivec2(px) + xyoff;
@@ -234,9 +229,9 @@ vec4 reconstruct_lighting(SurfaceInfo2 surface, ivec2 px, uint seed)
     float variance_estimate = texelFetch(g_varianceEstimate, px, 0).x;
 	eval_sample(surface, px, 0, false, seed, scount, lcol, wsum);
 
-    int sample_count = min(int(16 * variance_estimate), 16);
+    int sample_count = min(int(max_sample_count * variance_estimate), int(max_sample_count));
 	for (int sidx = 1; sidx < sample_count; ++sidx)
-    //for (int sidx = 1; sidx < 16; ++sidx)
+    //for (int sidx = 1; sidx < max_sample_count; ++sidx)
     //for (int sidx = 1; sidx < 1; ++sidx)
     {
         vec3 contrib = 0.0.xxx;
@@ -296,6 +291,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
         seed0 = seed0 + 1302391u * uint(pix.y);
 
       	finalColor = reconstruct_lighting(surface, pix, seed0);
+        //finalColor += gbuffer_packed.z == 4.0 ? 2.0 : 0.0;
 
         //finalColor.rgb = fract(surface.roughness.xxx);
         //finalColor.rgb = surface.normal * 0.5 + 0.5;

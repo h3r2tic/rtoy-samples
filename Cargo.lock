@@ -40,6 +40,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aliasmethod"
+version = "0.1.0"
+dependencies = [
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "andrew"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1735,10 +1742,12 @@ dependencies = [
 name = "rtoy-samples"
 version = "0.1.0"
 dependencies = [
+ "aliasmethod 0.1.0",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0",
  "rtoy-rt 0.1.0",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
+ "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
 ]
 
 [[package]]

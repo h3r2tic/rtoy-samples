@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate snoozy_macros;
+
 use rand::{distributions::StandardNormal, rngs::SmallRng, Rng, SeedableRng};
 use rendertoy::*;
 use rtoy_rt::*;
@@ -64,6 +67,60 @@ fn temporal_accumulate(
     (temporal_blend, accum_tex)
 }
 
+#[snoozy]
+fn build_light_gpu_data(
+    ctx: &mut Context,
+    mesh: &SnoozyRef<TriangleMesh>,
+) -> Result<ShaderUniformBundle> {
+    let mesh = ctx.get(mesh)?;
+
+    let mut tris: Vec<([[f32; 3]; 3], [f32; 3])> = Vec::with_capacity(mesh.indices.len() / 3);
+    let mut weights: Vec<f64> = Vec::with_capacity(mesh.indices.len() / 3);
+
+    for tri in mesh.indices.chunks(3) {
+        let mat_id = mesh.material_ids[tri[0] as usize];
+        let mat = &mesh.materials[mat_id as usize];
+
+        if mat.emissive != [0.0, 0.0, 0.0] {
+            let p0 = Point3::from(mesh.positions[tri[0] as usize]);
+            let p1 = Point3::from(mesh.positions[tri[1] as usize]);
+            let p2 = Point3::from(mesh.positions[tri[2] as usize]);
+
+            let area = (p1 - p0).cross(&(p2 - p0)).norm() * 0.5;
+            weights.push(area as f64);
+
+            tris.push((
+                [
+                    mesh.positions[tri[0] as usize],
+                    mesh.positions[tri[1] as usize],
+                    mesh.positions[tri[2] as usize],
+                ],
+                mat.emissive,
+            ));
+        }
+    }
+
+    if let Ok(alias_table) = aliasmethod::new_alias_table(&weights) {
+        let tbl = alias_table
+            .prob
+            .iter()
+            .enumerate()
+            .map(|(i, p)| (*p as f32, alias_table.alias[i] as u32))
+            .collect::<Vec<_>>();
+
+        let count = tbl.len() as u32;
+        dbg!(count);
+
+        Ok(shader_uniforms!(
+            "light_triangles_buf": upload_array_buffer(Box::new(tris)),
+            "light_alias_buf": upload_array_buffer(Box::new(tbl)),
+            "light_count_buf": upload_buffer(count),
+        ))
+    } else {
+        unimplemented!();
+    }
+}
+
 fn main() {
     let mut rtoy = Rendertoy::new();
 
@@ -80,7 +137,6 @@ fn main() {
     //let scene = load_gltf_scene(asset!("meshes/flying_trabant_final_takeoff/scene.gltf"), 1.0);
     //let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
     //let scene = load_gltf_scene(asset!("meshes/knight_final/scene.gltf"), 100.0);
-    let scene = load_gltf_scene(asset!("meshes/ori/scene.gltf"), 0.1);
     //let scene = load_gltf_scene(asset!("meshes/panhard_ebr_75_mle1954/scene.gltf"), 100.0);
     //let scene = load_gltf_scene(asset!("meshes/dieselpunk_hovercraft/scene.gltf"), 1.0);
     //let scene = load_gltf_scene(asset!("meshes/skull_salazar/scene.gltf"), 100.0);
@@ -89,8 +145,10 @@ fn main() {
     //let scene = load_gltf_scene(asset!("meshes/knight_artorias/scene.gltf"), 0.1);
     //let scene = load_gltf_scene(asset!("meshes/dreadroamer/scene.gltf"), 1.0);
 
+    let scene = load_gltf_scene(asset!("meshes/ori/scene.gltf"), 0.1);
     //let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
 
+    //let lights = build_light_gpu_data(scene);
     let bvh = build_gpu_bvh(scene);
 
     //let mut camera =
@@ -144,6 +202,11 @@ fn main() {
                 "inputTex": gbuffer_tex,
                 "": upload_raster_mesh(make_raster_mesh(scene)),
                 "": upload_bvh(bvh),
+                //"": lights,
+                "blue_noise_tex": load_tex_with_params(
+                    asset!("images/bluenoise/LDR_RGB1_0.png"), TexParams {
+                        gamma: TexGamma::Linear,
+                    }),
             ),
         );
 
@@ -171,7 +234,7 @@ fn main() {
                 "constants": constants_buf,
                 "g_primaryVisTex": gbuffer_tex,
                 "g_lightSamplesTex": out_tex,
-                "g_varianceEstimate": variance_estimate,
+                "g_varianceEstimate": variance_estimate
             ),
         )
     };

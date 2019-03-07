@@ -7,6 +7,7 @@
 #include "inc/brdf.inc"
 
 uniform sampler2D inputTex;
+uniform sampler2D blue_noise_tex;
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
@@ -23,24 +24,58 @@ layout(std430) buffer mesh_vertex_buf {
     VertexPacked vertices[];
 };
 
-const uint light_count = 3;
+struct LightTriangle {
+    float data[12];
+};
+
+struct LightAliasEntry {
+    float prob;
+    uint alias;
+};
+
+layout(std430) buffer light_triangles_buf {
+    LightTriangle light_triangles[];
+};
+
+layout(std430) buffer light_alias_buf {
+    LightAliasEntry light_alias_table[];
+};
+
+layout(std430) buffer light_count_buf {
+    uint tri_light_count;
+};
+
+const uint light_count = 5;
 
 Triangle get_light_source(uint idx) {
+    LightTriangle lt = light_triangles[idx];
+
     Triangle tri;
 
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 0.0;
-    vec3 offset = vec3(cos(a), 0.0, sin(a)) * 350.0;
+    //*
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 1.0;
+    vec3 offset = vec3(cos(a), -0.3, sin(a)) * 350.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 10.0 * sqrt(2.0) / 2.0;
     vec3 up = vec3(0.0, 1.0, 0.0) * 400.0;
 
     tri.v = offset;
     tri.e0 = side + up;
     tri.e1 = -side + up;
+    /*/
+    vec3 a = vec3(lt.data[0], lt.data[1], lt.data[2]);
+    vec3 b = vec3(lt.data[3], lt.data[4], lt.data[5]);
+    vec3 c = vec3(lt.data[6], lt.data[7], lt.data[8]);
+
+    tri.v = a;
+    tri.e0 = b - a;
+    tri.e1 = c - a;
+    //*/
 
     return tri;
 }
 
-const float light_intensity_scale = 50.0 * 3.0 / light_count;
+//const float light_intensity_scale = 10.0;
+const float light_intensity_scale = 25.0 * 3.0 / light_count;
 
 const vec3 light_colors[3] = vec3[](
     mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 1.0 * light_intensity_scale,
@@ -182,31 +217,87 @@ void main() {
         seed0 = hash(seed0 + 15488981u * uint(pix.x));
         seed0 = seed0 + 1302391u * uint(pix.y);
 
-        const uint light_sample_count = 32;
+        const uint light_sample_count_sqrt = 4;
+        const uint light_sample_count = light_sample_count_sqrt * light_sample_count_sqrt;
 
         float reservoir_lpdf = -1.0;
         vec3 reservoir_point_on_light = vec3(0);
         float reservoir_rate_sum = 0.0;
         vec3 reservoir_emission = 0.0.xxx;
 
-        for (uint light_sample_i = 0; light_sample_i < light_sample_count; ++light_sample_i) {
+        vec2 urand_offset = vec2(0.0, 0.0);
+        {
+            uint seed1 = hash(seed0 + frame_idx);
+            uint seed2 = hash(seed1);
+            seed0 = hash(seed2);
+            urand_offset = vec2(rand_float(seed0), rand_float(seed1));
+        }
+
+        //for (uint light_sample_i = 0; light_sample_i < light_sample_count; ++light_sample_i) {
+        for (uint light_sample_y = 0; light_sample_y < light_sample_count_sqrt; ++light_sample_y)
+        for (uint light_sample_x = 0; light_sample_x < light_sample_count_sqrt; ++light_sample_x) {
+#if 0
             uint seed1 = hash(seed0);
             uint seed2 = hash(seed1);
             seed0 = hash(seed2);
-
             vec2 urand = vec2(rand_float(seed0), rand_float(seed1));
+#elif 0
+            //seed0 = hash(frame_idx + hash(light_sample_y * light_sample_count_sqrt + light_sample_x + hash((pix.x & 7) + (pix.y & 7) * 8)));
+            seed0 = hash(seed0);
+            //seed0 = hash(1348);
+
+        //uint seed0 = hash(frame_idx);
+        //seed0 = hash(seed0 + 15488981u * uint(pix.x));
+        //seed0 = seed0 + 1302391u * uint(pix.y);
+
+            vec2 urand = fract(urand_offset + vec2(
+                float(light_sample_x) / light_sample_count_sqrt,
+                float(light_sample_y) / light_sample_count_sqrt
+            ));
+#else
+            uint sample_idx = light_sample_y * light_sample_count_sqrt + light_sample_x;
+
+            seed0 = hash((frame_idx * 3 + 17 * ((pix.x & 7) + (pix.y & 7) * 8)) % 64);
+            seed0 = hash(seed0 + sample_idx);
+            //seed0 = hash(seed0 + 15488981u * uint(pix.x & 3));
+            //seed0 = seed0 + 1302391u * uint(pix.y & 3);
+
+            {
+                uint seed0 = hash(frame_idx + sample_idx * 4);
+                seed0 = hash(seed0 + 15488981u * uint(pix.x));
+                seed0 = seed0 + 1302391u * uint(pix.y);
+
+                uint seed1 = hash(seed0 + sample_idx);
+                uint seed2 = hash(seed1);
+                urand_offset = vec2(rand_float(seed1), rand_float(seed2));
+            }
+
+            uint seed1 = hash(seed0);
+            uint seed2 = hash(seed1);
+
+            vec2 urand = fract(vec2(rand_float(seed1), rand_float(seed2)) + urand_offset * 0.25);
+
+        uint seed3 = 0; {
+        //seed3 = hash(frame_idx);
+        seed3 = hash(seed3 + 15488981u * uint(pix.x));
+        seed3 = hash(seed3 + 1302391u * uint(pix.y));
+        seed3 = seed3 + sample_idx;
+        }
+#endif
             
             #if 0
-            LightSampleResultAm light_sample = sample_light(get_light_source(seed2 % light_count), urand);
+            LightSampleResultAm light_sample = sample_light(get_light_source(seed0 % light_count), urand);
             #else
-            LightSampleResultSam light_sample = sample_light_sam(ray_origin_ws.xyz, get_light_source(seed2 % light_count), urand);
+            LightSampleResultSam light_sample = sample_light_sam(
+                ray_origin_ws.xyz, get_light_source(seed0 % light_count), urand);
             #endif
 
             vec3 to_light = light_sample.pos - ray_origin_ws.xyz;
             float to_light_sqlen = dot(to_light, to_light);
             vec3 l = to_light / sqrt(to_light_sqlen);
 
-            vec3 em = light_colors[(seed2 % light_count) % 3u] * 50.0 * light_count;
+            //vec3 em = 100000.0.xxx;//light_colors[(seed2 % light_count) % 3u] * 50.0 * light_count;
+            vec3 em = light_colors[(seed0 % light_count) % 3u] * 50.0 * light_count;
 
             vec3 microfacet_normal = calculate_microfacet_normal(l, v);
             float bpdf = d_ggx(roughness * roughness, dot(microfacet_normal, normal));
@@ -225,7 +316,11 @@ void main() {
             light_sel_rate = sqrt(light_sel_rate);
 
             float light_sel_prob = light_sel_rate / (reservoir_rate_sum + light_sel_rate);
-            float light_sel_dart = rand_float(hash(seed0 ^ seed1));
+            float light_sel_dart = rand_float(hash(seed0 ^ 9832001));
+
+            #if 1
+            light_sel_dart = fract(rand_float(seed3) * 0.05 + light_sel_dart);
+            #endif
 
             reservoir_rate_sum += light_sel_rate;
 

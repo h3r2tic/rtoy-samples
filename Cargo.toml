@@ -15,7 +15,7 @@ rendertoy = { path = "../rendertoy" }
 #rtoy-rt = { git = "https://github.com/h3r2tic/rtoy-rt" }
 rtoy-rt = { path = "../rtoy-rt" }
 snoozy = { git = "https://github.com/h3r2tic/snoozy" }
+snoozy-macros = { git = "https://github.com/h3r2tic/snoozy-macros" }
 #snoozy = { path = "../snoozy" }
 rand = "0.6.5"
-#serde = "1.0.80"
-#serde_derive = "1.0"
+aliasmethod = { path = "../rust_aliasmethod" }
