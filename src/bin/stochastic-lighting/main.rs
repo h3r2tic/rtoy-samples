@@ -204,7 +204,13 @@ fn main() {
                 "": upload_bvh(bvh),
                 //"": lights,
                 "blue_noise_tex": load_tex_with_params(
-                    asset!("images/bluenoise/LDR_RGB1_0.png"), TexParams {
+                    //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
+                        asset!("images/bluenoise/256_256/LDR_RGBA_0.png"), TexParams {
+                        gamma: TexGamma::Linear,
+                    }),
+                "blue_noise_tex2": load_tex_with_params(
+                    //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
+                        asset!("images/bluenoise/256_256/LDR_LLL1_0.png"), TexParams {
                         gamma: TexGamma::Linear,
                     }),
             ),
@@ -234,7 +240,12 @@ fn main() {
                 "constants": constants_buf,
                 "g_primaryVisTex": gbuffer_tex,
                 "g_lightSamplesTex": out_tex,
-                "g_varianceEstimate": variance_estimate
+                "g_varianceEstimate": variance_estimate,
+                "blue_noise_tex": load_tex_with_params(
+                    //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
+                        asset!("images/bluenoise/256_256/LDR_LLL1_0.png"), TexParams {
+                        gamma: TexGamma::Linear,
+                    }),
             ),
         )
     };

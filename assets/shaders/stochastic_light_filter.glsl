@@ -18,6 +18,7 @@ uniform float g_mouseX;
 uniform sampler2D g_primaryVisTex;
 uniform sampler2D g_lightSamplesTex;
 uniform sampler2D g_varianceEstimate;
+uniform sampler2D blue_noise_tex;
 
 layout(std430) buffer constants {
     mat4 view_to_clip;
@@ -84,28 +85,25 @@ struct SurfaceInfo2 {
     vec3 wo;
     float roughness;
     float metallic;
+    float z_over_w;
 };
 
 void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility, uint seed, inout int scount, inout vec3 lcol, inout float wsum)
 {
-    float k = 9.0;
+    float k = 7.0;
 
     ivec2 xyoff = ivec2(0, 0);
     if (sidx != 0) {
-        //seed = hash(128);
-        //float angle = float(sidx) / 16 * TWO_PI;
-        //angle += rand_float(seed) * TWO_PI;
-        float angle = (rand_float(seed) + float((sidx * 13) % max_sample_count) / max_sample_count) * TWO_PI;
-        float dist = float(sidx) / (max_sample_count - 1);
-        dist += rand_float(hash(seed)) / max_sample_count;
-        dist = sqrt(dist);
+        const float golden_angle = 2.39996322972865332;
+        float angle = sidx * golden_angle;// + rand_float(hash(seed)) ;
+        float dist = float(sidx + 1.0) / (max_sample_count - 1);
+        //dist += rand_float(hash(seed)) / max_sample_count;
+        //dist = sqrt(dist);
         dist *= k;
 
         vec2 off = vec2(cos(angle), sin(angle)) * dist;
         xyoff = ivec2(off);
     }
-
-	float w = 1.0;
 
     ivec2 sample_px = ivec2(px) + xyoff;
 
@@ -118,6 +116,12 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
     le.yz = unpackHalf2x16(floatBitsToUint(hit_data.z));
     point_on_light = (view_to_world * vec4(point_on_light, 1)).xyz;
 
+    vec4 gbuffer_packed = texelFetch(g_primaryVisTex, sample_px, 0);
+
+    float depth_diff = 1.0 / surface.z_over_w - 1.0 / gbuffer_packed.w;
+    depth_diff *= max(surface.z_over_w, gbuffer_packed.w);
+	float w = exp(-depth_diff * depth_diff * 1e4);
+
 	float lpdf = hit_data.w;
 	vec3 hitOffset = point_on_light - surface.point;
 	float hitOffsetLenSq = dot(hitOffset, hitOffset);
@@ -129,7 +133,6 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
         vec3 neigh_norm;
         float neigh_roughness;
         {
-            vec4 gbuffer_packed = texelFetch(g_primaryVisTex, sample_px, 0);
             vec2 uv = get_uv(sample_px, outputTex_size);
 
             Gbuffer gbuffer;
@@ -281,6 +284,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             surface.wo = -normalize(ray_dir_ws.xyz);
             surface.roughness = gbuffer.roughness;
             surface.metallic = gbuffer.metallic;
+            surface.z_over_w = gbuffer_packed.w;
 
             vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
             distance_to_surface = length(surface.point - eye_pos);

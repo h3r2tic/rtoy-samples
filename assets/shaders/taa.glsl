@@ -67,16 +67,38 @@ vec4 fetchHistoryCatmullRom(vec2 uv)
     return result;
 }
 
+#define ENCODING_VARIANT 2
+
+vec3 decode(vec3 a) {
+    #if 0 == ENCODING_VARIANT
+    return a;
+    #elif 1 == ENCODING_VARIANT
+    return sqrt(a);
+    #elif 2 == ENCODING_VARIANT
+    return log(1+sqrt(a));
+    #endif
+}
+
+vec3 encode(vec3 a) {
+    #if 0 == ENCODING_VARIANT
+    return a;
+    #elif 1 == ENCODING_VARIANT
+    return a * a;
+    #elif 2 == ENCODING_VARIANT
+    a = exp(a) - 1;
+    return a * a;
+    #endif
+}
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
     ivec2 px = ivec2(fragCoord);
     vec2 uv = get_uv(outputTex_size);
     
-    vec3 center = sqrt(texelFetch(inputTex, px, 0).rgb);
+    vec3 center = decode(texelFetch(inputTex, px, 0).rgb);
 	//vec4 history = texelFetch(historyTex, px, 0);
     vec4 reproj = texelFetch(reprojectionTex, px, 0);
-    vec4 history = sqrt(max(0.0.xxxx, fetchHistoryCatmullRom(uv + reproj.xy)));
+    vec3 history = decode(max(0.0.xxx, fetchHistoryCatmullRom(uv + reproj.xy).xyz));
     
 	vec3 vsum = vec3(0.);
 	vec3 vsum2 = vec3(0.);
@@ -88,7 +110,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 	const int k = 1;
     for (int y = -k; y <= k; ++y) {
         for (int x = -k; x <= k; ++x) {
-            vec3 neigh = sqrt(texelFetch(inputTex, px + ivec2(x, y), 0).rgb);
+            vec3 neigh = decode(texelFetch(inputTex, px + ivec2(x, y), 0).rgb);
             //nmin = min(nmin, neigh);
             //nmax = max(nmax, neigh);
 			float w = exp(-3.0 * float(x * x + y * y) / float((k+1.) * (k+1.)));
@@ -112,16 +134,16 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 		if (true) {
 			vec3 clamped_history = clamp(history.rgb, nmin, nmax);
 			//clamped_history = mix(clamped_history, history.rgb, 0.6);
-			result = mix(clamped_history, center, mix(1.0, 1.0 / 12.0, reproj.z));
+			result = mix(clamped_history, center, mix(1.0, 1.0 / 16.0, reproj.z));
 		} else if (true) {
 			result = mix(history.rgb, center, 1.0 / 16.0);
 		} else {
 			result = center;
 		}
 		
-		fragColor = vec4(result * result, 1.0);
+		fragColor = vec4(encode(result), 1.0);
 	#else
-		fragColor = vec4(center * center, 1.0);
+		fragColor = vec4(encode(center), 1.0);
 	#endif
 }
 
