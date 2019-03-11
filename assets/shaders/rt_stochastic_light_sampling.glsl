@@ -46,7 +46,7 @@ layout(std430) buffer light_count_buf {
     uint tri_light_count;
 };
 
-const uint light_count = 1;
+const uint light_count = 3;
 
 Triangle get_light_source(uint idx) {
     LightTriangle lt = light_triangles[idx];
@@ -54,10 +54,11 @@ Triangle get_light_source(uint idx) {
     Triangle tri;
 
     //*
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 0.0 + 1.2;
-    vec3 offset = vec3(cos(a), 0.3, sin(a)) * 300.0;
+    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 2.0 + 1.4;
+    //float a = float(idx) * 1.0 / float(light_count) + float(frame_idx) * 0.005 * 0.0 + 0.0;
+    vec3 offset = vec3(cos(a), -0.5, sin(a)) * 300.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 10.0 * sqrt(2.0) / 2.0;
-    vec3 up = vec3(0.0, 1.0, 0.0) * 200.0;
+    vec3 up = vec3(0.0, 1.0, 0.0) * 300.0;
 
     tri.v = offset;
     tri.e0 = side + up;
@@ -77,7 +78,7 @@ Triangle get_light_source(uint idx) {
 
 
 //const float light_intensity_scale = 10.0;
-const float light_intensity_scale = 50.0 * 3.0 / light_count;
+const float light_intensity_scale = 2.7;// * 3.0 / light_count;
 
 const vec3 light_colors[3] = vec3[](
     mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 1.0 * light_intensity_scale,
@@ -167,13 +168,13 @@ struct AdaptiveLightSamplingGuide {
 };
 
 float eval_adaptive_light_sampling_weight(AdaptiveLightSamplingGuide guide, vec3 point_on_light, int level) {
-    vec3 to_light = point_on_light - guide.pos;
-    float to_light_sqlen = dot(to_light, to_light);
-    vec3 l = to_light / sqrt(to_light_sqlen);
+    vec3 l = normalize(point_on_light - guide.pos);
 
     vec3 microfacet_normal = calculate_microfacet_normal(l, guide.v);
-    float r = min(1.0, guide.roughness2 + smoothstep(0.0, 0.03, guide.roughness2));
-    return d_ggx(r, dot(microfacet_normal, guide.normal)) * max(0.1, dot(l, guide.normal));
+    // HACK
+    float r = min(guide.roughness2 + max(0.0, 0.04 / float(1 << (level * 2))), 1);
+    //float r = min(guide.roughness2 * 1.2, 1);
+    return d_ggx(r, dot(microfacet_normal, guide.normal)) * max(0.001, dot(l, guide.normal));
 }
 
 vec3 sample_point_on_triangle_basu_owen(Triangle tri, float u) {
@@ -236,7 +237,7 @@ vec3 sample_point_on_triangle_adaptive(Triangle tri, AdaptiveLightSamplingGuide 
 
     pdf = 1.0;
 
-    for (int i = 0; i < 12; ++i) {            // For each base-4 digit
+    for (int i = 0; i < 10; ++i) {            // For each base-4 digit
         vec3 p[4] = {
             (a + b + c) / 3.0,
             (a * 2.0 + b * 0.5 + c * 0.5) / 3.0,
@@ -246,9 +247,9 @@ vec3 sample_point_on_triangle_adaptive(Triangle tri, AdaptiveLightSamplingGuide 
 
         float w[4] = { 1.0, 1.0, 1.0, 1.0 };
 
-        if (i < 4) {
+        if (i < 6) {
             for (int j = 0; j < 4; ++j) {
-                w[j] = sqrt(eval_adaptive_light_sampling_weight(guide, p[j], j));
+                w[j] = sqrt(eval_adaptive_light_sampling_weight(guide, p[j], i));
             }
         }
 
@@ -380,7 +381,7 @@ void main() {
     vec4 gbuffer = texelFetch(inputTex, pix, 0);
 
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
-    float roughness = 0.08;//gbuffer.y;
+    float roughness = gbuffer.y;
     vec4 col = -1.0.xxxx;
 
     vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;

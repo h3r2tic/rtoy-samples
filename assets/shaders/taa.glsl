@@ -136,7 +136,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 			//clamped_history = mix(clamped_history, history.rgb, 0.6);
 			result = mix(clamped_history, center, mix(1.0, 1.0 / 16.0, reproj.z));
 		} else if (true) {
-			result = mix(history.rgb, center, 1.0 / 16.0);
+            //float blend = mix(1.0, 1.0 / 16, smoothstep(0.05, 0.0, length(reproj.xy)));
+            float blend = 1.0 / 16;
+			result = mix(history.rgb, center, blend);
 		} else {
 			result = center;
 		}

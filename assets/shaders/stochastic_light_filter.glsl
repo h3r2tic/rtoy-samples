@@ -55,6 +55,7 @@ const vec3 light_colors[3] = vec3[](
 
 
 const uint max_sample_count = 16;
+const float kernel_size_scaling = 3.0;
 
 struct Gbuffer {
     float roughness;
@@ -90,16 +91,15 @@ struct SurfaceInfo2 {
 
 void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility, uint seed, inout int scount, inout vec3 lcol, inout float wsum)
 {
-    float k = 7.0;
+    float k = kernel_size_scaling;
 
     ivec2 xyoff = ivec2(0, 0);
     if (sidx != 0) {
         const float golden_angle = 2.39996322972865332;
         float angle = sidx * golden_angle;// + rand_float(hash(seed)) ;
-        float dist = float(sidx + 1.0) / (max_sample_count - 1);
-        //dist += rand_float(hash(seed)) / max_sample_count;
-        //dist = sqrt(dist);
-        dist *= k;
+        float dist = float(sidx + 1.0);
+        dist *= kernel_size_scaling;
+        dist = sqrt(dist);
 
         vec2 off = vec2(cos(angle), sin(angle)) * dist;
         xyoff = ivec2(off);
@@ -120,7 +120,8 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
 
     float depth_diff = 1.0 / surface.z_over_w - 1.0 / gbuffer_packed.w;
     depth_diff *= max(surface.z_over_w, gbuffer_packed.w);
-	float w = exp(-depth_diff * depth_diff * 1e4);
+	float w = exp(-depth_diff * depth_diff * 1e2);
+    //float w = 1;
 
 	float lpdf = hit_data.w;
 	vec3 hitOffset = point_on_light - surface.point;
@@ -230,6 +231,11 @@ vec4 reconstruct_lighting(SurfaceInfo2 surface, ivec2 px, uint seed)
 	int scount = 0;
 
     float variance_estimate = texelFetch(g_varianceEstimate, px, 0).x;
+    variance_estimate = max(variance_estimate, 0.5 * texelFetch(g_varianceEstimate, px + ivec2(-1, 0), 0).x);
+    variance_estimate = max(variance_estimate, 0.5 * texelFetch(g_varianceEstimate, px + ivec2(+1, 0), 0).x);
+    variance_estimate = max(variance_estimate, 0.5 * texelFetch(g_varianceEstimate, px + ivec2(0, -1), 0).x);
+    variance_estimate = max(variance_estimate, 0.5 * texelFetch(g_varianceEstimate, px + ivec2(0, +1), 0).x);
+
 	eval_sample(surface, px, 0, false, seed, scount, lcol, wsum);
 
     int sample_count = min(int(max_sample_count * variance_estimate), int(max_sample_count));

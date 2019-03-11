@@ -139,6 +139,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
         float luma_dev = dev / max(1e-5, ex);
 
         luma_dev = mix(1.0, luma_dev, validity);
+        /*if (!(luma_dev >= 0.0)) {
+            luma_dev = 1.0;
+        }*/
 
         vec4 result = vec4(clamp(luma_dev, 0.0, 1.0), ex, sqrt(ex2), 0.0);
         fragColor = result;

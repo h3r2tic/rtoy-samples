@@ -134,7 +134,10 @@ fn main() {
     //let scene_file = "assets/meshes/veach-mis-scaled.obj";
     //let scene = load_obj_scene(scene_file.to_string());
 
-    //let scene = load_gltf_scene(asset!("meshes/flying_trabant_final_takeoff/scene.gltf"), 1.0);
+    let scene = load_gltf_scene(
+        asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),
+        1.0,
+    );
     //let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
     //let scene = load_gltf_scene(asset!("meshes/knight_final/scene.gltf"), 100.0);
     //let scene = load_gltf_scene(asset!("meshes/panhard_ebr_75_mle1954/scene.gltf"), 100.0);
@@ -145,7 +148,7 @@ fn main() {
     //let scene = load_gltf_scene(asset!("meshes/knight_artorias/scene.gltf"), 0.1);
     //let scene = load_gltf_scene(asset!("meshes/dreadroamer/scene.gltf"), 1.0);
 
-    let scene = load_gltf_scene(asset!("meshes/ori/scene.gltf"), 0.1);
+    //let scene = load_gltf_scene(asset!("meshes/ori/scene.gltf"), 0.1);
     //let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
 
     //let lights = build_light_gpu_data(scene);
@@ -249,6 +252,26 @@ fn main() {
             ),
         )
     };
+
+    let variance_estimate2 = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
+    redef_dynamic!(
+        variance_estimate2,
+        compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/variance_estimate.glsl")),
+            shader_uniforms!(
+                "inputTex": out_tex,
+                "historyTex": variance_estimate2,
+                "reprojectionTex": reprojection_tex,
+            )
+        )
+    );
+
+    let out_tex = compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/steerable_bilateral.glsl")),
+        shader_uniforms!("inputTex": out_tex, "varianceTex": variance_estimate2,),
+    );
 
     let (temporal_blend, out_tex) = temporal_accumulate(out_tex, reprojection_tex, tex_key);
 

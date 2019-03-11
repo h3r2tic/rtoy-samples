@@ -19,6 +19,7 @@ void main() {
 
 	const ivec2 dim_offsets[] = { ivec2(1, 0), ivec2(0, 1) };
 
+#if 1
 	float center = calculate_luma(col.rgb);
 
 	for (int dim = 0; dim < 2; ++dim) {
@@ -36,6 +37,7 @@ void main() {
 	float sharpened_luma = max(0, center * (wt_sum * sharpen_amount + 1) - neighbors * sharpen_amount);
 
 	col.rgb *= max(0.0, sharpened_luma / max(1e-5, center));
+#endif
 
     // TEMP HACK: tonemap
     {
