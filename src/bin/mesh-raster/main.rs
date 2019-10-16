@@ -10,7 +10,8 @@ fn main() {
     };
 
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
-    let scene_file = "assets/meshes/flying_trabant.obj.gz";
+    //let scene_file = "assets/meshes/flying_trabant.obj.gz";
+    let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 5.0);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
 
@@ -24,7 +25,7 @@ fn main() {
         ]),
         shader_uniforms!(
             "constants": viewport_constants_buf,
-            "": upload_raster_mesh(make_raster_mesh(load_obj_scene(scene_file.to_string())))
+            "": upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
 

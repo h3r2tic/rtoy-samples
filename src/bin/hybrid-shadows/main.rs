@@ -18,7 +18,7 @@ fn main() {
     };
 
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
-    let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
+    let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 5.0);
     let bvh = build_gpu_bvh(scene);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
@@ -48,7 +48,7 @@ fn main() {
         ),
     );
 
-    let mut light_angle = 0.0f32;
+    let mut light_angle = 1.0f32;
 
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state, 1.0 / 60.0);
