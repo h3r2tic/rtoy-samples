@@ -18,10 +18,11 @@ fn main() {
     };
 
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
-    let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 5.0);
+    let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
     let bvh = build_gpu_bvh(scene);
+    let gpu_bvh = upload_bvh(bvh);
 
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
+    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
 
     let rt_constants_buf = init_dynamic!(upload_buffer(0u32));
     let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
@@ -43,8 +44,8 @@ fn main() {
         load_cs(asset!("shaders/rt_hybrid_shadows.glsl")),
         shader_uniforms!(
             "constants": rt_constants_buf,
-            "": upload_bvh(bvh),
             "inputTex": gbuffer_tex,
+            "": gpu_bvh,
         ),
     );
 
