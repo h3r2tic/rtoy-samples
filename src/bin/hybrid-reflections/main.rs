@@ -42,9 +42,7 @@ fn main() {
         format: gl::RGBA32F,
     };
 
-    let scene_file = "assets/meshes/flying_trabant.obj.gz";
-
-    let scene = load_obj_scene(scene_file.to_string());
+    let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
     let bvh = build_gpu_bvh(scene);
 
     let mut camera =
