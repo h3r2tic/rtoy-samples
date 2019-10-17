@@ -109,7 +109,7 @@ float radical_inverse(int n, int base) {
 }
 
 vec2 hammersley_2d(uint i, uint N) {
-    return vec2(float(i + 0.5) / N, radical_inverse_vdc(i));
+    return vec2((float(i) + 0.5) / float(N), radical_inverse_vdc(i));
 }
 
 vec3 sample_point_on_triangle(Triangle tri, vec2 urand) {
@@ -406,7 +406,7 @@ void main() {
         seed0 = hash(seed0 + 15488981u * uint(pix.x));
         seed0 = seed0 + 1302391u * uint(pix.y);
 
-#define ADAPTIVE 1
+#define ADAPTIVE true
 
         //const uint light_sample_count_sqrt = 1;
         //const uint light_sample_count = light_sample_count_sqrt * light_sample_count_sqrt;

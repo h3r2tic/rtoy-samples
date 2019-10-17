@@ -45,7 +45,7 @@ Triangle get_light_source(uint idx) {
     return tri;
 }
 
-const float light_intensity_scale = 50.0 * 3.0 / light_count;
+const float light_intensity_scale = 50.0 * 3.0 / float(light_count);
 
 const vec3 light_colors[3] = vec3[](
     mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 1.0 * light_intensity_scale,
