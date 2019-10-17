@@ -18,4 +18,4 @@ snoozy = { git = "https://github.com/h3r2tic/snoozy" }
 snoozy-macros = { git = "https://github.com/h3r2tic/snoozy-macros" }
 #snoozy = { path = "../snoozy" }
 rand = "0.6.5"
-aliasmethod = { path = "../rust_aliasmethod" }
+aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }
