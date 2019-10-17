@@ -10,7 +10,7 @@ uniform vec4 inputTex_size;
 uniform layout(rg32f) readonly image2D rtPixelLocationTex;
 uniform layout(r32f) readonly image2D tileAllocOffsetTex;
 uniform vec4 tileAllocOffsetTex_size;
-uniform vec4 discontinuityTex_size;
+uniform vec4 rtPixelLocationTex_size;
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
@@ -33,25 +33,23 @@ void do_shadow_rt(ivec2 pix) {
     float ndotl = max(0.0, dot(normal, l));
     float result = 1.0;
 
-    if (gbuffer.a != 0.0) {
-        if (ndotl > 0.0) {
-            vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
-            vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-            vec4 ray_origin_ws = view_to_world * ray_origin_vs;
-            ray_origin_ws /= ray_origin_ws.w;
+    if (gbuffer.a != 0.0 && ndotl > 0.0) {
+        vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
+        vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
+        vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+        ray_origin_ws /= ray_origin_ws.w;
 
-            vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-            vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
-            vec3 v = -normalize(ray_dir_ws.xyz);
+        vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
+        vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+        vec3 v = -normalize(ray_dir_ws.xyz);
 
-            Ray r;
-            r.d = l;
-            r.o = ray_origin_ws.xyz;
-            r.o += (v + r.d) * (1e-4 * max(length(r.o), abs(ray_origin_vs.z / ray_origin_vs.w)));
+        Ray r;
+        r.d = l;
+        r.o = ray_origin_ws.xyz;
+        r.o += (v + r.d) * (1e-4 * max(length(r.o), abs(ray_origin_vs.z / ray_origin_vs.w)));
 
-            if (raytrace_intersects_any(r)) {
-                result = 0.0;
-            }
+        if (raytrace_intersects_any(r)) {
+            result = 0.0;
         }
     }
 
@@ -73,10 +71,11 @@ void main() {
 
     barrier();
 
+    uint global_invocation_index = uint(gl_GlobalInvocationID.x) + uint(gl_GlobalInvocationID.y) * uint(outputTex_size.x);
+
     // Rendertoy doesn't have indirect dispatch. Just branch out for now.
-    ivec2 alloc_pix = ivec2(gl_GlobalInvocationID.xy);
-    uint alloc_pix_idx = uint(alloc_pix.x) + uint(alloc_pix.y) * uint(discontinuityTex_size.x);
-    if (alloc_pix_idx < total_rt_px_count) {
+    if (global_invocation_index < total_rt_px_count) {
+        ivec2 alloc_pix = ivec2(global_invocation_index % uint(rtPixelLocationTex_size.x), global_invocation_index / uint(rtPixelLocationTex_size.x));
         ivec2 pix = 2 * floatBitsToInt(imageLoad(rtPixelLocationTex, alloc_pix).xy);
 
         do_shadow_rt(pix + ivec2(1, 0));

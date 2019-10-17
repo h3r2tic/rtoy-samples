@@ -167,7 +167,7 @@ fn main() {
             })
         );
 
-        light_angle += 0.01;
+        //light_angle += 0.01;
 
         shadow_tex
     });
