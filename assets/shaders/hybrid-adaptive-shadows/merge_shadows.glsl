@@ -29,12 +29,35 @@ void main() {
     float discontinuity = texelFetch(discontinuityTex, pix / 2, 0).r;
     float result = texelFetch(halfresShadowsTex, pix / 2, 0).r;
 
-    if (discontinuity > 0.0 && (pix & 1) != ivec2(0, 0)) {
+    ivec2 quad = pix / 2;
+    uint quad_rotation_idx = (quad.x >> 1u) & 3u;
+    ivec2 offset = ivec2(0, quad_rotation_idx & 1);
+
+    if (discontinuity > 0.0 && (pix & 1) != offset) {
         result = texelFetch(sparseShadowsTex, pix, 0).r;
     }
 
     vec4 color_result = vec4(result);
-    color_result *= 0.5;
+
+    #if 0
+        color_result *= 0.5;
+    #else
+        vec2 uv = get_uv(outputTex_size);
+        vec4 gbuffer = texelFetch(inputTex, pix, 0);
+        vec3 normal = unpack_normal_11_10_11(gbuffer.x);
+
+        vec3 l = normalize(light_dir_pad.xyz);
+
+        float ndotl = max(0.0, dot(normal, l));
+
+        if (gbuffer.a == 0.0) {
+            color_result = vec4(0.05.xxx, 1.0);
+        } else {
+            color_result.rgb *= ndotl;
+            color_result.rgb *= normal * 0.5 + 0.5;
+        }
+    #endif
+
     //color_result.r += discontinuity * 0.2;
     imageStore(outputTex, pix, color_result);
 }
@@ -74,6 +97,17 @@ void main() {
     }
 
     vec4 color_result = vec4(result);
+
+    #if 0
+        color_result *= 0.5;
+    #else
+        if (gbuffer.a == 0.0) {
+            color_result = vec4(0.05.xxx, 1.0);
+        } else {
+            color_result.rgb *= ndotl;
+            color_result.rgb *= normal * 0.5 + 0.5;
+        }
+    #endif
 
     imageStore(outputTex, pix, color_result);
 }

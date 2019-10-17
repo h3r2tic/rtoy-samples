@@ -72,14 +72,21 @@ void main() {
     barrier();
 
     uint global_invocation_index = uint(gl_GlobalInvocationID.x) + uint(gl_GlobalInvocationID.y) * uint(outputTex_size.x);
+    uint pixel_idx = global_invocation_index / 3;
 
     // Rendertoy doesn't have indirect dispatch. Just branch out for now.
-    if (global_invocation_index < total_rt_px_count) {
-        ivec2 alloc_pix = ivec2(global_invocation_index % uint(rtPixelLocationTex_size.x), global_invocation_index / uint(rtPixelLocationTex_size.x));
-        ivec2 pix = 2 * floatBitsToInt(imageLoad(rtPixelLocationTex, alloc_pix).xy);
+    if (pixel_idx < total_rt_px_count) {
+        ivec2 alloc_pix = ivec2(pixel_idx % uint(rtPixelLocationTex_size.x), pixel_idx / uint(rtPixelLocationTex_size.x));
+        ivec2 quad = floatBitsToInt(imageLoad(rtPixelLocationTex, alloc_pix).xy);
+        ivec2 pix = 2 * quad;
 
-        do_shadow_rt(pix + ivec2(1, 0));
-        do_shadow_rt(pix + ivec2(1, 1));
-        do_shadow_rt(pix + ivec2(0, 1));
+        uint quad_rotation_idx = (quad.x >> 1u) & 3u;
+        ivec2 rendered_pixel_offset = ivec2(0, quad_rotation_idx & 1);
+
+        uint subpix_idx = (global_invocation_index - pixel_idx * 3) + 1;
+        ivec2 subpix = ivec2(subpix_idx & 1u, subpix_idx >> 1u);
+        ivec2 offset = rendered_pixel_offset ^ subpix;
+
+        do_shadow_rt(pix + offset);
     }
 }
