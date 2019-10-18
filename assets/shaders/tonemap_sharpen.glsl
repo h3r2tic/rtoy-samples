@@ -1,13 +1,41 @@
 uniform restrict writeonly image2D outputTex;
 uniform sampler2D inputTex;
 
+// Rec. 709
 float calculate_luma(vec3 col) {
-	return dot(vec3(0.299, 0.587, 0.114), col);
+	return dot(vec3(0.212, 0.701, 0.087), col);
 }
 
 layout(std430) buffer constants {
     float sharpen_amount;
 };
+
+float tonemap_curve(float v) {
+    #define METHOD 1
+
+    #if 0 == METHOD
+        // Standard photographic tone mapping
+        return 1.0 - exp(-v);
+    #elif 1 == METHOD
+        // Similar in shape, but more linear (less compression) in the mids
+        float c = v + v*v + 0.5*v*v*v;
+        return c / (1.0 + c);
+    #endif
+
+    #undef METHOD
+}
+
+vec3 tonemap_curve(vec3 v) {
+    return vec3(tonemap_curve(v.r), tonemap_curve(v.g), tonemap_curve(v.b));
+}
+
+vec3 neutral_tonemap(vec3 col) {
+    float tm_luma = tonemap_curve(calculate_luma(col.rgb));
+    vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
+    vec3 tm1 = tonemap_curve(col.rgb);
+    float bt = tonemap_curve(max(max(col.r, col.g), col.b) - min(min(col.r, col.g), col.b));
+    return mix(tm0, tm1, bt * bt);
+}
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
@@ -39,14 +67,8 @@ void main() {
 	col.rgb *= max(0.0, sharpened_luma / max(1e-5, center));
 #endif
 
-    // TEMP HACK: tonemap
-    {
-        float tm_luma = 1.0 - exp(-calculate_luma(col.rgb));
-        vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
-        vec3 tm1 = col.rgb = 1.0 - exp(-col.rgb);
-        col.rgb = mix(tm0, tm1, tm_luma * tm_luma);
-        col.rgb = pow(max(0.0.xxx, col.rgb), 1.1.xxx);
-    }
+    col.rgb = neutral_tonemap(col.rgb);
+    //col.rgb = 1.0 - exp(-col.rgb);
 
 	imageStore(outputTex, pix, col);
 }

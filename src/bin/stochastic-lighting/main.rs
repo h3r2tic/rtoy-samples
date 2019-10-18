@@ -278,7 +278,7 @@ fn main() {
     // Finally, chain a post-process sharpening effect to the output.
     let out_tex = compute_tex(
         tex_key,
-        load_cs(asset!("shaders/adaptive_sharpen.glsl")),
+        load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             "inputTex": out_tex,
             "constants": init_dynamic!(upload_buffer(0.4f32)),
