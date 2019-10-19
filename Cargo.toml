@@ -14,8 +14,8 @@ repository = "https://github.com/h3r2tic/rtoy-samples"
 rendertoy = { path = "../rendertoy" }
 #rtoy-rt = { git = "https://github.com/h3r2tic/rtoy-rt" }
 rtoy-rt = { path = "../rtoy-rt" }
-snoozy = { git = "https://github.com/h3r2tic/snoozy" }
+#snoozy = { git = "https://github.com/h3r2tic/snoozy" }
+snoozy = { path = "../snoozy" }
 snoozy-macros = { git = "https://github.com/h3r2tic/snoozy-macros" }
-#snoozy = { path = "../snoozy" }
 rand = "0.6.5"
 aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }

@@ -42,26 +42,7 @@ fn main() {
         shader_uniforms!("constants": viewport_constants_buf, "": bvh),
     );
 
-    // We temporally accumulate raytraced images. The blend factor gets re-defined every frame.
-    let temporal_blend = init_dynamic!(const_f32(1f32));
-
-    // Need a valid value for the accumulation history. Black will do.
-    let accum_rt_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
-
-    // Re-define the resource with a cycle upon itself -- every time it gets evaluated,
-    // it will use its previous value for "history", and produce a new value.
-    redef_dynamic!(
-        accum_rt_tex,
-        compute_tex(
-            tex_key,
-            load_cs(asset!("shaders/blend.glsl")),
-            shader_uniforms!(
-                "inputTex1": accum_rt_tex,
-                "inputTex2": rt_tex,
-                "blendAmount": temporal_blend,
-            )
-        )
-    );
+    let mut temporal_accum = rtoy_samples::accumulate_temporally(rt_tex, tex_key);
 
     let sharpen_constants_buf = init_dynamic!(upload_buffer(0.0f32));
 
@@ -69,22 +50,21 @@ fn main() {
     let sharpened_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
-        shader_uniforms!("inputTex": accum_rt_tex, "constants": sharpen_constants_buf),
+        shader_uniforms!("inputTex": temporal_accum.tex, "constants": sharpen_constants_buf),
     );
 
     let mut frame_idx = 0;
 
     // Start the main loop
     rtoy.draw_forever(|frame_state| {
-        camera.update(frame_state, 1.0 / 60.0);
+        camera.update(frame_state);
 
         // If the camera is moving/rotating, reset image accumulation.
         if !camera.is_converged() {
             frame_idx = 0;
         }
 
-        // Set the new blend factor such that we calculate a uniform average of all the traced frames.
-        redef_dynamic!(temporal_blend, const_f32(1.0 / (frame_idx as f32 + 1.0)));
+        temporal_accum.prepare_frame(frame_idx);
 
         // Jitter the image in a Gaussian kernel in order to anti-alias the result. This is why we have
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post

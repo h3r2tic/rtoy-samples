@@ -30,7 +30,7 @@ fn main() {
     );
 
     rtoy.draw_forever(|frame_state| {
-        camera.update(frame_state, 1.0 / 60.0);
+        camera.update(frame_state);
 
         let viewport_constants =
             ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();

@@ -1,5 +1,3 @@
-#include "rendertoy::shaders/random.inc"
-#include "rendertoy::shaders/sampling.inc"
 #include "rtoy-rt::shaders/rt.inc"
 #include "inc/uv.inc"
 #include "inc/pack_unpack.inc"

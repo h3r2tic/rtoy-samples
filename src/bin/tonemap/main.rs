@@ -17,10 +17,7 @@ fn main() {
     let tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/multiply.glsl")),
-        shader_uniforms!(
-            "inputTex": tex,
-            "factor": mouse_x,
-        ),
+        shader_uniforms!("inputTex": tex, "factor": mouse_x,),
     );
 
     let tex = compute_tex(
@@ -35,7 +32,10 @@ fn main() {
     let window_width = rtoy.width();
 
     rtoy.draw_forever(|frame_state| {
-        redef_dynamic!(mouse_x, const_f32(frame_state.mouse.pos.x / window_width as f32 * 10.0));
+        redef_dynamic!(
+            mouse_x,
+            const_f32(frame_state.mouse.pos.x / window_width as f32 * 10.0)
+        );
 
         tex
     });

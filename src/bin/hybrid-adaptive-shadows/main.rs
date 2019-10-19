@@ -152,7 +152,7 @@ fn main() {
     let mut light_angle = 1.0f32;
 
     rtoy.draw_forever(|frame_state| {
-        camera.update(frame_state, 1.0 / 60.0);
+        camera.update(frame_state);
 
         let viewport_constants =
             ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();

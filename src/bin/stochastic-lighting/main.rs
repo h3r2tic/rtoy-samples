@@ -19,31 +19,7 @@ struct ReprojConstants {
     prev_world_to_clip: Matrix4,
 }
 
-/*fn temporal_accumulate(
-    input: SnoozyRef<Texture>,
-    tex_key: TextureKey,
-) -> (SnoozyRef<f32>, SnoozyRef<Texture>) {
-    let temporal_blend = init_dynamic!(const_f32(1f32));
-
-    let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
-
-    redef_dynamic!(
-        accum_tex,
-        compute_tex(
-            tex_key,
-            load_cs(asset!("shaders/blend.glsl")),
-            shader_uniforms!(
-                "inputTex1": accum_tex,
-                "inputTex2": input,
-                "blendAmount": temporal_blend,
-            )
-        )
-    );
-
-    (temporal_blend, accum_tex)
-}*/
-
-fn temporal_accumulate(
+fn accumulate_reproject_temporally(
     input: SnoozyRef<Texture>,
     reprojection_tex: SnoozyRef<Texture>,
     tex_key: TextureKey,
@@ -273,7 +249,8 @@ fn main() {
         shader_uniforms!("inputTex": out_tex, "varianceTex": variance_estimate2,),
     );
 
-    let (temporal_blend, out_tex) = temporal_accumulate(out_tex, reprojection_tex, tex_key);
+    let (temporal_blend, out_tex) =
+        accumulate_reproject_temporally(out_tex, reprojection_tex, tex_key);
 
     // Finally, chain a post-process sharpening effect to the output.
     let out_tex = compute_tex(
@@ -289,7 +266,7 @@ fn main() {
     let mut prev_world_to_clip = Matrix4::identity();
 
     rtoy.draw_forever(|frame_state| {
-        camera.update(frame_state, 1.0 / 60.0);
+        camera.update(frame_state);
 
         // If the camera is moving/rotating, reset image accumulation.
         /*if !camera.is_converged() {
