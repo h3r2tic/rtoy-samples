@@ -48,8 +48,8 @@ fn main() {
     let tex_key = TextureKey::fullscreen(&rtoy, gl::RGBA32F);
 
     let scene = load_gltf_scene(
-        asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),
-        //asset!("meshes/the_lighthouse/scene.gltf"),
+        //asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),
+        asset!("meshes/the_lighthouse/scene.gltf"),
         1.0,
     );
     let bvh = build_gpu_bvh(scene);
@@ -107,7 +107,7 @@ fn main() {
     );
 
     let ao_tex = compute_tex(
-        tex_key.with_format(gl::R16F),
+        tex_key.with_format(gl::R8),
         load_cs(asset!("shaders/ssao_spatial_filter.glsl")),
         shader_uniforms!(
             "aoTex": ao_tex,
@@ -116,6 +116,8 @@ fn main() {
         ),
     );
 
+    // Should be R16F, but for the purpose of this demo this is easier
+    // than adding a redness -> greyness conversion to visualize the R16F.
     let mut temporal_accum =
         filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(gl::RGBA16F));
 
