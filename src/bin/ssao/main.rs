@@ -9,19 +9,57 @@ struct Constants {
     frame_idx: u32,
 }
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct ReprojConstants {
+    viewport_constants: ViewportConstants,
+    prev_world_to_clip: Matrix4,
+}
+
+pub fn filter_ssao_temporally(
+    input: SnoozyRef<Texture>,
+    reprojection_tex: SnoozyRef<Texture>,
+    tex_key: TextureKey,
+) -> rtoy_samples::TemporalAccumulation {
+    let temporal_blend = init_dynamic!(const_f32(1f32));
+    let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
+
+    redef_dynamic!(
+        accum_tex,
+        compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/ssao_temporal_filter.glsl")),
+            shader_uniforms!(
+                "inputTex": input,
+                "historyTex": accum_tex,
+                "reprojectionTex": reprojection_tex,
+            )
+        )
+    );
+
+    rtoy_samples::TemporalAccumulation {
+        tex: accum_tex,
+        temporal_blend,
+    }
+}
+
 fn main() {
     let mut rtoy = Rendertoy::new();
     let tex_key = TextureKey::fullscreen(&rtoy, gl::RGBA32F);
 
-    let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
+    let scene = load_gltf_scene(
+        asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),
+        //asset!("meshes/the_lighthouse/scene.gltf"),
+        1.0,
+    );
     let bvh = build_gpu_bvh(scene);
     let gpu_bvh = upload_bvh(bvh);
 
-    let mut camera =
-        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0)));
+    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
 
     let rt_constants_buf = init_dynamic!(upload_buffer(0u32));
     let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
+    let reproj_constants = init_dynamic!(upload_buffer(0u32));
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -35,31 +73,68 @@ fn main() {
         ),
     );
 
+    let reprojection_tex = compute_tex(
+        TextureKey {
+            width: rtoy.width(),
+            height: rtoy.height(),
+            format: gl::RGBA16F,
+        },
+        load_cs(asset!("shaders/reproject.glsl")),
+        shader_uniforms!("constants": reproj_constants, "inputTex": gbuffer_tex,),
+    );
+
+    let depth_tex = compute_tex(
+        tex_key.with_format(gl::R16F),
+        load_cs(asset!("shaders/extract_gbuffer_depth.glsl")),
+        shader_uniforms!("inputTex": gbuffer_tex),
+    );
+
     let ao_tex = compute_tex(
-        tex_key,
+        tex_key.with_format(gl::R16F),
         load_cs(asset!("shaders/ssao.glsl")),
         shader_uniforms!(
             "constants": rt_constants_buf,
             "inputTex": gbuffer_tex,
+            "depthTex": depth_tex,
             "": gpu_bvh,
         ),
     );
 
-    let mut temporal_accum = rtoy_samples::accumulate_temporally(ao_tex, tex_key);
+    let normal_tex = compute_tex(
+        tex_key.with_format(gl::R32UI),
+        load_cs(asset!("shaders/extract_gbuffer_normal.glsl")),
+        shader_uniforms!("inputTex": gbuffer_tex),
+    );
+
+    let ao_tex = compute_tex(
+        tex_key.with_format(gl::R16F),
+        load_cs(asset!("shaders/ssao_spatial_filter.glsl")),
+        shader_uniforms!(
+            "aoTex": ao_tex,
+            "depthTex": depth_tex,
+            "normalTex": normal_tex,
+        ),
+    );
+
+    let mut temporal_accum =
+        filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(gl::RGBA16F));
+
+    let out_tex = compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/tonemap_sharpen.glsl")),
+        shader_uniforms!(
+            "inputTex": temporal_accum.tex,
+            "constants": init_dynamic!(upload_buffer(0.4f32)),
+        ),
+    );
+
     let mut frame_idx = 0;
+    let mut prev_world_to_clip = Matrix4::identity();
 
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
 
-        // If the camera is moving/rotating, reset image accumulation.
-        if !camera.is_converged() {
-            frame_idx = 0;
-        }
-
         temporal_accum.prepare_frame(frame_idx);
-
-        /*let viewport_constants =
-        ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();*/
 
         // Jitter the image in a Gaussian kernel in order to anti-alias the result. This is why we have
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post
@@ -85,10 +160,23 @@ fn main() {
             })
         );
 
-        //frame_idx = (frame_idx + 1).min(1024);
-        frame_idx += 1;
+        redef_dynamic!(
+            reproj_constants,
+            upload_buffer(ReprojConstants {
+                viewport_constants: ViewportConstants::build(
+                    &camera,
+                    tex_key.width,
+                    tex_key.height
+                )
+                .finish(),
+                prev_world_to_clip
+            })
+        );
 
-        temporal_accum.tex
-        //ao_tex
+        let m = camera.calc_matrices();
+        prev_world_to_clip = m.view_to_clip * m.world_to_view;
+
+        frame_idx += 1;
+        out_tex
     });
 }

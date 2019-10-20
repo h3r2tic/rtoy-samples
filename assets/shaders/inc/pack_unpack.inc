@@ -24,3 +24,12 @@ vec3 unpack_normal_11_10_11(float pckd) {
 		unpack_unorm(p >> 21, 11)
 	) * 2.0 - 1.0);
 }
+
+vec3 unpack_normal_11_10_11_no_normalize(float pckd) {
+	uint p = floatBitsToUint(pckd);
+	return vec3(
+		unpack_unorm(p, 11),
+		unpack_unorm(p >> 11, 10),
+		unpack_unorm(p >> 21, 11)
+	) * 2.0 - 1.0;
+}
