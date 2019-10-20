@@ -19,30 +19,6 @@ struct ReprojConstants {
     prev_world_to_clip: Matrix4,
 }
 
-fn accumulate_reproject_temporally(
-    input: SnoozyRef<Texture>,
-    reprojection_tex: SnoozyRef<Texture>,
-    tex_key: TextureKey,
-) -> (SnoozyRef<f32>, SnoozyRef<Texture>) {
-    let temporal_blend = init_dynamic!(const_f32(1f32));
-    let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
-
-    redef_dynamic!(
-        accum_tex,
-        compute_tex(
-            tex_key,
-            load_cs(asset!("shaders/taa.glsl")),
-            shader_uniforms!(
-                "inputTex": input,
-                "historyTex": accum_tex,
-                "reprojectionTex": reprojection_tex,
-            )
-        )
-    );
-
-    (temporal_blend, accum_tex)
-}
-
 #[snoozy]
 fn build_light_gpu_data(
     ctx: &mut Context,
@@ -249,15 +225,15 @@ fn main() {
         shader_uniforms!("inputTex": out_tex, "varianceTex": variance_estimate2,),
     );
 
-    let (temporal_blend, out_tex) =
-        accumulate_reproject_temporally(out_tex, reprojection_tex, tex_key);
+    let temporal_accum =
+        rtoy_samples::accumulate_reproject_temporally(out_tex, reprojection_tex, tex_key);
 
     // Finally, chain a post-process sharpening effect to the output.
     let out_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": out_tex,
+            "inputTex": temporal_accum.tex,
             "constants": init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
@@ -276,7 +252,7 @@ fn main() {
         // Set the new blend factor such that we calculate a uniform average of all the traced frames.
         redef_dynamic!(temporal_blend, const_f32(1.0 / (frame_idx as f32 + 1.0)));*/
 
-        redef_dynamic!(temporal_blend, const_f32(0.1));
+        redef_dynamic!(temporal_accum.temporal_blend, const_f32(0.1));
 
         // Jitter the image in a Gaussian kernel in order to anti-alias the result. This is why we have
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post

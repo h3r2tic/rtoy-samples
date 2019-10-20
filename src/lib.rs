@@ -42,3 +42,30 @@ pub fn accumulate_temporally(tex: SnoozyRef<Texture>, tex_key: TextureKey) -> Te
         temporal_blend,
     }
 }
+
+pub fn accumulate_reproject_temporally(
+    input: SnoozyRef<Texture>,
+    reprojection_tex: SnoozyRef<Texture>,
+    tex_key: TextureKey,
+) -> TemporalAccumulation {
+    let temporal_blend = init_dynamic!(const_f32(1f32));
+    let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
+
+    redef_dynamic!(
+        accum_tex,
+        compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/taa.glsl")),
+            shader_uniforms!(
+                "inputTex": input,
+                "historyTex": accum_tex,
+                "reprojectionTex": reprojection_tex,
+            )
+        )
+    );
+
+    TemporalAccumulation {
+        tex: accum_tex,
+        temporal_blend,
+    }
+}
