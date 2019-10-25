@@ -20,10 +20,7 @@ fn main() {
     };
 
     let dredd = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
-    let trabant = load_gltf_scene(
-        asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),
-        1.0,
-    );
+    let lighthouse = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
 
     // Wrap a first person camera in a utility which enforces movement/rotation convergence by stopping it upon small deltas.
     // This comes in handy because the raytracer resets accumulation upon movement,
@@ -62,15 +59,15 @@ fn main() {
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
 
+        // Animate so we get motion blur!
+        let dredd_pos = Vector3::new(150.0 + 20.0 * ((frame_idx as f32 * 0.01) % 1.0), 0.0, 0.0);
+
         // Build a BVH and acquire a bundle of GPU buffers.
         redef_dynamic!(
             bvh,
             upload_bvh(vec![
-                (
-                    dredd.clone(),
-                    Vector3::new(5.0 * (frame_idx as f32 * 0.01).sin(), 0.0, 0.0)
-                ),
-                (trabant.clone(), Vector3::new(-100.0, 0.0, 0.0)),
+                (dredd.clone(), dredd_pos),
+                (lighthouse.clone(), Vector3::new(-250.0, -50.0, -100.0)),
             ])
         );
 
