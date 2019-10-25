@@ -1,4 +1,5 @@
-use rand::{distributions::StandardNormal, rngs::SmallRng, Rng, SeedableRng};
+use rand::{rngs::SmallRng, Rng, SeedableRng};
+use rand_distr::StandardNormal;
 use rendertoy::*;
 use rtoy_rt::*;
 
@@ -52,7 +53,11 @@ fn main() {
         asset!("meshes/the_lighthouse/scene.gltf"),
         1.0,
     );
-    let bvh = vec![(scene.clone(), Vector3::new(0.0, 0.0, 0.0))];
+    let bvh = vec![(
+        scene.clone(),
+        Vector3::new(0.0, 0.0, 0.0),
+        Quaternion::identity(),
+    )];
     let gpu_bvh = upload_bvh(bvh);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
@@ -143,8 +148,8 @@ fn main() {
         // filter perceptually sharpens it whilst keeping the image alias-free.
         let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
         let jitter = Vector2::new(
-            0.5 * rng.sample(StandardNormal) as f32,
-            0.5 * rng.sample(StandardNormal) as f32,
+            0.5 * rng.sample::<f32, _>(StandardNormal),
+            0.5 * rng.sample::<f32, _>(StandardNormal),
         );
 
         // Calculate the new viewport constants from the latest state

@@ -16,6 +16,8 @@ rendertoy = { path = "../rendertoy" }
 rtoy-rt = { path = "../rtoy-rt" }
 #snoozy = { git = "https://github.com/h3r2tic/snoozy" }
 snoozy = { path = "../snoozy" }
-snoozy-macros = { git = "https://github.com/h3r2tic/snoozy-macros" }
-rand = "0.6.5"
+#snoozy-macros = { git = "https://github.com/h3r2tic/snoozy-macros" }
+snoozy-macros = { path = "../snoozy-macros" }
+rand = { version = "0.7", features = ["small_rng"] }
+rand_distr = "0.2"
 aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }

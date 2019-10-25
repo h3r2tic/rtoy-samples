@@ -1,4 +1,5 @@
-use rand::{distributions::StandardNormal, rngs::SmallRng, Rng, SeedableRng};
+use rand::{rngs::SmallRng, Rng, SeedableRng};
+use rand_distr::StandardNormal;
 use rendertoy::*;
 use rtoy_rt::*;
 
@@ -19,7 +20,11 @@ fn main() {
     };
 
     let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
-    let bvh = vec![(scene.clone(), Vector3::new(0.0, 0.0, 0.0))];
+    let bvh = vec![(
+        scene.clone(),
+        Vector3::new(0.0, 0.0, 0.0),
+        Quaternion::identity(),
+    )];
 
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
@@ -77,8 +82,8 @@ fn main() {
         // filter perceptually sharpens it whilst keeping the image alias-free.
         let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
         let jitter = Vector2::new(
-            0.5 * rng.sample(StandardNormal) as f32,
-            0.5 * rng.sample(StandardNormal) as f32,
+            0.5 * rng.sample::<f32, _>(StandardNormal) as f32,
+            0.5 * rng.sample::<f32, _>(StandardNormal) as f32,
         );
 
         // Calculate the new viewport constants from the latest state

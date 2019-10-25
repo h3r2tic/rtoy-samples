@@ -19,7 +19,11 @@ fn main() {
 
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
     let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let bvh = vec![(scene.clone(), Vector3::new(0.0, 0.0, 0.0))];
+    let bvh = vec![(
+        scene.clone(),
+        Vector3::new(0.0, 0.0, 0.0),
+        Quaternion::identity(),
+    )];
     let gpu_bvh = upload_bvh(bvh);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
