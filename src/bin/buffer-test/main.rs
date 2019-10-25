@@ -18,5 +18,5 @@ fn main() {
         ),
     );
 
-    rtoy.draw_forever(|_| gradients_tex);
+    rtoy.draw_forever(|_| gradients_tex.clone());
 }

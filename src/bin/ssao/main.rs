@@ -31,7 +31,7 @@ pub fn filter_ssao_temporally(
             load_cs(asset!("shaders/ssao_temporal_filter.glsl")),
             shader_uniforms!(
                 "inputTex": input,
-                "historyTex": accum_tex,
+                "historyTex": accum_tex.clone(),
                 "reprojectionTex": reprojection_tex,
             )
         )
@@ -52,7 +52,7 @@ fn main() {
         asset!("meshes/the_lighthouse/scene.gltf"),
         1.0,
     );
-    let bvh = build_gpu_bvh(scene);
+    let bvh = vec![(scene.clone(), Vector3::new(0.0, 0.0, 0.0))];
     let gpu_bvh = upload_bvh(bvh);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
@@ -68,7 +68,7 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": raster_constants_buf,
+            "constants": raster_constants_buf.clone(),
             "": upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
@@ -80,22 +80,22 @@ fn main() {
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/reproject.glsl")),
-        shader_uniforms!("constants": reproj_constants, "inputTex": gbuffer_tex,),
+        shader_uniforms!("constants": reproj_constants.clone(), "inputTex": gbuffer_tex.clone(),),
     );
 
     let depth_tex = compute_tex(
         tex_key.with_format(gl::R16F),
         load_cs(asset!("shaders/extract_gbuffer_depth.glsl")),
-        shader_uniforms!("inputTex": gbuffer_tex),
+        shader_uniforms!("inputTex": gbuffer_tex.clone()),
     );
 
     let ao_tex = compute_tex(
         tex_key.with_format(gl::R16F),
         load_cs(asset!("shaders/ssao.glsl")),
         shader_uniforms!(
-            "constants": rt_constants_buf,
-            "inputTex": gbuffer_tex,
-            "depthTex": depth_tex,
+            "constants": rt_constants_buf.clone(),
+            "inputTex": gbuffer_tex.clone(),
+            "depthTex": depth_tex.clone(),
             "": gpu_bvh,
         ),
     );
@@ -125,7 +125,7 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": temporal_accum.tex,
+            "inputTex": temporal_accum.tex.clone(),
             "constants": init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
@@ -179,6 +179,6 @@ fn main() {
         prev_world_to_clip = m.view_to_clip * m.world_to_view;
 
         frame_idx += 1;
-        out_tex
+        out_tex.clone()
     });
 }

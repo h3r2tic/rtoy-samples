@@ -102,8 +102,9 @@ void main() {
             vec3 refl_col;
 
             RtHit hit;
+            hit.t = 1e10;
             if (raytrace(r, hit)) {
-                Triangle tri = unpack_triangle(bvh_triangles[hit.tri_idx]);
+                Triangle tri = unpack_triangle(get_bvh_triangle(hit.tri_sampler, hit.tri_idx));
                 vec3 hit_normal = normalize(cross(tri.e0, tri.e1));
 
                 vec3 hit_pos = r.o + r.d * hit.t;

@@ -14,7 +14,7 @@ fn main() {
     let gradients_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/gradients.glsl")),
-        shader_uniforms!("time": time_asset),
+        shader_uniforms!("time": time_asset.clone()),
     );
 
     let blurred_tex = compute_tex(
@@ -35,7 +35,7 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/blend.glsl")),
             shader_uniforms!(
-                "inputTex1": temporal_tex,
+                "inputTex1": temporal_tex.clone(),
                 "inputTex2": blurred_tex,
                 "blendAmount": 0.1f32,
             )
@@ -46,6 +46,6 @@ fn main() {
     rtoy.draw_forever(|_frame_state| {
         t += 0.01;
         redef_dynamic!(time_asset, const_f32(t));
-        temporal_tex
+        temporal_tex.clone()
     });
 }

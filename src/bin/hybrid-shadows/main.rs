@@ -19,7 +19,7 @@ fn main() {
 
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
     let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let bvh = build_gpu_bvh(scene);
+    let bvh = vec![(scene.clone(), Vector3::new(0.0, 0.0, 0.0))];
     let gpu_bvh = upload_bvh(bvh);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
@@ -34,7 +34,7 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": raster_constants_buf,
+            "constants": raster_constants_buf.clone(),
             "": upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
@@ -43,7 +43,7 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/rt_hybrid_shadows.glsl")),
         shader_uniforms!(
-            "constants": rt_constants_buf,
+            "constants": rt_constants_buf.clone(),
             "inputTex": gbuffer_tex,
             "": gpu_bvh,
         ),
@@ -69,6 +69,6 @@ fn main() {
             })
         );
 
-        shadowed_tex
+        shadowed_tex.clone()
     });
 }

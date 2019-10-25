@@ -6,5 +6,5 @@ fn main() {
     //let tex = load_tex(asset!("images/cornell_box_render.jpg"));
     let tex = init_dynamic!(load_tex(asset!("images/cornell_box_render.jpg")));
 
-    rtoy.draw_forever(|_| tex);
+    rtoy.draw_forever(|_| tex.clone());
 }

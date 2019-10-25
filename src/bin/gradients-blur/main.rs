@@ -25,5 +25,5 @@ fn main() {
         ),
     );
 
-    rtoy.draw_forever(|_| blurred_tex);
+    rtoy.draw_forever(|_| blurred_tex.clone());
 }

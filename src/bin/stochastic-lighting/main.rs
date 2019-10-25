@@ -104,7 +104,7 @@ fn main() {
     //let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
 
     //let lights = build_light_gpu_data(scene);
-    let bvh = build_gpu_bvh(scene);
+    let bvh = vec![(scene.clone(), Vector3::new(0.0, 0.0, 0.0))];
 
     //let mut camera =
     //    CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
@@ -122,8 +122,8 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": constants_buf,
-            "": upload_raster_mesh(make_raster_mesh(scene))
+            "constants": constants_buf.clone(),
+            "": upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );
 
@@ -134,7 +134,7 @@ fn main() {
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/reproject.glsl")),
-        shader_uniforms!("constants": reproj_constants, "inputTex": gbuffer_tex,),
+        shader_uniforms!("constants": reproj_constants.clone(), "inputTex": gbuffer_tex.clone(),),
     );
 
     let out_tex = if false {
@@ -142,10 +142,10 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/rt_stochastic_lighting.glsl")),
             shader_uniforms!(
-                "constants": constants_buf,
-                "inputTex": gbuffer_tex,
-                "": upload_raster_mesh(make_raster_mesh(scene)),
-                "": upload_bvh(bvh),
+                "constants": constants_buf.clone(),
+                "inputTex": gbuffer_tex.clone(),
+                "": upload_raster_mesh(make_raster_mesh(scene.clone())),
+                "": upload_bvh(bvh.clone()),
             ),
         )
     } else {
@@ -153,10 +153,10 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/rt_stochastic_light_sampling.glsl")),
             shader_uniforms!(
-                "constants": constants_buf,
-                "inputTex": gbuffer_tex,
-                "": upload_raster_mesh(make_raster_mesh(scene)),
-                "": upload_bvh(bvh),
+                "constants": constants_buf.clone(),
+                "inputTex": gbuffer_tex.clone(),
+                "": upload_raster_mesh(make_raster_mesh(scene.clone())),
+                "": upload_bvh(bvh.clone()),
                 //"": lights,
                 "blue_noise_tex": load_tex_with_params(
                     //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
@@ -178,10 +178,10 @@ fn main() {
                 tex_key,
                 load_cs(asset!("shaders/stochastic_light_variance_estimate.glsl")),
                 shader_uniforms!(
-                    "g_primaryVisTex": gbuffer_tex,
-                    "inputTex": out_tex,
-                    "historyTex": variance_estimate,
-                    "reprojectionTex": reprojection_tex,
+                    "g_primaryVisTex": gbuffer_tex.clone(),
+                    "inputTex": out_tex.clone(),
+                    "historyTex": variance_estimate.clone(),
+                    "reprojectionTex": reprojection_tex.clone(),
                 )
             )
         );
@@ -192,7 +192,7 @@ fn main() {
             shader_uniforms!(
                 //"g_frameIndex": frame_index,
                 //"g_mouseX": mouse_x,
-                "constants": constants_buf,
+                "constants": constants_buf.clone(),
                 "g_primaryVisTex": gbuffer_tex,
                 "g_lightSamplesTex": out_tex,
                 "g_varianceEstimate": variance_estimate,
@@ -212,9 +212,9 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/variance_estimate.glsl")),
             shader_uniforms!(
-                "inputTex": out_tex,
-                "historyTex": variance_estimate2,
-                "reprojectionTex": reprojection_tex,
+                "inputTex": out_tex.clone(),
+                "historyTex": variance_estimate2.clone(),
+                "reprojectionTex": reprojection_tex.clone(),
             )
         )
     );
@@ -233,7 +233,7 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": temporal_accum.tex,
+            "inputTex": temporal_accum.tex.clone(),
             "constants": init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
@@ -293,6 +293,6 @@ fn main() {
         prev_world_to_clip = m.view_to_clip * m.world_to_view;
 
         frame_idx += 1;
-        out_tex
+        out_tex.clone()
     });
 }

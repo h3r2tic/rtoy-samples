@@ -17,7 +17,7 @@ fn main() {
     let tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/multiply.glsl")),
-        shader_uniforms!("inputTex": tex, "factor": mouse_x,),
+        shader_uniforms!("inputTex": tex, "factor": mouse_x.clone(),),
     );
 
     let tex = compute_tex(
@@ -37,6 +37,6 @@ fn main() {
             const_f32(frame_state.mouse.pos.x / window_width as f32 * 10.0)
         );
 
-        tex
+        tex.clone()
     });
 }

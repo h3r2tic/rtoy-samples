@@ -15,5 +15,5 @@ fn main() {
         shader_uniforms!(),
     );
 
-    rtoy.draw_forever(|_| gradients_tex);
+    rtoy.draw_forever(|_| gradients_tex.clone());
 }

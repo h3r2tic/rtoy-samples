@@ -30,9 +30,9 @@ pub fn accumulate_temporally(tex: SnoozyRef<Texture>, tex_key: TextureKey) -> Te
             tex_key,
             load_cs(asset!("shaders/blend.glsl")),
             shader_uniforms!(
-                "inputTex1": accum_tex,
+                "inputTex1": accum_tex.clone(),
                 "inputTex2": tex,
-                "blendAmount": temporal_blend,
+                "blendAmount": temporal_blend.clone(),
             )
         )
     );
@@ -58,7 +58,7 @@ pub fn accumulate_reproject_temporally(
             load_cs(asset!("shaders/taa.glsl")),
             shader_uniforms!(
                 "inputTex": input,
-                "historyTex": accum_tex,
+                "historyTex": accum_tex.clone(),
                 "reprojectionTex": reprojection_tex,
             )
         )

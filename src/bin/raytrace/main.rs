@@ -19,7 +19,11 @@ fn main() {
         format: gl::RGBA32F,
     };
 
-    let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
+    let dredd = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
+    let trabant = load_gltf_scene(
+        asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),
+        1.0,
+    );
 
     // Wrap a first person camera in a utility which enforces movement/rotation convergence by stopping it upon small deltas.
     // This comes in handy because the raytracer resets accumulation upon movement,
@@ -27,8 +31,7 @@ fn main() {
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
 
-    // Build a BVH and acquire a bundle of GPU buffers.
-    let bvh = upload_bvh(build_gpu_bvh(scene));
+    let bvh = init_dynamic!(upload_bvh(vec![]));
 
     // Make a named slot for viewport constants. By giving it a unique name,
     // we can re-define it at runtime, and keep the lazy evaluation graph structure.
@@ -39,7 +42,7 @@ fn main() {
     let rt_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/raytrace.glsl")),
-        shader_uniforms!("constants": viewport_constants_buf, "": bvh),
+        shader_uniforms!("constants": viewport_constants_buf.clone(), "": bvh.clone()),
     );
 
     let mut temporal_accum = rtoy_samples::accumulate_temporally(rt_tex, tex_key);
@@ -50,7 +53,7 @@ fn main() {
     let sharpened_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
-        shader_uniforms!("inputTex": temporal_accum.tex, "constants": sharpen_constants_buf),
+        shader_uniforms!("inputTex": temporal_accum.tex.clone(), "constants": sharpen_constants_buf.clone()),
     );
 
     let mut frame_idx = 0;
@@ -58,6 +61,18 @@ fn main() {
     // Start the main loop
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
+
+        // Build a BVH and acquire a bundle of GPU buffers.
+        redef_dynamic!(
+            bvh,
+            upload_bvh(vec![
+                (
+                    dredd.clone(),
+                    Vector3::new(5.0 * (frame_idx as f32 * 0.01).sin(), 0.0, 0.0)
+                ),
+                (trabant.clone(), Vector3::new(-100.0, 0.0, 0.0)),
+            ])
+        );
 
         // If the camera is moving/rotating, reset image accumulation.
         if !camera.is_converged() {
@@ -97,6 +112,6 @@ fn main() {
         frame_idx += 1;
 
         // Finaly display the result.
-        sharpened_tex
+        sharpened_tex.clone()
     });
 }

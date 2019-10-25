@@ -19,7 +19,7 @@ fn main() {
     };
 
     let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
-    let bvh = build_gpu_bvh(scene);
+    let bvh = vec![(scene.clone(), Vector3::new(0.0, 0.0, 0.0))];
 
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
@@ -33,8 +33,8 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": constants_buf,
-            "": upload_raster_mesh(make_raster_mesh(scene))
+            "constants": constants_buf.clone(),
+            "": upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );
 
@@ -42,7 +42,7 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/rt_hybrid_reflections.glsl")),
         shader_uniforms!(
-            "constants": constants_buf,
+            "constants": constants_buf.clone(),
             "inputTex": gbuffer_tex,
             "": upload_raster_mesh(make_raster_mesh(scene)),
             "": upload_bvh(bvh),
@@ -56,7 +56,7 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": temporal_accum.tex,
+            "inputTex": temporal_accum.tex.clone(),
             "constants": init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
@@ -95,6 +95,6 @@ fn main() {
         );
 
         frame_idx += 1;
-        out_tex
+        out_tex.clone()
     });
 }

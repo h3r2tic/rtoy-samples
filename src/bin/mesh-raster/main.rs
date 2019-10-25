@@ -24,7 +24,7 @@ fn main() {
             load_ps(asset!("shaders/raster_simple_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": viewport_constants_buf,
+            "constants": viewport_constants_buf.clone(),
             "": upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
@@ -37,6 +37,6 @@ fn main() {
 
         redef_dynamic!(viewport_constants_buf, upload_buffer(viewport_constants));
 
-        out_tex
+        out_tex.clone()
     });
 }
