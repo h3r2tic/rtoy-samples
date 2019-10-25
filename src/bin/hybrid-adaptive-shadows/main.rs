@@ -51,7 +51,7 @@ fn main() {
     let bvh = vec![(
         scene.clone(),
         Vector3::new(0.0, 0.0, 0.0),
-        Quaternion::identity(),
+        UnitQuaternion::identity(),
     )];
     let gpu_bvh = upload_bvh(bvh);
 

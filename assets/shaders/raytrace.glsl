@@ -45,8 +45,7 @@ void main() {
     RtHit hit;
     hit.t = 1e10;
     if (raytrace(r, hit)) {
-        Triangle tri = unpack_triangle(get_bvh_triangle(hit.tri_sampler, hit.tri_idx));
-        vec3 normal = normalize(cross(tri.e0, tri.e1));
+        vec3 normal = hit.normal;
 
         // Pick a light direction
         vec3 l = normalize(vec3(1, -1, -1));

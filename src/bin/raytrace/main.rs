@@ -61,17 +61,19 @@ fn main() {
         camera.update(frame_state);
 
         // Animate so we get motion blur!
-        let dredd_pos = Vector3::new(150.0 + 20.0 * ((frame_idx as f32 * 0.01) % 1.0), 0.0, 0.0);
+        let dredd_pos = Vector3::new(150.0, 0.0, 0.0);
+        let dredd_rot =
+            na::UnitQuaternion::from_axis_angle(&Vector3::y_axis(), frame_idx as f32 * 0.01);
 
         // Build a BVH and acquire a bundle of GPU buffers.
         redef_dynamic!(
             bvh,
             upload_bvh(vec![
-                (dredd.clone(), dredd_pos, Quaternion::identity()),
+                (dredd.clone(), dredd_pos, dredd_rot),
                 (
                     lighthouse.clone(),
                     Vector3::new(-250.0, -50.0, -100.0),
-                    Quaternion::identity()
+                    UnitQuaternion::identity()
                 ),
             ])
         );
