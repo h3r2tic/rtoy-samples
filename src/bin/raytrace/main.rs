@@ -92,7 +92,7 @@ fn main() {
             .pixel_offset(jitter)
             .finish();
 
-        let sharpen_amount = (frame_idx as f32 / 1024.0).min(0.5);
+        let sharpen_amount = ((frame_idx as f32).sqrt() / 256.0).min(0.5);
         redef_dynamic!(sharpen_constants_buf, upload_buffer(sharpen_amount));
 
         // Redefine the viewport constants parameter. This invalidates all dependent assets,
