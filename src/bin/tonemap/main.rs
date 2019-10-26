@@ -17,15 +17,15 @@ fn main() {
     let tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/multiply.glsl")),
-        shader_uniforms!("inputTex": tex, "factor": mouse_x.clone(),),
+        shader_uniforms!(inputTex: tex, factor: mouse_x.clone(),),
     );
 
     let tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": tex,
-            "constants": init_dynamic!(upload_buffer(0.4f32)),
+            inputTex: tex,
+            constants: init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
 

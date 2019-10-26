@@ -14,16 +14,16 @@ fn main() {
     let gradients_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/gradients.glsl")),
-        shader_uniforms!("time": time_asset.clone()),
+        shader_uniforms!(time: time_asset.clone()),
     );
 
     let blurred_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/blur.glsl")),
         shader_uniforms!(
-            "inputImage": gradients_tex,
-            "blurRadius": 4,
-            "blurDir": (0i32, 3i32)
+            inputImage: gradients_tex,
+            blurRadius: 4,
+            blurDir: (0i32, 3i32)
         ),
     );
 
@@ -35,9 +35,9 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/blend.glsl")),
             shader_uniforms!(
-                "inputTex1": temporal_tex.clone(),
-                "inputTex2": blurred_tex,
-                "blendAmount": 0.1f32,
+                inputTex1: temporal_tex.clone(),
+                inputTex2: blurred_tex,
+                blendAmount: 0.1f32,
             )
         )
     );

@@ -14,7 +14,7 @@ fn prefix_scan_2d(tex: SnoozyRef<Texture>, tex_key: &TextureKey) -> SnoozyRef<Te
         load_cs(asset!(
             "shaders/hybrid-adaptive-shadows/prefix_scan_2d_horizontal.glsl"
         )),
-        shader_uniforms!("inputTex": tex),
+        shader_uniforms!(inputTex: tex),
     );
 
     let tex_prefix_vert = compute_tex(
@@ -22,7 +22,7 @@ fn prefix_scan_2d(tex: SnoozyRef<Texture>, tex_key: &TextureKey) -> SnoozyRef<Te
         load_cs(asset!(
             "shaders/hybrid-adaptive-shadows/prefix_scan_2d_vertical.glsl"
         )),
-        shader_uniforms!("inputTex": tex_prefix_horiz.clone()),
+        shader_uniforms!(inputTex: tex_prefix_horiz.clone()),
     );
 
     compute_tex(
@@ -31,8 +31,8 @@ fn prefix_scan_2d(tex: SnoozyRef<Texture>, tex_key: &TextureKey) -> SnoozyRef<Te
             "shaders/hybrid-adaptive-shadows/prefix_scan_2d_merge.glsl"
         )),
         shader_uniforms!(
-            "horizontalInputTex": tex_prefix_horiz,
-            "verticalInputTex": tex_prefix_vert
+            horizontalInputTex: tex_prefix_horiz,
+            verticalInputTex: tex_prefix_vert
         ),
     )
 }
@@ -67,8 +67,8 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": raster_constants_buf.clone(),
-            "": upload_raster_mesh(make_raster_mesh(scene.clone()))
+            constants: raster_constants_buf.clone(),
+            :upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );
 
@@ -78,9 +78,9 @@ fn main() {
             "shaders/hybrid-adaptive-shadows/halfres_shadows.glsl"
         )),
         shader_uniforms!(
-            "constants": rt_constants_buf.clone(),
-            "inputTex": gbuffer_tex.clone(),
-            "": gpu_bvh.clone(),
+            constants: rt_constants_buf.clone(),
+            inputTex: gbuffer_tex.clone(),
+            :gpu_bvh.clone(),
         ),
     );
 
@@ -92,7 +92,7 @@ fn main() {
         load_cs(asset!(
             "shaders/hybrid-adaptive-shadows/discontinuity_detect.glsl"
         )),
-        shader_uniforms!("inputTex": halfres_shadow_tex.clone(),),
+        shader_uniforms!(inputTex: halfres_shadow_tex.clone(),),
     );
 
     let tile_tex_key = discontinuity_tex_key
@@ -105,7 +105,7 @@ fn main() {
         load_cs(asset!(
             "shaders/hybrid-adaptive-shadows/discontinuity_tile_reduce.glsl"
         )),
-        shader_uniforms!("inputTex": discontinuity_tex.clone()),
+        shader_uniforms!(inputTex: discontinuity_tex.clone()),
     );
 
     // Run a prefix scan over tiles to allocate space
@@ -118,8 +118,8 @@ fn main() {
             "shaders/hybrid-adaptive-shadows/alloc_rt_pixel_locations.glsl"
         )),
         shader_uniforms!(
-            "discontinuityTex": discontinuity_tex.clone(),
-            "tileAllocOffsetTex": tile_prefix_tex.clone(),
+            discontinuityTex: discontinuity_tex.clone(),
+            tileAllocOffsetTex: tile_prefix_tex.clone(),
         ),
     );
 
@@ -130,12 +130,12 @@ fn main() {
             "shaders/hybrid-adaptive-shadows/sparse_shadows_trace.glsl"
         )),
         shader_uniforms!(
-            "constants": rt_constants_buf.clone(),
-            "inputTex": gbuffer_tex.clone(),
-            "discontinuityTex": discontinuity_tex.clone(),
-            "tileAllocOffsetTex": tile_prefix_tex.clone(),
-            "rtPixelLocationTex": rt_pixel_location_tex.clone(),
-            "": gpu_bvh.clone(),
+            constants: rt_constants_buf.clone(),
+            inputTex: gbuffer_tex.clone(),
+            discontinuityTex: discontinuity_tex.clone(),
+            tileAllocOffsetTex: tile_prefix_tex.clone(),
+            rtPixelLocationTex: rt_pixel_location_tex.clone(),
+            :gpu_bvh.clone(),
         ),
     );
 
@@ -144,12 +144,12 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/hybrid-adaptive-shadows/merge_shadows.glsl")),
         shader_uniforms!(
-            "constants": rt_constants_buf.clone(),
-            "inputTex": gbuffer_tex.clone(),
-            "halfresShadowsTex": halfres_shadow_tex.clone(),
-            "discontinuityTex": discontinuity_tex.clone(),
-            "sparseShadowsTex": sparse_shadow_tex.clone(),
-            "": gpu_bvh.clone(),
+            constants: rt_constants_buf.clone(),
+            inputTex: gbuffer_tex.clone(),
+            halfresShadowsTex: halfres_shadow_tex.clone(),
+            discontinuityTex: discontinuity_tex.clone(),
+            sparseShadowsTex: sparse_shadow_tex.clone(),
+            :gpu_bvh.clone(),
         ),
     );
 

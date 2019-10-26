@@ -31,9 +31,9 @@ pub fn filter_ssao_temporally(
             tex_key,
             load_cs(asset!("shaders/ssao_temporal_filter.glsl")),
             shader_uniforms!(
-                "inputTex": input,
-                "historyTex": accum_tex.clone(),
-                "reprojectionTex": reprojection_tex,
+                inputTex: input,
+                historyTex: accum_tex.clone(),
+                reprojectionTex: reprojection_tex,
             )
         )
     );
@@ -73,8 +73,8 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": raster_constants_buf.clone(),
-            "": upload_raster_mesh(make_raster_mesh(scene))
+            constants: raster_constants_buf.clone(),
+            :upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
 
@@ -85,40 +85,39 @@ fn main() {
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/reproject.glsl")),
-        shader_uniforms!("constants": reproj_constants.clone(), "inputTex": gbuffer_tex.clone(),),
+        shader_uniforms!(
+            constants: reproj_constants.clone(),
+            inputTex: gbuffer_tex.clone()
+        ),
     );
 
     let depth_tex = compute_tex(
         tex_key.with_format(gl::R16F),
         load_cs(asset!("shaders/extract_gbuffer_depth.glsl")),
-        shader_uniforms!("inputTex": gbuffer_tex.clone()),
+        shader_uniforms!(inputTex: gbuffer_tex.clone()),
     );
 
     let ao_tex = compute_tex(
         tex_key.with_format(gl::R16F),
         load_cs(asset!("shaders/ssao.glsl")),
         shader_uniforms!(
-            "constants": rt_constants_buf.clone(),
-            "inputTex": gbuffer_tex.clone(),
-            "depthTex": depth_tex.clone(),
-            "": gpu_bvh,
+            constants: rt_constants_buf.clone(),
+            inputTex: gbuffer_tex.clone(),
+            depthTex: depth_tex.clone(),
+            :gpu_bvh,
         ),
     );
 
     let normal_tex = compute_tex(
         tex_key.with_format(gl::R32UI),
         load_cs(asset!("shaders/extract_gbuffer_normal.glsl")),
-        shader_uniforms!("inputTex": gbuffer_tex),
+        shader_uniforms!(inputTex: gbuffer_tex),
     );
 
     let ao_tex = compute_tex(
         tex_key.with_format(gl::R8),
         load_cs(asset!("shaders/ssao_spatial_filter.glsl")),
-        shader_uniforms!(
-            "aoTex": ao_tex,
-            "depthTex": depth_tex,
-            "normalTex": normal_tex,
-        ),
+        shader_uniforms!(aoTex: ao_tex, depthTex: depth_tex, normalTex: normal_tex,),
     );
 
     // Should be R16F, but for the purpose of this demo this is easier
@@ -130,8 +129,8 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": temporal_accum.tex.clone(),
-            "constants": init_dynamic!(upload_buffer(0.4f32)),
+            inputTex: temporal_accum.tex.clone(),
+            constants: init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
 

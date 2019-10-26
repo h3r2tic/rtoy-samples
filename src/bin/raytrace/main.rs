@@ -40,7 +40,10 @@ fn main() {
     let rt_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/raytrace.glsl")),
-        shader_uniforms!("constants": viewport_constants_buf.clone(), "": bvh.clone()),
+        shader_uniforms!(
+            constants: viewport_constants_buf.clone(),
+            :bvh.clone()
+        ),
     );
 
     let mut temporal_accum = rtoy_samples::accumulate_temporally(rt_tex, tex_key);
@@ -51,7 +54,9 @@ fn main() {
     let sharpened_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
-        shader_uniforms!("inputTex": temporal_accum.tex.clone(), "constants": sharpen_constants_buf.clone()),
+        shader_uniforms!(
+            inputTex: temporal_accum.tex.clone(),
+            constants: sharpen_constants_buf.clone()),
     );
 
     let mut frame_idx = 0;

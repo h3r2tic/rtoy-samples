@@ -19,9 +19,9 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/blur.glsl")),
         shader_uniforms!(
-            "inputImage": gradients_tex,
-            "blurRadius": 4,
-            "blurDir": (0i32, 3i32)
+            inputImage: gradients_tex,
+            blurRadius: 4,
+            blurDir: (0i32, 3i32)
         ),
     );
 

@@ -65,9 +65,9 @@ fn build_light_gpu_data(
         dbg!(count);
 
         Ok(shader_uniforms!(
-            "light_triangles_buf": upload_array_buffer(Box::new(tris)),
-            "light_alias_buf": upload_array_buffer(Box::new(tbl)),
-            "light_count_buf": upload_buffer(count),
+            light_triangles_buf: upload_array_buffer(Box::new(tris)),
+            light_alias_buf: upload_array_buffer(Box::new(tbl)),
+            light_count_buf: upload_buffer(count),
         ))
     } else {
         unimplemented!();
@@ -127,8 +127,8 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": constants_buf.clone(),
-            "": upload_raster_mesh(make_raster_mesh(scene.clone()))
+            constants: constants_buf.clone(),
+            :upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );
 
@@ -139,7 +139,7 @@ fn main() {
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/reproject.glsl")),
-        shader_uniforms!("constants": reproj_constants.clone(), "inputTex": gbuffer_tex.clone(),),
+        shader_uniforms!(constants: reproj_constants.clone(), inputTex: gbuffer_tex.clone(),),
     );
 
     let out_tex = if false {
@@ -147,10 +147,10 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/rt_stochastic_lighting.glsl")),
             shader_uniforms!(
-                "constants": constants_buf.clone(),
-                "inputTex": gbuffer_tex.clone(),
-                "": upload_raster_mesh(make_raster_mesh(scene.clone())),
-                "": upload_bvh(bvh.clone()),
+                constants: constants_buf.clone(),
+                inputTex: gbuffer_tex.clone(),
+                :upload_raster_mesh(make_raster_mesh(scene.clone())),
+                :upload_bvh(bvh.clone()),
             ),
         )
     } else {
@@ -158,17 +158,17 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/rt_stochastic_light_sampling.glsl")),
             shader_uniforms!(
-                "constants": constants_buf.clone(),
-                "inputTex": gbuffer_tex.clone(),
-                "": upload_raster_mesh(make_raster_mesh(scene.clone())),
-                "": upload_bvh(bvh.clone()),
+                constants: constants_buf.clone(),
+                inputTex: gbuffer_tex.clone(),
+                :upload_raster_mesh(make_raster_mesh(scene.clone())),
+                :upload_bvh(bvh.clone()),
                 //"": lights,
-                "blue_noise_tex": load_tex_with_params(
+                blue_noise_tex: load_tex_with_params(
                     //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
                         asset!("images/bluenoise/256_256/LDR_RGBA_0.png"), TexParams {
                         gamma: TexGamma::Linear,
                     }),
-                "blue_noise_tex2": load_tex_with_params(
+                blue_noise_tex2: load_tex_with_params(
                     //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
                         asset!("images/bluenoise/256_256/LDR_LLL1_0.png"), TexParams {
                         gamma: TexGamma::Linear,
@@ -183,10 +183,10 @@ fn main() {
                 tex_key,
                 load_cs(asset!("shaders/stochastic_light_variance_estimate.glsl")),
                 shader_uniforms!(
-                    "g_primaryVisTex": gbuffer_tex.clone(),
-                    "inputTex": out_tex.clone(),
-                    "historyTex": variance_estimate.clone(),
-                    "reprojectionTex": reprojection_tex.clone(),
+                    g_primaryVisTex: gbuffer_tex.clone(),
+                    inputTex: out_tex.clone(),
+                    historyTex: variance_estimate.clone(),
+                    reprojectionTex: reprojection_tex.clone(),
                 )
             )
         );
@@ -197,11 +197,11 @@ fn main() {
             shader_uniforms!(
                 //"g_frameIndex": frame_index,
                 //"g_mouseX": mouse_x,
-                "constants": constants_buf.clone(),
-                "g_primaryVisTex": gbuffer_tex,
-                "g_lightSamplesTex": out_tex,
-                "g_varianceEstimate": variance_estimate,
-                "blue_noise_tex": load_tex_with_params(
+                constants: constants_buf.clone(),
+                g_primaryVisTex: gbuffer_tex,
+                g_lightSamplesTex: out_tex,
+                g_varianceEstimate: variance_estimate,
+                blue_noise_tex: load_tex_with_params(
                     //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
                         asset!("images/bluenoise/256_256/LDR_LLL1_0.png"), TexParams {
                         gamma: TexGamma::Linear,
@@ -217,9 +217,9 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/variance_estimate.glsl")),
             shader_uniforms!(
-                "inputTex": out_tex.clone(),
-                "historyTex": variance_estimate2.clone(),
-                "reprojectionTex": reprojection_tex.clone(),
+                inputTex: out_tex.clone(),
+                historyTex: variance_estimate2.clone(),
+                reprojectionTex: reprojection_tex.clone(),
             )
         )
     );
@@ -227,7 +227,7 @@ fn main() {
     let out_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/steerable_bilateral.glsl")),
-        shader_uniforms!("inputTex": out_tex, "varianceTex": variance_estimate2,),
+        shader_uniforms!(inputTex: out_tex, varianceTex: variance_estimate2,),
     );
 
     let temporal_accum =
@@ -238,8 +238,8 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": temporal_accum.tex.clone(),
-            "constants": init_dynamic!(upload_buffer(0.4f32)),
+            inputTex: temporal_accum.tex.clone(),
+            constants: init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
 

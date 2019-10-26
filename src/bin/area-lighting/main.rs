@@ -23,8 +23,8 @@ fn main() {
         tex_key_f32,
         load_cs(asset!("shaders/area-lighting/primary_vis.glsl")),
         shader_uniforms!(
-            "g_mouseX": mouse_x.clone(),
-            "g_roughnessMultTex": load_tex_with_params(
+            g_mouseX: mouse_x.clone(),
+            g_roughnessMultTex: load_tex_with_params(
                 asset!("rendertoy::images/shadertoyWood.jpg"),
                 TexParams { gamma: TexGamma::Linear }
             )
@@ -35,10 +35,10 @@ fn main() {
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/sample_lights.glsl")),
         shader_uniforms!(
-            "g_frameIndex": frame_index.clone(),
-            "g_mouseX": mouse_x.clone(),
-            "g_primaryVisTex": primary_vis_tex.clone(),
-            "g_whiteNoise": load_tex_with_params(
+            g_frameIndex: frame_index.clone(),
+            g_mouseX: mouse_x.clone(),
+            g_primaryVisTex: primary_vis_tex.clone(),
+            g_whiteNoise: load_tex_with_params(
                 asset!("rendertoy::images/noise/white_uniform_r_256.png"),
                 TexParams { gamma: TexGamma::Linear }
             ),
@@ -49,10 +49,10 @@ fn main() {
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/sample_surfaces.glsl")),
         shader_uniforms!(
-            "g_frameIndex": frame_index.clone(),
-            "g_mouseX": mouse_x.clone(),
-            "g_primaryVisTex": primary_vis_tex.clone(),
-            "g_whiteNoise": load_tex_with_params(
+            g_frameIndex: frame_index.clone(),
+            g_mouseX: mouse_x.clone(),
+            g_primaryVisTex: primary_vis_tex.clone(),
+            g_whiteNoise: load_tex_with_params(
                 asset!("rendertoy::images/noise/white_uniform_r_256.png"),
                 TexParams { gamma: TexGamma::Linear }
             ),
@@ -63,10 +63,10 @@ fn main() {
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/filter_light.glsl")),
         shader_uniforms!(
-            "g_frameIndex": frame_index.clone(),
-            "g_mouseX": mouse_x.clone(),
-            "g_primaryVisTex": primary_vis_tex.clone(),
-            "g_lightSamplesTex": light_samples_tex.clone(),
+            g_frameIndex: frame_index.clone(),
+            g_mouseX: mouse_x.clone(),
+            g_primaryVisTex: primary_vis_tex.clone(),
+            g_lightSamplesTex: light_samples_tex.clone(),
         ),
     );
 
@@ -74,10 +74,10 @@ fn main() {
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/filter_surface.glsl")),
         shader_uniforms!(
-            "g_frameIndex": frame_index.clone(),
-            "g_mouseX": mouse_x.clone(),
-            "g_primaryVisTex": primary_vis_tex.clone(),
-            "g_surfaceSamplesTex": surface_samples_tex.clone(),
+            g_frameIndex: frame_index.clone(),
+            g_mouseX: mouse_x.clone(),
+            g_primaryVisTex: primary_vis_tex.clone(),
+            g_surfaceSamplesTex: surface_samples_tex.clone(),
         ),
     );
 
@@ -85,8 +85,8 @@ fn main() {
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/fuse_lighting.glsl")),
         shader_uniforms!(
-            "g_filteredLightTex": filtered_light_tex.clone(),
-            "g_filteredSurfaceTex": filtered_surface_tex.clone(),
+            g_filteredLightTex: filtered_light_tex.clone(),
+            g_filteredSurfaceTex: filtered_surface_tex.clone(),
         ),
     );
 
@@ -98,8 +98,8 @@ fn main() {
             tex_key_f32,
             load_cs(asset!("shaders/area-lighting/temporal_accum.glsl")),
             shader_uniforms!(
-                "g_filteredLightingTex": fused_lighting_tex.clone(),
-                "g_prevOutputTex": accum_lighting_tex.clone(),
+                g_filteredLightingTex: fused_lighting_tex.clone(),
+                g_prevOutputTex: accum_lighting_tex.clone(),
             )
         )
     );
@@ -107,7 +107,7 @@ fn main() {
     let final_tex = compute_tex(
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/normalize.glsl")),
-        shader_uniforms!("g_inputTex": accum_lighting_tex,),
+        shader_uniforms!(g_inputTex: accum_lighting_tex,),
     );
 
     let mut t = 0.0f32;

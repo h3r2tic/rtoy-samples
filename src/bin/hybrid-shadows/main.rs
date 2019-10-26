@@ -38,8 +38,8 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": raster_constants_buf.clone(),
-            "": upload_raster_mesh(make_raster_mesh(scene))
+            constants: raster_constants_buf.clone(),
+            :upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
 
@@ -47,9 +47,9 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/rt_hybrid_shadows.glsl")),
         shader_uniforms!(
-            "constants": rt_constants_buf.clone(),
-            "inputTex": gbuffer_tex,
-            "": gpu_bvh,
+            constants: rt_constants_buf.clone(),
+            inputTex: gbuffer_tex,
+            :gpu_bvh,
         ),
     );
 

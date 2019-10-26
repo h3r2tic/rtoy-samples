@@ -23,6 +23,11 @@ layout(std430) buffer mesh_material_id_buf {
     uint material_ids[];
 };
 
+layout(std430) buffer instance_constants {
+    //mat4 model_to_world;
+    vec3 world_offset;
+};
+
 out vec3 v_normal;
 out vec3 v_tangent;
 out vec3 v_bitangent;
@@ -41,7 +46,7 @@ void main() {
     vec3 tangent = tangents_packed.xyz;
     vec3 bitangent = normalize(cross(vertex.normal, tangent) * tangents_packed.w);
 
-    vec4 clip_position = view_to_clip * world_to_view * vec4(world_position, 1.0);
+    vec4 clip_position = view_to_clip * world_to_view * vec4(world_position + world_offset, 1.0);
     v_clip_position = clip_position;
 	gl_Position = clip_position;
 

@@ -38,8 +38,8 @@ fn main() {
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
         shader_uniforms!(
-            "constants": constants_buf.clone(),
-            "": upload_raster_mesh(make_raster_mesh(scene.clone()))
+            constants: constants_buf.clone(),
+            :upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );
 
@@ -47,10 +47,10 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/rt_hybrid_reflections.glsl")),
         shader_uniforms!(
-            "constants": constants_buf.clone(),
-            "inputTex": gbuffer_tex,
-            "": upload_raster_mesh(make_raster_mesh(scene)),
-            "": upload_bvh(bvh),
+            constants: constants_buf.clone(),
+            inputTex: gbuffer_tex,
+            :upload_raster_mesh(make_raster_mesh(scene)),
+            :upload_bvh(bvh),
         ),
     );
 
@@ -61,8 +61,8 @@ fn main() {
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            "inputTex": temporal_accum.tex.clone(),
-            "constants": init_dynamic!(upload_buffer(0.4f32)),
+            inputTex: temporal_accum.tex.clone(),
+            constants: init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
 
