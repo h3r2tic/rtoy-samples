@@ -37,7 +37,7 @@ flat out uint v_material_id;
 
 void main() {
     Vertex vertex = unpack_vertex(vertices[gl_VertexID]);
-    v_normal = vertex.normal;
+    v_normal = (model_to_world * vec4(vertex.normal, 0.0)).xyz;
 	vec3 world_position = (model_to_world * vec4(vertex.position, 1.0)).xyz;
     v_world_position = world_position;
 

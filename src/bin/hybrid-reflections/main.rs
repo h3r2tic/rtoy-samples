@@ -24,7 +24,7 @@ fn main() {
         (
             mesh.clone(),
             Vector3::new(-150.0, 0.0, 0.0),
-            UnitQuaternion::identity(),
+            UnitQuaternion::from_axis_angle(&Vector3::y_axis(), 90.0f32.to_radians()),
         ),
         (
             mesh.clone(),
@@ -46,14 +46,14 @@ fn main() {
         ]),
         vec![
             shader_uniform_bundle!(
-                instance_transform: raster_mesh_transform(Vector3::new(-150.0, 0.0, 0.0), UnitQuaternion::identity()),
+                instance_transform: raster_mesh_transform(Vector3::new(-150.0, 0.0, 0.0), UnitQuaternion::from_axis_angle(&Vector3::y_axis(), 90.0f32.to_radians())),
                 constants: constants_buf.clone(),
-                :upload_raster_mesh(make_raster_mesh(scene.clone()))
+                :upload_raster_mesh(make_raster_mesh(mesh.clone()))
             ),
             shader_uniform_bundle!(
                 instance_transform: raster_mesh_transform(Vector3::new(150.0, 0.0, 0.0), UnitQuaternion::identity()),
                 constants: constants_buf.clone(),
-                :upload_raster_mesh(make_raster_mesh(scene.clone()))
+                :upload_raster_mesh(make_raster_mesh(mesh.clone()))
             ),
         ],
     );
@@ -64,7 +64,7 @@ fn main() {
         shader_uniforms!(
             constants: constants_buf.clone(),
             inputTex: gbuffer_tex,
-            :upload_raster_mesh(make_raster_mesh(scene)),
+            :upload_raster_mesh(make_raster_mesh(mesh)),
             :upload_bvh(bvh),
         ),
     );
