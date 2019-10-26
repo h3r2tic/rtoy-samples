@@ -21,7 +21,7 @@ fn main() {
     };
 
     let dredd = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
-    let lighthouse = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
+    //let lighthouse = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
 
     // Wrap a first person camera in a utility which enforces movement/rotation convergence by stopping it upon small deltas.
     // This comes in handy because the raytracer resets accumulation upon movement,
@@ -61,22 +61,42 @@ fn main() {
         camera.update(frame_state);
 
         // Animate so we get motion blur!
-        let dredd_pos = Vector3::new(150.0, 0.0, 0.0);
         let dredd_rot =
-            na::UnitQuaternion::from_axis_angle(&Vector3::y_axis(), frame_idx as f32 * 0.01);
+            na::UnitQuaternion::from_axis_angle(&Vector3::y_axis(), frame_idx as f32 * 0.05 * 0.0);
+        //let dredd_pos = Vector3::new(150.0, 0.0, 0.0);
+
+        /*let scene = vec![
+            (dredd.clone(), dredd_pos, dredd_rot),
+            (
+                lighthouse.clone(),
+                Vector3::new(-250.0, -50.0, -100.0),
+                UnitQuaternion::identity(),
+            ),
+        ];*/
+
+        let scene = (0..16 * 16)
+            .map(|i| {
+                (
+                    dredd.clone(),
+                    Vector3::new(
+                        -300.0 * 8.0 + 300.0 * (i % 16) as f32,
+                        600.0 * (((frame_idx * 0 + i * 1234567) % (314 * 2)) as f32 * 0.01).sin(),
+                        -300.0 * 8.0 + 300.0 * (i / 16) as f32,
+                    ),
+                    //UnitQuaternion::identity(),
+                    dredd_rot,
+                )
+            })
+            .collect::<Vec<_>>();
+
+        /*scene.push((
+            lighthouse.clone(),
+            Vector3::new(0.0, -50.0, -300.0),
+            UnitQuaternion::identity(),
+        ));*/
 
         // Build a BVH and acquire a bundle of GPU buffers.
-        redef_dynamic!(
-            bvh,
-            upload_bvh(vec![
-                (dredd.clone(), dredd_pos, dredd_rot),
-                (
-                    lighthouse.clone(),
-                    Vector3::new(-250.0, -50.0, -100.0),
-                    UnitQuaternion::identity()
-                ),
-            ])
-        );
+        redef_dynamic!(bvh, upload_bvh(scene));
 
         // If the camera is moving/rotating, reset image accumulation.
         if !camera.is_converged() {

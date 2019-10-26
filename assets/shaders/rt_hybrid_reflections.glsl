@@ -104,9 +104,7 @@ void main() {
             RtHit hit;
             hit.t = 1e10;
             if (raytrace(r, hit)) {
-                Triangle tri = unpack_triangle(get_bvh_triangle(hit.tri_sampler, hit.tri_idx));
-                vec3 hit_normal = normalize(cross(tri.e0, tri.e1));
-
+                vec3 hit_normal = hit.normal;
                 vec3 hit_pos = r.o + r.d * hit.t;
                 refl_col = diffuse_at_point(hit_pos, hit_normal, -r.d) * albedo_scale;
             } else {

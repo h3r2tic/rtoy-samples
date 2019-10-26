@@ -79,7 +79,7 @@ void main() {
             r.o = hit_pos;
             r.d = l;
 
-            shadowed = raytrace_intersects_any(r);
+            shadowed = raytrace_intersects_any(r, 1e10);
         }
 
         float diffuse_albedo = 0.7;
@@ -93,7 +93,7 @@ void main() {
             r.o = hit_pos;
             r.d = ao_dir;
 
-            if (!raytrace_intersects_any(r)) {
+            if (!raytrace_intersects_any(r, 100.0)) {
                 ambient += sample_environment_light(ao_dir);
             }
         }
@@ -107,7 +107,6 @@ void main() {
         col.rgb += (rnd - 0.5) / 256.0;
     }
 
-    //col.r = hit.debug_iter_count * 0.01;
     col.a = 1;
 
     imageStore(outputTex, pix, col);
