@@ -23,9 +23,8 @@ layout(std430) buffer mesh_material_id_buf {
     uint material_ids[];
 };
 
-layout(std430) buffer instance_constants {
-    //mat4 model_to_world;
-    vec3 world_offset;
+layout(std430) buffer instance_transform {
+    mat4 model_to_world;
 };
 
 out vec3 v_normal;
@@ -39,14 +38,14 @@ flat out uint v_material_id;
 void main() {
     Vertex vertex = unpack_vertex(vertices[gl_VertexID]);
     v_normal = vertex.normal;
-	vec3 world_position = vertex.position;
+	vec3 world_position = (model_to_world * vec4(vertex.position, 1.0)).xyz;
     v_world_position = world_position;
 
     vec4 tangents_packed = tangents[gl_VertexID];
     vec3 tangent = tangents_packed.xyz;
     vec3 bitangent = normalize(cross(vertex.normal, tangent) * tangents_packed.w);
 
-    vec4 clip_position = view_to_clip * world_to_view * vec4(world_position + world_offset, 1.0);
+    vec4 clip_position = view_to_clip * world_to_view * vec4(world_position, 1.0);
     v_clip_position = clip_position;
 	gl_Position = clip_position;
 

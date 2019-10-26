@@ -68,6 +68,7 @@ fn main() {
         ]),
         shader_uniforms!(
             constants: raster_constants_buf.clone(),
+            instance_transform: raster_mesh_transform(Vector3::zeros(), UnitQuaternion::identity()),
             :upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );

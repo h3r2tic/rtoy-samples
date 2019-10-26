@@ -19,12 +19,19 @@ fn main() {
         format: gl::RGBA32F,
     };
 
-    let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
-    let bvh = vec![(
-        scene.clone(),
-        Vector3::new(0.0, 0.0, 0.0),
-        UnitQuaternion::identity(),
-    )];
+    let mesh = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
+    let bvh = vec![
+        (
+            mesh.clone(),
+            Vector3::new(-150.0, 0.0, 0.0),
+            UnitQuaternion::identity(),
+        ),
+        (
+            mesh.clone(),
+            Vector3::new(150.0, 0.0, 0.0),
+            UnitQuaternion::identity(),
+        ),
+    ];
 
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
@@ -37,10 +44,18 @@ fn main() {
             load_vs(asset!("shaders/raster_simple_vs.glsl")),
             load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
         ]),
-        shader_uniforms!(
-            constants: constants_buf.clone(),
-            :upload_raster_mesh(make_raster_mesh(scene.clone()))
-        ),
+        vec![
+            shader_uniform_bundle!(
+                instance_transform: raster_mesh_transform(Vector3::new(-150.0, 0.0, 0.0), UnitQuaternion::identity()),
+                constants: constants_buf.clone(),
+                :upload_raster_mesh(make_raster_mesh(scene.clone()))
+            ),
+            shader_uniform_bundle!(
+                instance_transform: raster_mesh_transform(Vector3::new(150.0, 0.0, 0.0), UnitQuaternion::identity()),
+                constants: constants_buf.clone(),
+                :upload_raster_mesh(make_raster_mesh(scene.clone()))
+            ),
+        ],
     );
 
     let out_tex = compute_tex(
