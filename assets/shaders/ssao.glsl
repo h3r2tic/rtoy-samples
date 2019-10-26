@@ -1,6 +1,5 @@
 #include "rendertoy::shaders/random.inc"
 #include "rendertoy::shaders/sampling.inc"
-#include "rtoy-rt::shaders/rt.inc"
 #include "inc/uv.inc"
 #include "inc/pack_unpack.inc"
 
@@ -26,10 +25,10 @@ layout(std430) buffer constants {
 const float temporal_rotations[] = {60.0, 300.0, 180.0, 240.0, 120.0, 0.0};
 const float temporal_offsets[] = {0.0, 0.5, 0.25, 0.75};
 
-Ray offset_ray_origin(Ray r, vec3 v) {
+/*Ray offset_ray_origin(Ray r, vec3 v) {
     r.o += (v + r.d) * (1e-4 * length(r.o));
     return r;
-}
+}*/
 
 float fetch_depth(vec2 uv) {
     return texelFetch(depthTex, ivec2(inputTex_size.xy * uv), 0).x;
@@ -125,7 +124,7 @@ void main() {
             float cs_ao_radius_rescale = ao_radius * view_to_clip[1][1] / (-ray_origin_vs.z / ray_origin_vs.w);
             cs_slice_dir *= cs_ao_radius_rescale;
 
-            // TODO: better units
+            // TODO: better units (pixels? degrees?)
             // Calculate AO radius shrinkage (if camera is too close to a surface)
             float max_ao_radius_cs = 0.15;
             ao_radius_shrinkage = min(1.0, max_ao_radius_cs / cs_ao_radius_rescale);

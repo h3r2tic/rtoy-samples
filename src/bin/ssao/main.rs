@@ -1,7 +1,6 @@
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use rand_distr::StandardNormal;
 use rendertoy::*;
-use rtoy_rt::*;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
@@ -53,16 +52,10 @@ fn main() {
         asset!("meshes/the_lighthouse/scene.gltf"),
         1.0,
     );
-    let bvh = vec![(
-        scene.clone(),
-        Vector3::new(0.0, 0.0, 0.0),
-        UnitQuaternion::identity(),
-    )];
-    let gpu_bvh = upload_bvh(bvh);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
 
-    let rt_constants_buf = init_dynamic!(upload_buffer(0u32));
+    let ao_constants_buf = init_dynamic!(upload_buffer(0u32));
     let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
     let reproj_constants = init_dynamic!(upload_buffer(0u32));
 
@@ -102,10 +95,9 @@ fn main() {
         tex_key.with_format(gl::R16F),
         load_cs(asset!("shaders/ssao.glsl")),
         shader_uniforms!(
-            constants: rt_constants_buf.clone(),
+            constants: ao_constants_buf.clone(),
             inputTex: gbuffer_tex.clone(),
-            depthTex: depth_tex.clone(),
-            :gpu_bvh,
+            depthTex: depth_tex.clone()
         ),
     );
 
@@ -121,16 +113,20 @@ fn main() {
         shader_uniforms!(aoTex: ao_tex, depthTex: depth_tex, normalTex: normal_tex,),
     );
 
-    // Should be R16F, but for the purpose of this demo this is easier
-    // than adding a redness -> greyness conversion to visualize the R16F.
     let mut temporal_accum =
-        filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(gl::RGBA16F));
+        filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(gl::R16F));
+
+    let out_tex = compute_tex(
+        tex_key.with_format(gl::RGBA16F),
+        load_cs(asset!("shaders/splat_r_to_rgb.glsl")),
+        shader_uniforms!(inputTex: temporal_accum.tex.clone()),
+    );
 
     let out_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            inputTex: temporal_accum.tex.clone(),
+            inputTex: out_tex,
             constants: init_dynamic!(upload_buffer(0.4f32)),
         ),
     );
@@ -160,7 +156,7 @@ fn main() {
         redef_dynamic!(raster_constants_buf, upload_buffer(viewport_constants));
 
         redef_dynamic!(
-            rt_constants_buf,
+            ao_constants_buf,
             upload_buffer(Constants {
                 viewport_constants,
                 frame_idx,
