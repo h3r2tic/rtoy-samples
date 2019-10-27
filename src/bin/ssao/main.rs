@@ -116,10 +116,11 @@ fn main() {
     let mut temporal_accum =
         filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(gl::R16F));
 
-    let out_tex = compute_tex(
+    let out_tex = compute_tex!(
+        "splat red to rgb",
         tex_key.with_format(gl::RGBA16F),
-        load_cs(asset!("shaders/splat_r_to_rgb.glsl")),
-        shader_uniforms!(inputTex: temporal_accum.tex.clone()),
+        #input: temporal_accum.tex.clone(),
+        color.rgb = #@input.rrr
     );
 
     let out_tex = compute_tex(
