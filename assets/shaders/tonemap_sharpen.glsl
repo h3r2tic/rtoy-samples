@@ -1,14 +1,11 @@
 uniform restrict writeonly image2D outputTex;
 uniform sampler2D inputTex;
+uniform float sharpen_amount;
 
 // Rec. 709
 float calculate_luma(vec3 col) {
 	return dot(vec3(0.212, 0.701, 0.087), col);
 }
-
-layout(std430) buffer constants {
-    float sharpen_amount;
-};
 
 float tonemap_curve(float v) {
     #define METHOD 1

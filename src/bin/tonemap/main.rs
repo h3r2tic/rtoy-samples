@@ -23,7 +23,7 @@ fn main() {
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             inputTex: tex,
-            constants: upload_buffer(0.4f32),
+            sharpen_amount: 0.4f32,
         ),
     );
 

@@ -48,7 +48,7 @@ fn main() {
 
     let mut temporal_accum = rtoy_samples::accumulate_temporally(rt_tex, tex_key);
 
-    let sharpen_constants_buf = init_dynamic!(upload_buffer(0.0f32));
+    let sharpen_amount = init_dynamic!(const_f32(0.0f32));
 
     // Finally, chain a post-process sharpening effect to the output.
     let sharpened_tex = compute_tex(
@@ -56,7 +56,7 @@ fn main() {
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             inputTex: temporal_accum.tex.clone(),
-            constants: sharpen_constants_buf.clone()),
+            sharpen_amount: sharpen_amount.clone()),
     );
 
     let mut frame_idx = 0;
@@ -124,8 +124,10 @@ fn main() {
             .pixel_offset(jitter)
             .finish();
 
-        let sharpen_amount = ((frame_idx as f32).sqrt() / 256.0).min(0.5);
-        redef_dynamic!(sharpen_constants_buf, upload_buffer(sharpen_amount));
+        redef_dynamic!(
+            sharpen_amount,
+            const_f32(((frame_idx as f32).sqrt() / 256.0).min(0.7))
+        );
 
         // Redefine the viewport constants parameter. This invalidates all dependent assets,
         // and causes the next frame to be rendered.

@@ -77,7 +77,7 @@ fn main() {
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             inputTex: temporal_accum.tex.clone(),
-            constants: init_dynamic!(upload_buffer(0.4f32)),
+            sharpen_amount: 0.4f32,
         ),
     );
 
