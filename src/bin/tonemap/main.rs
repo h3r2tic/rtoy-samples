@@ -5,15 +5,18 @@ fn main() {
 
     let mouse_x = init_dynamic!(const_f32(0f32));
 
-    let tex = load_tex(asset!("images/cornell_box_render.jpg"));
-
     let tex_key = TextureKey {
         width: rtoy.width(),
         height: rtoy.height(),
         format: gl::RGBA32F,
     };
 
-    let tex = compute_tex!("multiply", tex_key, .rgb = @tex.rgb * #mouse_x);
+    let tex = compute_tex!(
+        "EV shift",
+        tex_key,
+        #tex: load_tex(asset!("images/cornell_box_render.jpg")),
+        .rgb = @tex.rgb * exp((#mouse_x - 0.5) * 8.0)
+    );
 
     let tex = compute_tex(
         tex_key,
@@ -29,7 +32,7 @@ fn main() {
     rtoy.draw_forever(|frame_state| {
         redef_dynamic!(
             mouse_x,
-            const_f32(frame_state.mouse.pos.x / window_width as f32 * 10.0)
+            const_f32(frame_state.mouse.pos.x / window_width as f32)
         );
 
         tex.clone()
