@@ -2,8 +2,8 @@
 #include "../inc/uv.inc"
 #include "../inc/pack_unpack.inc"
 
-uniform sampler2D inputTex;
-uniform vec4 inputTex_size;
+uniform sampler2D gbuffer;
+uniform vec4 gbuffer_size;
 
 uniform sampler2D halfresShadowsTex;
 uniform sampler2D discontinuityTex;
@@ -35,36 +35,26 @@ void main() {
         result = texelFetch(sparseShadowsTex, pix, 0).r;
     }
 
-    vec4 color_result = vec4(result);
-
     #if 0
-        color_result *= 0.5;
-    #else
         vec2 uv = get_uv(outputTex_size);
-        vec4 gbuffer = texelFetch(inputTex, pix, 0);
-        vec3 normal = unpack_normal_11_10_11(gbuffer.x);
-
-        vec3 l = normalize(light_dir_pad.xyz);
-
-        float ndotl = max(0.0, dot(normal, l));
+        vec4 gbuffer = texelFetch(gbuffer, pix, 0);
 
         if (gbuffer.a == 0.0) {
-            color_result = vec4(0.05.xxx, 1.0);
+            result = 0.0;
         } else {
-            color_result.rgb *= ndotl;
-            color_result.rgb *= normal * 0.5 + 0.5;
+            vec3 normal = unpack_normal_11_10_11_no_normalize(gbuffer.x);
+            result *= dot(normal, light_dir_pad.xyz) > 0.0 ? 1.0 : 0.0;
         }
     #endif
 
-    //color_result.r += discontinuity * 0.2;
-    imageStore(outputTex, pix, color_result);
+    imageStore(outputTex, pix, result.xxxx);
 }
 #else
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
-    vec2 uv = get_uv(pix, inputTex_size);
-    vec4 gbuffer = texelFetch(inputTex, pix, 0);
+    vec2 uv = get_uv(pix, gbuffer_size);
+    vec4 gbuffer = texelFetch(gbuffer, pix, 0);
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
 
     vec3 l = normalize(light_dir_pad.xyz);

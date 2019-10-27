@@ -53,8 +53,8 @@ fn main() {
         camera.update(frame_state);
 
         ssao.prepare_frame(
-            frame_idx,
             ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish(),
+            frame_idx,
         );
 
         // Jitter the image in a Gaussian kernel in order to anti-alias the result. This is why we have

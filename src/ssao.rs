@@ -87,7 +87,7 @@ impl Ssao {
         }
     }
 
-    pub fn prepare_frame(&mut self, frame_idx: u32, viewport_constants: ViewportConstants) {
+    pub fn prepare_frame(&mut self, viewport_constants: ViewportConstants, frame_idx: u32) {
         self.temporal_accum.prepare_frame(frame_idx);
 
         #[allow(dead_code)]

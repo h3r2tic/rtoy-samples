@@ -4,8 +4,8 @@
 #include "../inc/uv.inc"
 #include "../inc/pack_unpack.inc"
 
-uniform sampler2D inputTex;
-uniform vec4 inputTex_size;
+uniform sampler2D gbufferTex;
+uniform vec4 gbufferTex_size;
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
@@ -24,8 +24,8 @@ void main() {
     uint quad_rotation_idx = (gl_GlobalInvocationID.x >> 1u) & 3u;
     pix += ivec2(0, quad_rotation_idx & 1);
 
-    vec2 uv = get_uv(pix, inputTex_size);
-    vec4 gbuffer = texelFetch(inputTex, pix, 0);
+    vec2 uv = get_uv(pix, gbufferTex_size);
+    vec4 gbuffer = texelFetch(gbufferTex, pix, 0);
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
 
     vec3 l = normalize(light_dir_pad.xyz);
