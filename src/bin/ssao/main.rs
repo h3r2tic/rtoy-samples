@@ -119,8 +119,8 @@ fn main() {
     let out_tex = compute_tex!(
         "splat red to rgb",
         tex_key.with_format(gl::RGBA16F),
-        #input: temporal_accum.tex.clone(),
-        color.rgb = #@input.rrr
+        #input: temporal_accum.tex,
+        .rgb = @input.rrr
     );
 
     let out_tex = compute_tex(

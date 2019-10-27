@@ -6,7 +6,6 @@ fn main() {
     let mouse_x = init_dynamic!(const_f32(0f32));
 
     let tex = load_tex(asset!("images/cornell_box_render.jpg"));
-    //let tex = load_tex(asset!("images/KodakTestImage28-web.jpg"));
 
     let tex_key = TextureKey {
         width: rtoy.width(),
@@ -14,11 +13,7 @@ fn main() {
         format: gl::RGBA32F,
     };
 
-    let tex = compute_tex(
-        tex_key,
-        load_cs(asset!("shaders/multiply.glsl")),
-        shader_uniforms!(inputTex: tex, factor: mouse_x.clone(),),
-    );
+    let tex = compute_tex!("multiply", tex_key, .rgb = @tex.rgb * #mouse_x);
 
     let tex = compute_tex(
         tex_key,
