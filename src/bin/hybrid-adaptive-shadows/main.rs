@@ -133,7 +133,6 @@ fn main() {
         shader_uniforms!(
             constants: rt_constants_buf.clone(),
             inputTex: gbuffer_tex.clone(),
-            discontinuityTex: discontinuity_tex.clone(),
             tileAllocOffsetTex: tile_prefix_tex.clone(),
             rtPixelLocationTex: rt_pixel_location_tex.clone(),
             :gpu_bvh.clone(),

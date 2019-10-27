@@ -8,7 +8,6 @@
 
 uniform sampler2D inputTex;
 uniform sampler2D blue_noise_tex;
-uniform sampler2D blue_noise_tex2;
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
@@ -529,7 +528,6 @@ void main() {
 #else
         uint frame = frame_idx;
         vec4 sample_rot = texelFetch(blue_noise_tex, (pix + ivec2(frame * 91, frame * 71)) & 255, 0);
-        //vec4 sample_rot = texelFetch(blue_noise_tex2, (pix + ivec2(frame * 91, frame * 71)) & 255, 0);
 
         float light_sel_dart = 0.9;
         uint light_idx = 0;

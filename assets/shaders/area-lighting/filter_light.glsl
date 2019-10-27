@@ -13,7 +13,7 @@ uniform float g_mouseX;
 uniform sampler2D g_primaryVisTex;
 uniform sampler2D g_lightSamplesTex;
 
-uniform uint g_frameIndex;
+//uniform uint g_frameIndex;
 
 #if 1
 const vec2 poissonOffsets[16] = vec2[](
@@ -272,10 +272,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
     vec4 finalColor = vec4(0.);
     
-    if (g_frameIndex > 0)
-    {
+    //if (g_frameIndex > 0)
+    //{
         //finalColor = texture(iChannel2, uv);
-    }
+    //}
     
     //if (g_frameIndex < 0.5)
     {

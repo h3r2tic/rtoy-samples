@@ -52,10 +52,6 @@ fn main() {
             g_frameIndex: frame_index.clone(),
             g_mouseX: mouse_x.clone(),
             g_primaryVisTex: primary_vis_tex.clone(),
-            g_whiteNoise: load_tex_with_params(
-                asset!("rendertoy::images/noise/white_uniform_r_256.png"),
-                TexParams { gamma: TexGamma::Linear }
-            ),
         ),
     );
 
@@ -63,7 +59,6 @@ fn main() {
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/filter_light.glsl")),
         shader_uniforms!(
-            g_frameIndex: frame_index.clone(),
             g_mouseX: mouse_x.clone(),
             g_primaryVisTex: primary_vis_tex.clone(),
             g_lightSamplesTex: light_samples_tex.clone(),
@@ -74,7 +69,6 @@ fn main() {
         tex_key_f16,
         load_cs(asset!("shaders/area-lighting/filter_surface.glsl")),
         shader_uniforms!(
-            g_frameIndex: frame_index.clone(),
             g_mouseX: mouse_x.clone(),
             g_primaryVisTex: primary_vis_tex.clone(),
             g_surfaceSamplesTex: surface_samples_tex.clone(),

@@ -12,7 +12,6 @@ uniform float g_mouseX;
 
 uniform sampler2D g_primaryVisTex;
 //uniform sampler2D g_blueNoise;
-uniform sampler2D g_whiteNoise;
 
 uniform uint g_frameIndex;
 
@@ -40,48 +39,6 @@ float light_pdf( vec4 light,
     return 1. / (TWO_PI * (1. - cosThetaMax));
 }
 
-vec2 texhash_21(float seed) {
-    ivec2 nc = ivec2(seed * 255.0, fract(seed * 255.0) * 255.0);
-    return vec2(
-        texelFetch(g_whiteNoise, nc % 256, 0).x,
-        texelFetch(g_whiteNoise, (nc + ivec2(1, 0)) % 256, 0).x
-    );
-}
-
-float texhash_12(float seed0, float seed1) {
-    ivec2 nc = ivec2(seed0 * 255.0, seed1 * 255.0 * 255.0);
-    return texelFetch(g_whiteNoise, nc % 256, 0).x;
-}
-
-
-vec3 sample_light( SurfaceInfo surface,
-                   MaterialInfo material,
-                   vec4 light,
-                 out float pdf )
-{
-    //return normalize(light.xyz - surface.point);
-    
-    //vec2 u12 = hash21(material.seed);
-    //vec2 u12 = vec2(0.0);
-    vec2 u12 = texhash_21(material.seed);
-    
-    vec3 tangent = vec3(0.), binormal = vec3(0.);
-    vec3 ldir = normalize(light.xyz - surface.point);
-    calc_binormals(ldir, tangent, binormal);
-    
-    float sinThetaMax2 = light.w * light.w / dist_squared(light.xyz, surface.point);
-    float cosThetaMax = sqrt(max(0., 1. - sinThetaMax2));
-    vec3 light_sample = uniform_sample_cone(u12, cosThetaMax, tangent, binormal, ldir);
-    
-    pdf = -1.;
-    if (dot(light_sample, surface.normal) > 0.)
-    {
-        pdf = 1. / (TWO_PI * (1. - cosThetaMax));
-    }
-    
-    return light_sample;    
-}
- 
 float power_heuristic(float nf, 
                       float fPdf, 
                       float ng, 

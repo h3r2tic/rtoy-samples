@@ -18,7 +18,6 @@ uniform float g_mouseX;
 uniform sampler2D g_primaryVisTex;
 uniform sampler2D g_lightSamplesTex;
 uniform sampler2D g_varianceEstimate;
-uniform sampler2D blue_noise_tex;
 
 layout(std430) buffer constants {
     mat4 view_to_clip;

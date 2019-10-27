@@ -13,7 +13,7 @@ uniform float g_mouseX;
 uniform sampler2D g_primaryVisTex;
 uniform sampler2D g_surfaceSamplesTex;
 
-uniform uint g_frameIndex;
+//uniform uint g_frameIndex;
 
 #if 1
 const vec2 poissonOffsets[8] = vec2[](
@@ -107,31 +107,6 @@ float light_pdf( vec4 light,
     
 }
 
-vec3 sample_light( SurfaceInfo surface,
-                   MaterialInfo material,
-                   vec4 light,
-                 out float pdf )
-{
-    vec2 u12 = hash21(material.seed);
-    
-    vec3 tangent = vec3(0.), binormal = vec3(0.);
-    vec3 ldir = normalize(light.xyz - surface.point);
-    calc_binormals(ldir, tangent, binormal);
-    
-    float sinThetaMax2 = light.w * light.w / dist_squared(light.xyz, surface.point);
-    float cosThetaMax = sqrt(max(0., 1. - sinThetaMax2));
-    vec3 light_sample = uniform_sample_cone(u12, cosThetaMax, tangent, binormal, ldir);
-    
-    pdf = -1.;
-    if (dot(light_sample, surface.normal) > 0.)
-    {
-        pdf = 1. / (TWO_PI * (1. - cosThetaMax));
-    }
-    
-    return light_sample;
-    
-}
- 
 vec3 calc_light_emission(vec3 p)
 {
     vec3 le = vec3(1., .98, .95) * 10.;
@@ -281,18 +256,13 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     // ----------------------------------
     // SAMPLING 
     
-    float seed = g_frameIndex + hash12( uv );
+    float seed = 0;//g_frameIndex + hash12( uv );
     //float seed = float(floor(float(g_frameIndex)/10.));
     
     // ----------------------------------
     // FINAL GATHER 
 
     vec4 finalColor = vec4(0.);
-    
-    if (g_frameIndex > 0)
-    {
-        //finalColor = texture(iChannel2, uv);
-    }
     
     //if (g_frameIndex < 0.5)
     {
