@@ -1,5 +1,5 @@
 use rendertoy::*;
-
+pub mod ssao;
 pub struct TemporalAccumulation {
     pub tex: SnoozyRef<Texture>,
     pub temporal_blend: SnoozyRef<f32>,

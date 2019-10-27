@@ -48,7 +48,7 @@ void main() {
         vec3 normal = hit.normal;
 
         // Pick a light direction
-        vec3 l = normalize(vec3(1, -1, -1));
+        vec3 l = normalize(vec3(1, 1, -1));
 
         // Randomize light direction within a cone for soft shadows
         {
