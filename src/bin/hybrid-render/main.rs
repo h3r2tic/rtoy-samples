@@ -93,11 +93,14 @@ fn main() {
         shader_uniforms!(constants: reproj_constants.clone(), inputTex: gbuffer_tex.clone(),),
     );
 
-    let temporal_accum =
-        rtoy_samples::accumulate_reproject_temporally(lighting_tex, reprojection_tex, tex_key);
+    let temporal_accum = rtoy_samples::accumulate_reproject_temporally(
+        lighting_tex,
+        reprojection_tex,
+        tex_key.with_format(gl::R11F_G11F_B10F),
+    );
 
     let out_tex = compute_tex(
-        tex_key,
+        tex_key.with_format(gl::R11F_G11F_B10F),
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             inputTex: temporal_accum.tex.clone(),
