@@ -4,7 +4,7 @@ uniform float sharpen_amount;
 
 // Rec. 709
 float calculate_luma(vec3 col) {
-	return dot(vec3(0.212, 0.701, 0.087), col);
+	return dot(vec3(0.2126, 0.7152, 0.0722), col);
 }
 
 float tonemap_curve(float v) {
