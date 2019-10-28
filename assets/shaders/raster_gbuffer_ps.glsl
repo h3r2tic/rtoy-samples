@@ -13,6 +13,7 @@ layout(std430) buffer constants {
 struct Material {
     uvec2 normal_map;
     uvec2 spec_map;
+    uvec2 albedo_map;
 };
 
 layout(std430) buffer mesh_materials_buf {
@@ -35,6 +36,7 @@ void main() {
 
     sampler2D normalTex = sampler2D(material.normal_map);
     sampler2D metallicRoughnessTex = sampler2D(material.spec_map);
+    sampler2D albedoTex = sampler2D(material.albedo_map);
 
     //vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
     vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
@@ -51,6 +53,8 @@ void main() {
     float metallic = 1;//metallicRoughness.z;
 
     mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
+
+    vec3 albedo = texture2D(albedoTex, uv).rgb;
     
     //ts_normal = vec3(0, 0, 1);
     //roughness = float(v_material_id) * 0.2;
@@ -58,7 +62,8 @@ void main() {
     vec4 res = 0.0.xxxx;
     res.x = pack_normal_11_10_11(normalize(tbn * ts_normal));
     res.y = roughness * roughness;      // UE4 remap
-    res.z = metallic;
+    //res.z = metallic;
+    res.z = uintBitsToFloat(pack_color_888(albedo));
     //res.z = v_material_id;
     res.w = z_over_w;
     out_color = res;

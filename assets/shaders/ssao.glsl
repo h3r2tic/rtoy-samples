@@ -136,7 +136,7 @@ void main() {
 
         vec3 center_vs = ray_origin_vs.xyz / ray_origin_vs.w;
 
-        const uint half_sample_count = 8;
+        const uint half_sample_count = 4;
         cs_slice_dir *= 1.0 / float(half_sample_count);
 
         float theta_cos_max1 = -1.0;

@@ -19,6 +19,8 @@ vec2 process_sample(float ao, float depth, float normal_packed, float center_dep
         float depth_factor = exp2(-200.0 * abs(depth_diff));
 
         float normal_factor = max(0.0, dot(normal, center_normal));
+        normal_factor *= normal_factor;
+        normal_factor *= normal_factor;
 
         float w = 1;
         w *= depth_factor;  // TODO: differentials
