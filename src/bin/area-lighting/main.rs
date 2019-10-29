@@ -104,6 +104,15 @@ fn main() {
         shader_uniforms!(g_inputTex: accum_lighting_tex,),
     );
 
+    let final_tex = compute_tex(
+        tex_key_f16,
+        load_cs(asset!("shaders/tonemap_sharpen.glsl")),
+        shader_uniforms!(
+            inputTex: final_tex,
+            sharpen_amount: 0.2f32,
+        ),
+    );
+
     let mut t = 0.0f32;
     let mut fidx = 0u32;
 

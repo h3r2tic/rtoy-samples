@@ -11,8 +11,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     vec3 scol = vec3(0.);
 	scol = 4. * val.xyz / val.w;
-	scol = 1.0 - exp(-scol);
-	scol = pow( scol, vec3(1.1) );
     
     fragColor = vec4(scol, 1.0);
 }
