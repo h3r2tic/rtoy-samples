@@ -8,13 +8,6 @@ struct MergeConstants {
     light_dir: Vector4,
 }
 
-#[derive(Clone, Copy)]
-#[repr(C)]
-struct ReprojConstants {
-    viewport_constants: ViewportConstants,
-    prev_world_to_clip: Matrix4,
-}
-
 fn radical_inverse(mut n: u32, base: u32) -> f32 {
     let mut val = 0.0f32;
     let inv_base = 1.0f32 / base as f32;
@@ -30,6 +23,69 @@ fn radical_inverse(mut n: u32, base: u32) -> f32 {
     val
 }
 
+struct Taa {
+    temporal_accum: rtoy_samples::TemporalAccumulation,
+    reproj_constants: SnoozyRef<Buffer>,
+    prev_world_to_clip: Matrix4,
+}
+
+impl Taa {
+    pub fn new(
+        tex_key: TextureKey,
+        gbuffer_tex: SnoozyRef<Texture>,
+        color_tex: SnoozyRef<Texture>,
+    ) -> Self {
+        let reproj_constants = init_dynamic!(upload_buffer(0u32));
+
+        let reprojection_tex = compute_tex(
+            tex_key.with_format(gl::RGBA16F),
+            load_cs(asset!("shaders/reproject.glsl")),
+            shader_uniforms!(
+                constants: reproj_constants.clone(),
+                inputTex: gbuffer_tex.clone()
+            ),
+        );
+
+        let temporal_accum = rtoy_samples::accumulate_reproject_temporally(
+            color_tex,
+            reprojection_tex,
+            tex_key.with_format(gl::R11F_G11F_B10F),
+        );
+
+        Self {
+            temporal_accum,
+            reproj_constants,
+            prev_world_to_clip: Matrix4::identity(),
+        }
+    }
+
+    pub fn prepare_frame(&mut self, viewport_constants: ViewportConstants, frame_idx: u32) {
+        self.temporal_accum.prepare_frame(frame_idx);
+
+        #[derive(Clone, Copy)]
+        #[repr(C)]
+        struct ReprojConstants {
+            viewport_constants: ViewportConstants,
+            prev_world_to_clip: Matrix4,
+        }
+
+        redef_dynamic!(
+            self.reproj_constants,
+            upload_buffer(ReprojConstants {
+                viewport_constants,
+                prev_world_to_clip: self.prev_world_to_clip
+            })
+        );
+
+        self.prev_world_to_clip =
+            viewport_constants.view_to_clip * viewport_constants.world_to_view;
+    }
+
+    pub fn get_output_tex(&self) -> SnoozyRef<Texture> {
+        self.temporal_accum.tex.clone()
+    }
+}
+
 fn main() {
     let mut rtoy = Rendertoy::new();
 
@@ -39,10 +95,8 @@ fn main() {
         format: gl::RGBA32F,
     };
 
-    let reproj_constants = init_dynamic!(upload_buffer(0u32));
-
-    //let scene_file = "assets/meshes/lighthouse.obj.gz";
-    let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
+    //let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
+    let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
     let bvh = vec![(
         scene.clone(),
         Vector3::new(0.0, 0.0, 0.0),
@@ -83,35 +137,19 @@ fn main() {
             constants: merge_constants_buf.clone()),
     );
 
-    let reprojection_tex = compute_tex(
-        TextureKey {
-            width: rtoy.width(),
-            height: rtoy.height(),
-            format: gl::RGBA16F,
-        },
-        load_cs(asset!("shaders/reproject.glsl")),
-        shader_uniforms!(constants: reproj_constants.clone(), inputTex: gbuffer_tex.clone(),),
-    );
-
-    let temporal_accum = rtoy_samples::accumulate_reproject_temporally(
-        lighting_tex,
-        reprojection_tex,
-        tex_key.with_format(gl::R11F_G11F_B10F),
-    );
+    let mut taa = Taa::new(tex_key, gbuffer_tex, lighting_tex);
 
     let out_tex = compute_tex(
         tex_key.with_format(gl::R11F_G11F_B10F),
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
-            inputTex: temporal_accum.tex.clone(),
+            inputTex: taa.get_output_tex(),
             sharpen_amount: 0.4f32,
         ),
     );
 
-    let mut light_angle = 2.5f32;
+    let mut light_angle = 1.7f32;
     let mut frame_idx = 0;
-
-    let mut prev_world_to_clip = Matrix4::identity();
 
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
@@ -134,6 +172,8 @@ fn main() {
         let light_dir = Vector3::new(light_angle.cos(), 0.5, light_angle.sin());
         rt_shadows.prepare_frame(viewport_constants, light_dir);
 
+        taa.prepare_frame(viewport_constants_no_jitter, frame_idx);
+
         redef_dynamic!(
             merge_constants_buf,
             upload_buffer(MergeConstants {
@@ -142,24 +182,8 @@ fn main() {
             })
         );
 
-        redef_dynamic!(
-            reproj_constants,
-            upload_buffer(ReprojConstants {
-                viewport_constants: ViewportConstants::build(
-                    &camera,
-                    tex_key.width,
-                    tex_key.height
-                )
-                .finish(),
-                prev_world_to_clip
-            })
-        );
-
-        //light_angle += 0.01;
+        light_angle += 0.01;
         frame_idx += 1;
-
-        let m = camera.calc_matrices();
-        prev_world_to_clip = m.view_to_clip * m.world_to_view;
 
         out_tex.clone()
     });

@@ -27,7 +27,7 @@ vec3 sample_environment_light(vec3 dir) {
     //dir.y = abs(dir.y);
     vec3 col = (dir.zyx * vec3(1, 1, -1) * 0.5 + vec3(0.6, 0.5, 0.5)) * 0.75;
     col = mix(col, 1.3 * dot(col, vec3(0.2, 0.7, 0.1)).xxx, smoothstep(0.3, 0.8, col.g).xxx);
-    return col * 0.5;
+    return col * 0.6;
 }
 
 vec3 ao_multibounce(float visibility, vec3 albedo) {
@@ -60,11 +60,10 @@ void main() {
     } else {
         vec3 normal = unpack_normal_11_10_11(gbuffer.x);
         //vec3 albedo = 0.3.xxx;
-        //vec3 albedo = (gbuffer.z / max(0.3, gbuffer.z)).xxx;
         vec3 albedo = unpack_color_888(floatBitsToUint(gbuffer.z));
 
         // De-light in a horrible way
-        //albedo = 0.5 * albedo / max(0.01, max(max(albedo.x, albedo.y), albedo.z));
+        albedo = 0.35 * albedo / max(0.001, max(max(albedo.x, albedo.y), albedo.z));
 
         vec3 env_color = sample_environment_light(normal);
         // Desaturate for a cheapo pretend diffuse pre-integration
@@ -75,7 +74,7 @@ void main() {
 
         float shadows = texelFetch(shadowsTex, pix, 0).r;
         float ndotl = max(0, dot(normal, light_dir_pad.xyz));
-        vec3 sun_color = vec3(1.0, 0.8, 0.65) * 3.0;
+        vec3 sun_color = vec3(1.0, 0.8, 0.65) * 2.0;
         result += albedo * ndotl * shadows * sun_color;
 
         vec3 microfacet_normal = calculate_microfacet_normal(light_dir_pad.xyz, v);
