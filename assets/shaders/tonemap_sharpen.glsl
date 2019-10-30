@@ -21,7 +21,6 @@ vec3 neutral_tonemap(vec3 col) {
     mat3 ycbr_mat = mat3(.2126, .7152, .0722, -.1146,-.3854, .5, .5,-.4542,-.0458);
     vec3 ycbcr = col * ycbr_mat;
 
-    float tm_luma = tonemap_curve(ycbcr.x);
     float chroma = length(ycbcr.yz) * 2.4;
     float bt = tonemap_curve(chroma);
 
@@ -30,10 +29,23 @@ vec3 neutral_tonemap(vec3 col) {
 
     vec3 desat_col = mix(col.rgb, ycbcr.xxx, desat);
 
+#if 1
+    float tm_luma = tonemap_curve(ycbcr.x);
     vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
+#else
+    // Less clipping at the expense of luminance preservation
+    float sm0 = ycbcr.x;
+    float sm1 = max(max(col.r, col.g), col.b);
+    float sm_mix = clamp(length(ycbcr.yz), 0.0, 1.0);
+    float sm = mix(sm0, sm1, sm_mix);
+
+    float tm_luma = tonemap_curve(sm);
+    vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, sm));
+#endif
     vec3 tm1 = tonemap_curve(desat_col);
 
     col = mix(tm0, tm1, bt * bt);
+
     return col;
 }
 
