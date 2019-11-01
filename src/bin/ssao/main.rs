@@ -14,7 +14,7 @@ fn main() {
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
 
-    let mut raster_constants_buf = upload_buffer(0u32).into_dynamic();
+    let mut raster_constants_buf = upload_buffer(0u32).into_named();
 
     let gbuffer_tex = raster_tex(
         tex_key,

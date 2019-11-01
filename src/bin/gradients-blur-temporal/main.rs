@@ -3,7 +3,7 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    let mut time_asset = const_f32(0f32).into_dynamic();
+    let mut time_asset = const_f32(0f32).into_named();
 
     let tex_key = TextureKey {
         width: 256,
@@ -27,7 +27,7 @@ fn main() {
         ),
     );
 
-    let mut temporal_tex = load_tex(asset!("rendertoy::images/black.png")).into_dynamic();
+    let mut temporal_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
     temporal_tex.rebind(compute_tex(
         tex_key,
         load_cs(asset!("shaders/blend.glsl")),

@@ -3,7 +3,7 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    let mut mouse_x = const_f32(0f32).into_dynamic();
+    let mut mouse_x = const_f32(0f32).into_named();
 
     let tex_key = TextureKey {
         width: rtoy.width(),

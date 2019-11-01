@@ -23,7 +23,7 @@ fn main() {
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
 
-    let mut viewport_constants_buf = upload_buffer(0u32).into_dynamic();
+    let mut viewport_constants_buf = upload_buffer(0u32).into_named();
 
     let out_tex = raster_tex(
         tex_key,

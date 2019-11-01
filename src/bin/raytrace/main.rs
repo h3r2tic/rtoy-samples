@@ -29,11 +29,11 @@ fn main() {
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
 
-    let mut bvh = upload_bvh(vec![]).into_dynamic();
+    let mut bvh = upload_bvh(vec![]).into_named();
 
     // Make a named slot for viewport constants. By giving it a unique name,
     // we can re-define it at runtime, and keep the lazy evaluation graph structure.
-    let mut viewport_constants_buf = upload_buffer(0.0f32).into_dynamic();
+    let mut viewport_constants_buf = upload_buffer(0.0f32).into_named();
 
     // Define the raytrace output texture. Since it depends on viewport constants,
     // it will get re-generated whenever they change.
@@ -48,7 +48,7 @@ fn main() {
 
     let mut temporal_accum = rtoy_samples::accumulate_temporally(rt_tex, tex_key);
 
-    let mut sharpen_amount = const_f32(0.0f32).into_dynamic();
+    let mut sharpen_amount = const_f32(0.0f32).into_named();
 
     // Finally, chain a post-process sharpening effect to the output.
     let sharpened_tex = compute_tex(

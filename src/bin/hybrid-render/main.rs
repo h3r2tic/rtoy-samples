@@ -36,8 +36,8 @@ impl Taa {
         gbuffer_tex: SnoozyRef<Texture>,
         color_tex: SnoozyRef<Texture>,
     ) -> Self {
-        let taa_constants = upload_buffer(0u32).into_dynamic();
-        let reproj_constants = upload_buffer(0u32).into_dynamic();
+        let taa_constants = upload_buffer(0u32).into_named();
+        let reproj_constants = upload_buffer(0u32).into_named();
 
         let reprojection_tex = compute_tex(
             //tex_key.with_format(gl::RGBA16F),
@@ -54,9 +54,9 @@ impl Taa {
             reprojection_tex,
             tex_key.with_format(gl::R11F_G11F_B10F),
         );*/
-        let temporal_blend = const_f32(1f32).into_dynamic();
+        let temporal_blend = const_f32(1f32).into_named();
 
-        let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_dynamic();
+        let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
         accum_tex.rebind(compute_tex(
             //tex_key.with_format(gl::RGBA16F),
             tex_key.with_format(gl::RGBA32F),
@@ -143,7 +143,7 @@ fn main() {
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
 
-    let mut raster_constants_buf = upload_buffer(0u32).into_dynamic();
+    let mut raster_constants_buf = upload_buffer(0u32).into_named();
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -162,7 +162,7 @@ fn main() {
     let mut rt_shadows =
         rtoy_samples::rt_shadows::RtShadows::new(tex_key, gbuffer_tex.clone(), gpu_bvh);
 
-    let mut merge_constants_buf = upload_buffer(0u32).into_dynamic();
+    let mut merge_constants_buf = upload_buffer(0u32).into_named();
     let lighting_tex = compute_tex(
         tex_key.with_format(gl::R11F_G11F_B10F),
         load_cs(asset!("shaders/hybrid-render/merge.glsl")),

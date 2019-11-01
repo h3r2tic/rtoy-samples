@@ -36,7 +36,7 @@ fn main() {
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
 
-    let mut constants_buf = upload_buffer(0u32).into_dynamic();
+    let mut constants_buf = upload_buffer(0u32).into_named();
 
     let gbuffer_tex = raster_tex(
         tex_key,
