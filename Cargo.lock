@@ -807,6 +807,11 @@ version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "hdrldr"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "hex"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1768,6 +1773,7 @@ dependencies = [
  "gl 0.1.0",
  "gltf 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hdrldr 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.22.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libflate 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2548,6 +2554,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum gltf-json 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e8df6444709ac196b1aa89ef098923f2f950b66a2d1b6b17ee36558b0b3ac72d"
 "checksum glutin 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)" = "535c6eda58adbb227604b2db10a022ffd6339d7ea3e970f338e7d98aeb24fcc3"
 "checksum half 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9ff54597ea139063f4225f1ec47011b03c9de4a486957ff3fc506881dac951d0"
+"checksum hdrldr 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "b6cb717c5ebe824622289dc405a0415152ce835d162d43bf05fd902e394d5609"
 "checksum hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "805026a5d0141ffc30abb3be3173848ad46a1b1664fe632428479619a3644d77"
 "checksum home 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "29302b90cfa76231a757a887d1e3153331a63c7f80b6c75f86366334cbe70708"
 "checksum http 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)" = "d7e06e336150b178206af098a055e3621e8336027e2b4d126bda0bc64824baaf"

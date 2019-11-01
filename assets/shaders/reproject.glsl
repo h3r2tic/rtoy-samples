@@ -18,12 +18,17 @@ void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
 
-    vec4 gbuffer = texelFetch(inputTex, pix, 0);
     vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
 
     float depth = 0.0;
-    if (gbuffer.a != 0.0) {
-        depth = gbuffer.w;
+    const int k = 1;
+    for (int y = -k; y <= k; ++y) {
+        for (int x = -k; x <= k; ++x) {
+            vec4 gbuffer = texelFetch(inputTex, pix + ivec2(x, y), 0);
+            if (gbuffer.a != 0.0) {
+                depth = max(depth, gbuffer.w);
+            }
+        }
     }
 
     vec4 pos_cs = vec4(uv_to_cs(uv), depth, 1.0);

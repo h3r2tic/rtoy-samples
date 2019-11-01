@@ -63,7 +63,7 @@ void main() {
         vec3 albedo = unpack_color_888(floatBitsToUint(gbuffer.z));
 
         // De-light in a horrible way
-        albedo = 0.35 * albedo / max(0.001, max(max(albedo.x, albedo.y), albedo.z));
+        //albedo = 0.35 * albedo / max(0.001, max(max(albedo.x, albedo.y), albedo.z));
 
         vec3 env_color = sample_environment_light(normal);
         // Desaturate for a cheapo pretend diffuse pre-integration
@@ -74,7 +74,7 @@ void main() {
 
         float shadows = texelFetch(shadowsTex, pix, 0).r;
         float ndotl = max(0, dot(normal, light_dir_pad.xyz));
-        vec3 sun_color = vec3(1.0, 0.8, 0.65) * 2.0;
+        vec3 sun_color = vec3(1.0, 0.95, 0.9) * 2.0;
         result += albedo * ndotl * shadows * sun_color;
 
         vec3 microfacet_normal = calculate_microfacet_normal(light_dir_pad.xyz, v);

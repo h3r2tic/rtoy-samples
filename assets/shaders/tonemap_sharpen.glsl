@@ -32,6 +32,7 @@ vec3 neutral_tonemap(vec3 col) {
 #if 1
     float tm_luma = tonemap_curve(ycbcr.x);
     vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
+    float final_mult = 0.95;
 #else
     // Less clipping at the expense of luminance preservation
     float sm0 = ycbcr.x;
@@ -41,12 +42,13 @@ vec3 neutral_tonemap(vec3 col) {
 
     float tm_luma = tonemap_curve(sm);
     vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, sm));
+    float final_mult = 1.0;
 #endif
     vec3 tm1 = tonemap_curve(desat_col);
 
     col = mix(tm0, tm1, bt * bt);
 
-    return col;
+    return col * final_mult;
 }
 
 layout (local_size_x = 8, local_size_y = 8) in;
@@ -78,6 +80,7 @@ void main() {
 	col.rgb *= max(0.0, sharpened_luma / max(1e-5, center));
 
     col.rgb = neutral_tonemap(col.rgb);
+    //col.r = col.a * 10.0;
     //col.rgb = 1.0 - exp(-col.rgb);
 
 	imageStore(outputTex, pix, col);
