@@ -28,8 +28,8 @@ fn main() {
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
 
-    let rt_constants_buf = init_dynamic!(upload_buffer(0u32));
-    let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
+    let mut rt_constants_buf = upload_buffer(0u32).into_dynamic();
+    let mut raster_constants_buf = upload_buffer(0u32).into_dynamic();
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -64,15 +64,12 @@ fn main() {
 
         light_angle += 0.01;
 
-        redef_dynamic!(raster_constants_buf, upload_buffer(viewport_constants));
+        raster_constants_buf.rebind(upload_buffer(viewport_constants));
 
-        redef_dynamic!(
-            rt_constants_buf,
-            upload_buffer(Constants {
-                viewport_constants,
-                light_dir: Vector4::new(light_angle.cos(), 0.5, light_angle.sin(), 0.0)
-            })
-        );
+        rt_constants_buf.rebind(upload_buffer(Constants {
+            viewport_constants,
+            light_dir: Vector4::new(light_angle.cos(), 0.5, light_angle.sin(), 0.0),
+        }));
 
         shadowed_tex.clone()
     });

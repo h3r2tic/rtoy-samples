@@ -14,7 +14,7 @@ fn main() {
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
 
-    let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
+    let mut raster_constants_buf = upload_buffer(0u32).into_dynamic();
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -71,7 +71,7 @@ fn main() {
             .pixel_offset(jitter)
             .finish();
 
-        redef_dynamic!(raster_constants_buf, upload_buffer(viewport_constants));
+        raster_constants_buf.rebind(upload_buffer(viewport_constants));
 
         frame_idx += 1;
         out_tex.clone()

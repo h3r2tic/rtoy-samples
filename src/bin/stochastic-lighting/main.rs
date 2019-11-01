@@ -117,8 +117,8 @@ fn main() {
     camera.move_smoothness = 3.0;
     camera.look_smoothness = 3.0;
 
-    let constants_buf = init_dynamic!(upload_buffer(0u32));
-    let reproj_constants = init_dynamic!(upload_buffer(0u32));
+    let mut constants_buf = upload_buffer(0u32).into_dynamic();
+    let mut reproj_constants = upload_buffer(0u32).into_dynamic();
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -172,20 +172,17 @@ fn main() {
             ),
         );
 
-        let variance_estimate = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
-        redef_dynamic!(
-            variance_estimate,
-            compute_tex(
-                tex_key,
-                load_cs(asset!("shaders/stochastic_light_variance_estimate.glsl")),
-                shader_uniforms!(
-                    g_primaryVisTex: gbuffer_tex.clone(),
-                    inputTex: out_tex.clone(),
-                    historyTex: variance_estimate.clone(),
-                    reprojectionTex: reprojection_tex.clone(),
-                )
-            )
-        );
+        let mut variance_estimate = load_tex(asset!("rendertoy::images/black.png")).into_dynamic();
+        variance_estimate.rebind(compute_tex(
+            tex_key,
+            load_cs(asset!("shaders/stochastic_light_variance_estimate.glsl")),
+            shader_uniforms!(
+                g_primaryVisTex: gbuffer_tex.clone(),
+                inputTex: out_tex.clone(),
+                historyTex: variance_estimate.clone(),
+                reprojectionTex: reprojection_tex.clone(),
+            ),
+        ));
 
         compute_tex(
             tex_key,
@@ -201,19 +198,17 @@ fn main() {
         )
     };
 
-    let variance_estimate2 = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
-    redef_dynamic!(
-        variance_estimate2,
-        compute_tex(
-            tex_key,
-            load_cs(asset!("shaders/variance_estimate.glsl")),
-            shader_uniforms!(
-                inputTex: out_tex.clone(),
-                historyTex: variance_estimate2.clone(),
-                reprojectionTex: reprojection_tex.clone(),
-            )
-        )
-    );
+    let mut variance_estimate2 = load_tex(asset!("rendertoy::images/black.png")).into_dynamic();
+
+    variance_estimate2.rebind(compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/variance_estimate.glsl")),
+        shader_uniforms!(
+            inputTex: out_tex.clone(),
+            historyTex: variance_estimate2.clone(),
+            reprojectionTex: reprojection_tex.clone(),
+        ),
+    ));
 
     let out_tex = compute_tex(
         tex_key,
@@ -221,7 +216,7 @@ fn main() {
         shader_uniforms!(inputTex: out_tex, varianceTex: variance_estimate2,),
     );
 
-    let temporal_accum =
+    let mut temporal_accum =
         rtoy_samples::accumulate_reproject_temporally(out_tex, reprojection_tex, tex_key);
 
     // Finally, chain a post-process sharpening effect to the output.
@@ -246,9 +241,9 @@ fn main() {
         }
 
         // Set the new blend factor such that we calculate a uniform average of all the traced frames.
-        redef_dynamic!(temporal_blend, const_f32(1.0 / (frame_idx as f32 + 1.0)));*/
+        temporal_blend.rebind(const_f32(1.0 / (frame_idx as f32 + 1.0)));*/
 
-        redef_dynamic!(temporal_accum.temporal_blend, const_f32(0.1));
+        temporal_accum.temporal_blend.rebind(const_f32(0.1));
 
         // Jitter the image in a Gaussian kernel in order to anti-alias the result. This is why we have
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post
@@ -264,26 +259,16 @@ fn main() {
             .pixel_offset(jitter)
             .finish();
 
-        redef_dynamic!(
-            constants_buf,
-            upload_buffer(Constants {
-                viewport_constants,
-                frame_idx
-            })
-        );
+        constants_buf.rebind(upload_buffer(Constants {
+            viewport_constants,
+            frame_idx,
+        }));
 
-        redef_dynamic!(
-            reproj_constants,
-            upload_buffer(ReprojConstants {
-                viewport_constants: ViewportConstants::build(
-                    &camera,
-                    tex_key.width,
-                    tex_key.height
-                )
+        reproj_constants.rebind(upload_buffer(ReprojConstants {
+            viewport_constants: ViewportConstants::build(&camera, tex_key.width, tex_key.height)
                 .finish(),
-                prev_world_to_clip
-            })
-        );
+            prev_world_to_clip,
+        }));
 
         let m = camera.calc_matrices();
         prev_world_to_clip = m.view_to_clip * m.world_to_view;

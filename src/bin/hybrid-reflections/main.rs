@@ -36,7 +36,7 @@ fn main() {
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
 
-    let constants_buf = init_dynamic!(upload_buffer(0u32));
+    let mut constants_buf = upload_buffer(0u32).into_dynamic();
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -106,13 +106,10 @@ fn main() {
             .pixel_offset(jitter)
             .finish();
 
-        redef_dynamic!(
-            constants_buf,
-            upload_buffer(Constants {
-                viewport_constants,
-                frame_idx
-            })
-        );
+        constants_buf.rebind(upload_buffer(Constants {
+            viewport_constants,
+            frame_idx,
+        }));
 
         frame_idx += 1;
         out_tex.clone()

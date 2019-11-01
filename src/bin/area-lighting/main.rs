@@ -3,9 +3,9 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    let time = init_dynamic!(const_f32(0f32));
-    let mouse_x = init_dynamic!(const_f32(0f32));
-    let frame_index = init_dynamic!(const_u32(0));
+    let mut time = const_f32(0f32).into_dynamic();
+    let mut mouse_x = const_f32(0f32).into_dynamic();
+    let mut frame_index = const_u32(0).into_dynamic();
 
     let tex_key_f16 = TextureKey {
         width: rtoy.width(),
@@ -84,19 +84,16 @@ fn main() {
         ),
     );
 
-    let accum_lighting_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
+    let mut accum_lighting_tex = load_tex(asset!("rendertoy::images/black.png")).into_dynamic();
 
-    redef_dynamic!(
-        accum_lighting_tex,
-        compute_tex(
-            tex_key_f32,
-            load_cs(asset!("shaders/area-lighting/temporal_accum.glsl")),
-            shader_uniforms!(
-                g_filteredLightingTex: fused_lighting_tex.clone(),
-                g_prevOutputTex: accum_lighting_tex.clone(),
-            )
-        )
-    );
+    accum_lighting_tex.rebind(compute_tex(
+        tex_key_f32,
+        load_cs(asset!("shaders/area-lighting/temporal_accum.glsl")),
+        shader_uniforms!(
+            g_filteredLightingTex: fused_lighting_tex.clone(),
+            g_prevOutputTex: accum_lighting_tex.clone(),
+        ),
+    ));
 
     let final_tex = compute_tex(
         tex_key_f16,
@@ -119,9 +116,9 @@ fn main() {
     rtoy.draw_forever(|frame_state| {
         t += 0.01;
         fidx += 1;
-        redef_dynamic!(time, const_f32(t));
-        redef_dynamic!(mouse_x, const_f32(frame_state.mouse.pos.x));
-        redef_dynamic!(frame_index, const_u32(fidx));
+        time.rebind(const_f32(t));
+        mouse_x.rebind(const_f32(frame_state.mouse.pos.x));
+        frame_index.rebind(const_u32(fidx));
 
         final_tex.clone()
     });

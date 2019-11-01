@@ -29,11 +29,11 @@ fn main() {
     let mut camera =
         CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
 
-    let bvh = init_dynamic!(upload_bvh(vec![]));
+    let mut bvh = upload_bvh(vec![]).into_dynamic();
 
     // Make a named slot for viewport constants. By giving it a unique name,
     // we can re-define it at runtime, and keep the lazy evaluation graph structure.
-    let viewport_constants_buf = init_dynamic!(upload_buffer(0.0f32));
+    let mut viewport_constants_buf = upload_buffer(0.0f32).into_dynamic();
 
     // Define the raytrace output texture. Since it depends on viewport constants,
     // it will get re-generated whenever they change.
@@ -48,7 +48,7 @@ fn main() {
 
     let mut temporal_accum = rtoy_samples::accumulate_temporally(rt_tex, tex_key);
 
-    let sharpen_amount = init_dynamic!(const_f32(0.0f32));
+    let mut sharpen_amount = const_f32(0.0f32).into_dynamic();
 
     // Finally, chain a post-process sharpening effect to the output.
     let sharpened_tex = compute_tex(
@@ -101,7 +101,7 @@ fn main() {
         ));*/
 
         // Build a BVH and acquire a bundle of GPU buffers.
-        redef_dynamic!(bvh, upload_bvh(scene));
+        bvh.rebind(upload_bvh(scene));
 
         // If the camera is moving/rotating, reset image accumulation.
         if !camera.is_converged() {
@@ -124,21 +124,16 @@ fn main() {
             .pixel_offset(jitter)
             .finish();
 
-        redef_dynamic!(
-            sharpen_amount,
-            const_f32(((frame_idx as f32).sqrt() / 256.0).min(0.7))
-        );
+        sharpen_amount.rebind(const_f32(((frame_idx as f32).sqrt() / 256.0).min(0.7)));
 
         // Redefine the viewport constants parameter. This invalidates all dependent assets,
         // and causes the next frame to be rendered.
-        redef_dynamic!(
-            viewport_constants_buf,
-            upload_buffer(Constants {
-                frame_idx,
-                pad: [0; 3],
-                viewport_constants,
-            })
-        );
+
+        viewport_constants_buf.rebind(upload_buffer(Constants {
+            frame_idx,
+            pad: [0; 3],
+            viewport_constants,
+        }));
 
         frame_idx += 1;
 

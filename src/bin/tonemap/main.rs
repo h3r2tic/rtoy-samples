@@ -3,7 +3,7 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    let mouse_x = init_dynamic!(const_f32(0f32));
+    let mut mouse_x = const_f32(0f32).into_dynamic();
 
     let tex_key = TextureKey {
         width: rtoy.width(),
@@ -30,11 +30,7 @@ fn main() {
     let window_width = rtoy.width();
 
     rtoy.draw_forever(|frame_state| {
-        redef_dynamic!(
-            mouse_x,
-            const_f32(frame_state.mouse.pos.x / window_width as f32)
-        );
-
+        mouse_x.rebind(const_f32(frame_state.mouse.pos.x / window_width as f32));
         tex.clone()
     });
 }

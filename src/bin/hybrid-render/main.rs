@@ -36,8 +36,8 @@ impl Taa {
         gbuffer_tex: SnoozyRef<Texture>,
         color_tex: SnoozyRef<Texture>,
     ) -> Self {
-        let taa_constants = init_dynamic!(upload_buffer(0u32));
-        let reproj_constants = init_dynamic!(upload_buffer(0u32));
+        let taa_constants = upload_buffer(0u32).into_dynamic();
+        let reproj_constants = upload_buffer(0u32).into_dynamic();
 
         let reprojection_tex = compute_tex(
             //tex_key.with_format(gl::RGBA16F),
@@ -54,23 +54,20 @@ impl Taa {
             reprojection_tex,
             tex_key.with_format(gl::R11F_G11F_B10F),
         );*/
-        let temporal_blend = init_dynamic!(const_f32(1f32));
-        let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
+        let temporal_blend = const_f32(1f32).into_dynamic();
 
-        redef_dynamic!(
-            accum_tex,
-            compute_tex(
-                //tex_key.with_format(gl::RGBA16F),
-                tex_key.with_format(gl::RGBA32F),
-                load_cs(asset!("shaders/taa.glsl")),
-                shader_uniforms!(
-                    inputTex: color_tex,
-                    historyTex: accum_tex.clone(),
-                    reprojectionTex: reprojection_tex,
-                    constants: taa_constants.clone(),
-                )
-            )
-        );
+        let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_dynamic();
+        accum_tex.rebind(compute_tex(
+            //tex_key.with_format(gl::RGBA16F),
+            tex_key.with_format(gl::RGBA32F),
+            load_cs(asset!("shaders/taa.glsl")),
+            shader_uniforms!(
+                inputTex: color_tex,
+                historyTex: accum_tex.clone(),
+                reprojectionTex: reprojection_tex,
+                constants: taa_constants.clone(),
+            ),
+        ));
 
         let temporal_accum = rtoy_samples::TemporalAccumulation {
             tex: accum_tex,
@@ -99,12 +96,9 @@ impl Taa {
             jitter: (f32, f32),
         }
 
-        redef_dynamic!(
-            self.taa_constants,
-            upload_buffer(TaaConstants {
-                jitter: (jitter.x, jitter.y)
-            })
-        );
+        self.taa_constants.rebind(upload_buffer(TaaConstants {
+            jitter: (jitter.x, jitter.y),
+        }));
 
         #[derive(Clone, Copy)]
         #[repr(C)]
@@ -113,13 +107,10 @@ impl Taa {
             prev_world_to_clip: Matrix4,
         }
 
-        redef_dynamic!(
-            self.reproj_constants,
-            upload_buffer(ReprojConstants {
-                viewport_constants,
-                prev_world_to_clip: self.prev_world_to_clip
-            })
-        );
+        self.reproj_constants.rebind(upload_buffer(ReprojConstants {
+            viewport_constants,
+            prev_world_to_clip: self.prev_world_to_clip,
+        }));
 
         self.prev_world_to_clip =
             viewport_constants.view_to_clip * viewport_constants.world_to_view;
@@ -152,7 +143,7 @@ fn main() {
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
 
-    let raster_constants_buf = init_dynamic!(upload_buffer(0u32));
+    let mut raster_constants_buf = upload_buffer(0u32).into_dynamic();
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -171,7 +162,7 @@ fn main() {
     let mut rt_shadows =
         rtoy_samples::rt_shadows::RtShadows::new(tex_key, gbuffer_tex.clone(), gpu_bvh);
 
-    let merge_constants_buf = init_dynamic!(upload_buffer(0u32));
+    let mut merge_constants_buf = upload_buffer(0u32).into_dynamic();
     let lighting_tex = compute_tex(
         tex_key.with_format(gl::R11F_G11F_B10F),
         load_cs(asset!("shaders/hybrid-render/merge.glsl")),
@@ -195,7 +186,7 @@ fn main() {
     );
 
     //let mut light_angle = 1.7f32;
-    let mut light_angle = 0.5f32;
+    let light_angle = 0.5f32;
     let mut frame_idx = 0;
 
     let poisson = vec![
@@ -250,7 +241,7 @@ fn main() {
             .pixel_offset(jitter)
             .finish();
 
-        redef_dynamic!(raster_constants_buf, upload_buffer(viewport_constants));
+        raster_constants_buf.rebind(upload_buffer(viewport_constants));
         ssao.prepare_frame(viewport_constants_no_jitter, frame_idx);
 
         let light_dir = Vector3::new(light_angle.cos(), 0.5, light_angle.sin());
@@ -258,13 +249,10 @@ fn main() {
 
         taa.prepare_frame(viewport_constants_no_jitter, frame_idx, jitter);
 
-        redef_dynamic!(
-            merge_constants_buf,
-            upload_buffer(MergeConstants {
-                viewport_constants: viewport_constants_no_jitter,
-                light_dir: light_dir.to_homogeneous(),
-            })
-        );
+        merge_constants_buf.rebind(upload_buffer(MergeConstants {
+            viewport_constants: viewport_constants_no_jitter,
+            light_dir: light_dir.to_homogeneous(),
+        }));
 
         //light_angle += 0.01;
         frame_idx += 1;

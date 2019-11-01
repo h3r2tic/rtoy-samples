@@ -11,7 +11,7 @@ impl RtShadows {
         gbuffer_tex: SnoozyRef<Texture>,
         gpu_bvh: SnoozyRef<ShaderUniformBundle>,
     ) -> Self {
-        let rt_constants_buf = init_dynamic!(upload_buffer(0u32));
+        let rt_constants_buf = upload_buffer(0u32).into_dynamic();
         let halfres_shadow_tex = compute_tex(
             tex_key.half_res().with_format(gl::R8),
             load_cs(asset!(
@@ -106,13 +106,10 @@ impl RtShadows {
             light_dir: Vector4,
         }
 
-        redef_dynamic!(
-            self.rt_constants_buf,
-            upload_buffer(Constants {
-                viewport_constants,
-                light_dir: light_dir.to_homogeneous(),
-            })
-        );
+        self.rt_constants_buf.rebind(upload_buffer(Constants {
+            viewport_constants,
+            light_dir: light_dir.to_homogeneous(),
+        }));
     }
 
     pub fn get_output_tex(&self) -> SnoozyRef<Texture> {

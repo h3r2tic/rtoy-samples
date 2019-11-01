@@ -3,8 +3,6 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    //let tex = load_tex(asset!("images/cornell_box_render.jpg"));
-    let tex = init_dynamic!(load_tex(asset!("images/cornell_box_render.jpg")));
-
+    let tex = load_tex(asset!("images/cornell_box_render.jpg"));
     rtoy.draw_forever(|_| tex.clone());
 }

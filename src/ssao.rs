@@ -5,21 +5,17 @@ fn filter_ssao_temporally(
     reprojection_tex: SnoozyRef<Texture>,
     tex_key: TextureKey,
 ) -> crate::TemporalAccumulation {
-    let temporal_blend = init_dynamic!(const_f32(1f32));
-    let accum_tex = init_dynamic!(load_tex(asset!("rendertoy::images/black.png")));
-
-    redef_dynamic!(
-        accum_tex,
-        compute_tex(
-            tex_key,
-            load_cs(asset!("shaders/ssao_temporal_filter.glsl")),
-            shader_uniforms!(
-                inputTex: input,
-                historyTex: accum_tex.clone(),
-                reprojectionTex: reprojection_tex,
-            )
-        )
-    );
+    let temporal_blend = const_f32(1f32).into_dynamic();
+    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_dynamic();
+    accum_tex.rebind(compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/ssao_temporal_filter.glsl")),
+        shader_uniforms!(
+            inputTex: input,
+            historyTex: accum_tex.clone(),
+            reprojectionTex: reprojection_tex,
+        ),
+    ));
 
     crate::TemporalAccumulation {
         tex: accum_tex,
@@ -36,8 +32,8 @@ pub struct Ssao {
 
 impl Ssao {
     pub fn new(tex_key: TextureKey, gbuffer_tex: SnoozyRef<Texture>) -> Self {
-        let ao_constants_buf = init_dynamic!(upload_buffer(0u32));
-        let reproj_constants = init_dynamic!(upload_buffer(0u32));
+        let ao_constants_buf = upload_buffer(0u32).into_dynamic();
+        let reproj_constants = upload_buffer(0u32).into_dynamic();
 
         let reprojection_tex = compute_tex(
             tex_key.with_format(gl::RGBA16F),
@@ -97,13 +93,10 @@ impl Ssao {
             frame_idx: u32,
         }
 
-        redef_dynamic!(
-            self.ao_constants_buf,
-            upload_buffer(Constants {
-                viewport_constants,
-                frame_idx,
-            })
-        );
+        self.ao_constants_buf.rebind(upload_buffer(Constants {
+            viewport_constants,
+            frame_idx,
+        }));
 
         #[derive(Clone, Copy)]
         #[repr(C)]
@@ -112,13 +105,10 @@ impl Ssao {
             prev_world_to_clip: Matrix4,
         }
 
-        redef_dynamic!(
-            self.reproj_constants,
-            upload_buffer(ReprojConstants {
-                viewport_constants,
-                prev_world_to_clip: self.prev_world_to_clip
-            })
-        );
+        self.reproj_constants.rebind(upload_buffer(ReprojConstants {
+            viewport_constants,
+            prev_world_to_clip: self.prev_world_to_clip,
+        }));
 
         self.prev_world_to_clip =
             viewport_constants.view_to_clip * viewport_constants.world_to_view;
