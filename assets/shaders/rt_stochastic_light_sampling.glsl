@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
 #include "rendertoy::shaders/sampling.inc"
 #include "rtoy-rt::shaders/rt.inc"
@@ -13,10 +14,7 @@ uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
     uint frame_idx;
 };
 
@@ -383,10 +381,10 @@ void main() {
     float roughness = gbuffer.y;
     vec4 col = -1.0.xxxx;
 
-    vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
+    vec3 eye_pos = (view_constants.view_to_world * vec4(0, 0, 0, 1)).xyz;
 
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_dir_cs);
     vec3 v = -normalize(ray_dir_ws.xyz);
 
     float distance_to_surface = 1e10;
@@ -395,8 +393,8 @@ void main() {
         col = 0.0.xxxx;
 
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
-        vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-        vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+        vec4 ray_origin_vs = view_constants.clip_to_view * ray_origin_cs;
+        vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 
         distance_to_surface = length(ray_origin_ws.xyz - eye_pos);
@@ -610,7 +608,7 @@ void main() {
 
             if (!raytrace_intersects_any(r, 1.0))
             {
-                vec3 pt = (world_to_view * vec4(reservoir_point_on_light, 1)).xyz;
+                vec3 pt = (view_constants.world_to_view * vec4(reservoir_point_on_light, 1)).xyz;
                 vec3 emission = reservoir_emission;
                 col.r = uintBitsToFloat(packHalf2x16(pt.xy));
                 col.g = uintBitsToFloat(packHalf2x16(vec2(pt.z, emission.x)));

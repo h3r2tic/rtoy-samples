@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "inc/uv.inc"
 #include "inc/pack_unpack.inc"
 #include "inc/math.inc"
@@ -12,10 +13,7 @@ uniform sampler2D historyTex;
 uniform sampler2D reprojectionTex;
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
     uint frame_idx;
 };
 
@@ -51,7 +49,7 @@ vec3 eval_sample(SurfaceInfo2 surface, ivec2 px)
     point_on_light.z = unpackHalf2x16(floatBitsToUint(hit_data.y)).x;
     le.x = unpackHalf2x16(floatBitsToUint(hit_data.y)).y;
     le.yz = unpackHalf2x16(floatBitsToUint(hit_data.z));
-    point_on_light = (view_to_world * vec4(point_on_light, 1)).xyz;
+    point_on_light = (view_constants.view_to_world * vec4(point_on_light, 1)).xyz;
 
 	float lpdf = hit_data.w;
 	vec3 hitOffset = point_on_light - surface.point;
@@ -101,7 +99,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
     float distance_to_surface = 1e10;
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_dir_cs);
 
     vec4 gbuffer_packed = texelFetch(g_primaryVisTex, pix, 0);
 
@@ -110,8 +108,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 		SurfaceInfo2 surface;// = unpackSurfaceInfo(surfacePckd,  fragCoord);
         {
             vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer_packed.w, 1.0);
-            vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-            vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+            vec4 ray_origin_vs = view_constants.clip_to_view * ray_origin_cs;
+            vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
             ray_origin_ws /= ray_origin_ws.w;
 
             surface.point = ray_origin_ws.xyz;
@@ -119,7 +117,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             surface.wo = -normalize(ray_dir_ws.xyz);
             surface.roughness = gbuffer.roughness;
 
-            vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
+            vec3 eye_pos = (view_constants.view_to_world * vec4(0, 0, 0, 1)).xyz;
             distance_to_surface = length(surface.point - eye_pos);
         }
 

@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
 #include "rendertoy::shaders/sampling.inc"
 #include "inc/uv.inc"
@@ -15,10 +16,7 @@ uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
     uint frame_idx;
 };
 
@@ -46,7 +44,7 @@ float update_horizion_angle(float prev, float new) {
 
 float process_sample(vec4 sample_cs, vec3 center_vs, vec3 v_vs, float ao_radius, float theta_cos_max) {
     if (sample_cs.z > 0) {
-        vec4 sample_vs4 = clip_to_view * sample_cs;
+        vec4 sample_vs4 = view_constants.sample_to_view * sample_cs;
         vec3 sample_vs = sample_vs4.xyz / sample_vs4.w;
         vec3 sample_vs_offset = sample_vs - center_vs;
         float sample_vs_offset_len = length(sample_vs_offset);
@@ -70,7 +68,7 @@ void main() {
     vec2 uv = get_uv(outputTex_size);
     vec4 gbuffer = texelFetch(inputTex, pix, 0);
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
-    vec3 normal_vs = normalize((world_to_view * vec4(normal, 0)).xyz);
+    vec3 normal_vs = normalize((view_constants.world_to_view * vec4(normal, 0)).xyz);
 
     vec3 basis0 = normalize(build_orthonormal_basis(normal));
     vec3 basis1 = cross(basis0, normal);
@@ -81,15 +79,15 @@ void main() {
 
     if (gbuffer.a != 0.0) {
         vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-        vec4 ray_dir_vs = clip_to_view * ray_dir_cs;
-        vec4 ray_dir_ws = view_to_world * ray_dir_vs;
+        vec4 ray_dir_vs = view_constants.sample_to_view * ray_dir_cs;
+        vec4 ray_dir_ws = view_constants.view_to_world * ray_dir_vs;
 
         vec3 v = -normalize(ray_dir_ws.xyz);
         vec3 v_vs = -normalize(ray_dir_vs.xyz);
 
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
-        vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-        vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+        vec4 ray_origin_vs = view_constants.sample_to_view * ray_origin_cs;
+        vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 
 #if 0
@@ -121,7 +119,7 @@ void main() {
         float ao_radius_shrinkage;
         {
             // Convert AO radius into world scale
-            float cs_ao_radius_rescale = ao_radius * view_to_clip[1][1] / (-ray_origin_vs.z / ray_origin_vs.w);
+            float cs_ao_radius_rescale = ao_radius * view_constants.view_to_clip[1][1] / (-ray_origin_vs.z / ray_origin_vs.w);
             cs_slice_dir *= cs_ao_radius_rescale;
 
             // TODO: better units (pixels? degrees?)
@@ -142,7 +140,7 @@ void main() {
         float theta_cos_max1 = -1.0;
         float theta_cos_max2 = -1.0;
 
-        vec2 vs_slice_dir = (vec4(cs_slice_dir, 0, 0) * clip_to_view).xy;
+        vec2 vs_slice_dir = (vec4(cs_slice_dir, 0, 0) * view_constants.sample_to_view).xy;
         vec3 slice_normal_vs = normalize(cross(v_vs, vec3(vs_slice_dir, 0)));
 
         for (uint i = 0; i < half_sample_count; ++i) {

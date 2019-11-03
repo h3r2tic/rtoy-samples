@@ -53,7 +53,7 @@ fn main() {
         camera.update(frame_state);
 
         ssao.prepare_frame(
-            ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish(),
+            ViewConstants::build(&camera, tex_key.width, tex_key.height).finish(),
             frame_idx,
         );
 
@@ -67,11 +67,11 @@ fn main() {
         );
 
         // Calculate the new viewport constants from the latest state
-        let viewport_constants = ViewportConstants::build(&camera, tex_key.width, tex_key.height)
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
             .finish();
 
-        raster_constants_buf.rebind(upload_buffer(viewport_constants));
+        raster_constants_buf.rebind(upload_buffer(view_constants));
 
         frame_idx += 1;
         out_tex.clone()

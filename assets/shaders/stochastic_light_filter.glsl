@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
 #include "inc/uv.inc"
 #include "inc/pack_unpack.inc"
@@ -20,10 +21,7 @@ uniform sampler2D g_lightSamplesTex;
 uniform sampler2D g_varianceEstimate;
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
     uint frame_idx;
 };
 
@@ -113,7 +111,7 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
     point_on_light.z = unpackHalf2x16(floatBitsToUint(hit_data.y)).x;
     le.x = unpackHalf2x16(floatBitsToUint(hit_data.y)).y;
     le.yz = unpackHalf2x16(floatBitsToUint(hit_data.z));
-    point_on_light = (view_to_world * vec4(point_on_light, 1)).xyz;
+    point_on_light = (view_constants.view_to_world * vec4(point_on_light, 1)).xyz;
 
     vec4 gbuffer_packed = texelFetch(g_primaryVisTex, sample_px, 0);
 
@@ -142,8 +140,8 @@ void eval_sample(SurfaceInfo2 surface, ivec2 px, int sidx, bool approxVisibility
             }
 
             vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer_packed.w, 1.0);
-            vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-            vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+            vec4 ray_origin_vs = view_constants.clip_to_view * ray_origin_cs;
+            vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
             ray_origin_ws /= ray_origin_ws.w;
 
             neigh_pos = ray_origin_ws.xyz;
@@ -271,7 +269,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
     float distance_to_surface = 1e10;
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_dir_cs);
 
     vec4 gbuffer_packed = texelFetch(g_primaryVisTex, pix, 0);
 
@@ -280,8 +278,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 		SurfaceInfo2 surface;// = unpackSurfaceInfo(surfacePckd,  fragCoord);
         {
             vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer_packed.w, 1.0);
-            vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-            vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+            vec4 ray_origin_vs = view_constants.clip_to_view * ray_origin_cs;
+            vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
             ray_origin_ws /= ray_origin_ws.w;
 
             surface.point = ray_origin_ws.xyz;
@@ -291,7 +289,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             surface.metallic = gbuffer.metallic;
             surface.z_over_w = gbuffer_packed.w;
 
-            vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
+            vec3 eye_pos = (view_constants.view_to_world * vec4(0, 0, 0, 1)).xyz;
             distance_to_surface = length(surface.point - eye_pos);
         }
 
@@ -307,7 +305,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     }
 
     if (false) {
-        vec3 eye_pos = (view_to_world * vec4(0, 0, 0, 1)).xyz;
+        vec3 eye_pos = (view_constants.view_to_world * vec4(0, 0, 0, 1)).xyz;
 
         Ray r;
         r.o = eye_pos;

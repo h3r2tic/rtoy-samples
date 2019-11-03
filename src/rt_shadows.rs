@@ -1,8 +1,22 @@
 use rendertoy::*;
+pub use std::cell::Cell;
+pub use std::rc::Rc;
+
+#[derive(Clone, Copy)]
+pub struct DirectionalLightState {
+    pub direction: Vector3,
+}
+
+impl DirectionalLightState {
+    pub fn new(direction: Vector3) -> Self {
+        Self { direction }
+    }
+}
 
 pub struct RtShadows {
     rt_constants_buf: SnoozyRef<Buffer>,
     shadow_tex: SnoozyRef<Texture>,
+    light_controller: Rc<Cell<DirectionalLightState>>,
 }
 
 impl RtShadows {
@@ -10,6 +24,7 @@ impl RtShadows {
         tex_key: TextureKey,
         gbuffer_tex: SnoozyRef<Texture>,
         gpu_bvh: SnoozyRef<ShaderUniformBundle>,
+        light_controller: Rc<Cell<DirectionalLightState>>,
     ) -> Self {
         let rt_constants_buf = upload_buffer(0u32).into_named();
         let halfres_shadow_tex = compute_tex(
@@ -95,25 +110,34 @@ impl RtShadows {
         Self {
             rt_constants_buf,
             shadow_tex,
+            light_controller,
         }
-    }
-
-    pub fn prepare_frame(&mut self, viewport_constants: ViewportConstants, light_dir: Vector3) {
-        #[allow(dead_code)]
-        #[derive(Clone, Copy)]
-        struct Constants {
-            viewport_constants: ViewportConstants,
-            light_dir: Vector4,
-        }
-
-        self.rt_constants_buf.rebind(upload_buffer(Constants {
-            viewport_constants,
-            light_dir: light_dir.to_homogeneous(),
-        }));
     }
 
     pub fn get_output_tex(&self) -> SnoozyRef<Texture> {
         self.shadow_tex.clone()
+    }
+}
+
+impl RenderPass for RtShadows {
+    fn prepare_frame(
+        &mut self,
+        view_constants: &ViewConstants,
+        _frame_state: &FrameState,
+        _frame_idx: u32,
+    ) {
+        #[allow(dead_code)]
+        #[derive(Clone, Copy)]
+        #[repr(C)]
+        struct Constants {
+            view_constants: ViewConstants,
+            light_dir: Vector4,
+        }
+
+        self.rt_constants_buf.rebind(upload_buffer(Constants {
+            view_constants: *view_constants,
+            light_dir: self.light_controller.get().direction.to_homogeneous(),
+        }));
     }
 }
 

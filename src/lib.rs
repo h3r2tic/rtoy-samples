@@ -1,13 +1,20 @@
 use rendertoy::*;
 pub mod rt_shadows;
 pub mod ssao;
+pub mod taa;
+
 pub struct TemporalAccumulation {
     pub tex: SnoozyRef<Texture>,
     pub temporal_blend: SnoozyRef<f32>,
 }
 
-impl TemporalAccumulation {
-    pub fn prepare_frame(&mut self, frame_idx: u32) {
+impl RenderPass for TemporalAccumulation {
+    fn prepare_frame(
+        &mut self,
+        _view_constants: &ViewConstants,
+        _frame_state: &FrameState,
+        frame_idx: u32,
+    ) {
         // Set the new blend factor such that we calculate a uniform average of all the traced frames.
         self.temporal_blend
             .rebind(const_f32(1.0 / (frame_idx as f32 + 1.0)));

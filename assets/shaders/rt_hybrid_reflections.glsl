@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
 #include "rendertoy::shaders/sampling.inc"
 #include "rtoy-rt::shaders/rt.inc"
@@ -12,10 +13,7 @@ uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
     uint frame_idx;
 };
 
@@ -62,15 +60,15 @@ void main() {
     vec4 col = vec4(0.0.xxx, 1);
 
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_dir_cs);
     vec3 v = -normalize(ray_dir_ws.xyz);
 
     const float albedo_scale = 0.04;
 
     if (gbuffer.a != 0.0) {
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
-        vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-        vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+        vec4 ray_origin_vs = view_constants.clip_to_view * ray_origin_cs;
+        vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 
         uint seed0 = hash(hash(uint(pix.x) ^ hash(frame_idx)) ^ uint(pix.y));

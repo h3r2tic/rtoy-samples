@@ -1,10 +1,8 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "inc/mesh_vertex.inc"
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
 };
 
 layout(std430) buffer mesh_vertex_buf {
@@ -45,7 +43,7 @@ void main() {
     vec3 tangent = tangents_packed.xyz;
     vec3 bitangent = normalize(cross(vertex.normal, tangent) * tangents_packed.w);
 
-    vec4 clip_position = view_to_clip * world_to_view * vec4(world_position, 1.0);
+    vec4 clip_position = view_constants.view_to_sample * view_constants.world_to_view * vec4(world_position, 1.0);
     v_clip_position = clip_position;
 	gl_Position = clip_position;
 

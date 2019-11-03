@@ -83,38 +83,45 @@ impl Ssao {
         }
     }
 
-    pub fn prepare_frame(&mut self, viewport_constants: ViewportConstants, frame_idx: u32) {
-        self.temporal_accum.prepare_frame(frame_idx);
+    pub fn get_output_tex(&self) -> SnoozyRef<Texture> {
+        self.temporal_accum.tex.clone()
+    }
+}
+
+impl RenderPass for Ssao {
+    fn prepare_frame(
+        &mut self,
+        view_constants: &ViewConstants,
+        frame_state: &FrameState,
+        frame_idx: u32,
+    ) {
+        self.temporal_accum
+            .prepare_frame(view_constants, frame_state, frame_idx);
 
         #[allow(dead_code)]
         #[derive(Clone, Copy)]
         struct Constants {
-            viewport_constants: ViewportConstants,
+            view_constants: ViewConstants,
             frame_idx: u32,
         }
 
         self.ao_constants_buf.rebind(upload_buffer(Constants {
-            viewport_constants,
+            view_constants: *view_constants,
             frame_idx,
         }));
 
         #[derive(Clone, Copy)]
         #[repr(C)]
         struct ReprojConstants {
-            viewport_constants: ViewportConstants,
+            view_constants: ViewConstants,
             prev_world_to_clip: Matrix4,
         }
 
         self.reproj_constants.rebind(upload_buffer(ReprojConstants {
-            viewport_constants,
+            view_constants: *view_constants,
             prev_world_to_clip: self.prev_world_to_clip,
         }));
 
-        self.prev_world_to_clip =
-            viewport_constants.view_to_clip * viewport_constants.world_to_view;
-    }
-
-    pub fn get_output_tex(&self) -> SnoozyRef<Texture> {
-        self.temporal_accum.tex.clone()
+        self.prev_world_to_clip = view_constants.view_to_clip * view_constants.world_to_view;
     }
 }

@@ -1,13 +1,11 @@
 #extension GL_ARB_bindless_texture : require
+#include "rendertoy::shaders/view_constants.inc"
 #include "inc/pack_unpack.inc"
 
 layout(location = 0) out vec4 out_color;
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
 };
 
 struct Material {

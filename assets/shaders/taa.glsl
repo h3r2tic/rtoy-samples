@@ -231,16 +231,17 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float texel_center_dist = dot(1.0.xx, abs(0.5 - fract(history_pixel)));
 
     float box_size = 1.0;
-    box_size *= mix(0.25, 1.0, smoothstep(-0.1, 0.3, local_contrast));
+    box_size *= mix(0.5, 1.0, smoothstep(-0.1, 0.3, local_contrast));
     box_size *= mix(0.5, 1.0, clamp(1.0 - texel_center_dist, 0.0, 1.0));
 
     center = fetch_center_filtered(px);
 
-    const float n_deviations = 2.0;
+    const float n_deviations = 1.5;
 	nmin = mix(center, ex, box_size * box_size) - dev * box_size * n_deviations;
 	nmax = mix(center, ex, box_size * box_size) + dev * box_size * n_deviations;
+    nmin = max(nmin, 0.0.xxx);
 
-    float blend_factor = 1;
+    float blend_factor = 1.0;
     
 	#if 1
 		vec3 result;

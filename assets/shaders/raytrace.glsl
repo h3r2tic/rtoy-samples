@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
 #include "rendertoy::shaders/sampling.inc"
 #include "rtoy-rt::shaders/rt.inc"
@@ -9,10 +10,7 @@ uniform vec4 outputTex_size;
 layout(std430) buffer constants {
     uint frame_idx;
     uint pad[3];
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
 };
 
 vec3 sample_environment_light(vec3 dir) {
@@ -27,11 +25,11 @@ void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
     vec4 ray_origin_cs = vec4(uv_to_cs(uv), 1.0, 1.0);
-    vec4 ray_origin_ws = view_to_world * (clip_to_view * ray_origin_cs);
+    vec4 ray_origin_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_origin_cs);
     ray_origin_ws /= ray_origin_ws.w;
 
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_dir_cs);
     vec3 v = -normalize(ray_dir_ws.xyz);
 
     Ray r;

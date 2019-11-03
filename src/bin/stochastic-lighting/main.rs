@@ -9,14 +9,14 @@ use rtoy_rt::*;
 #[derive(Clone, Copy)]
 #[repr(C)]
 struct Constants {
-    viewport_constants: ViewportConstants,
+    view_constants: ViewConstants,
     frame_idx: u32,
 }
 
 #[derive(Clone, Copy)]
 #[repr(C)]
 struct ReprojConstants {
-    viewport_constants: ViewportConstants,
+    view_constants: ViewConstants,
     prev_world_to_clip: Matrix4,
 }
 
@@ -255,18 +255,17 @@ fn main() {
         );
 
         // Calculate the new viewport constants from the latest state
-        let viewport_constants = ViewportConstants::build(&camera, tex_key.width, tex_key.height)
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
             .finish();
 
         constants_buf.rebind(upload_buffer(Constants {
-            viewport_constants,
+            view_constants,
             frame_idx,
         }));
 
         reproj_constants.rebind(upload_buffer(ReprojConstants {
-            viewport_constants: ViewportConstants::build(&camera, tex_key.width, tex_key.height)
-                .finish(),
+            view_constants: ViewConstants::build(&camera, tex_key.width, tex_key.height).finish(),
             prev_world_to_clip,
         }));
 

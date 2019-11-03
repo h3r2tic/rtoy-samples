@@ -8,7 +8,7 @@ use rtoy_rt::*;
 struct Constants {
     frame_idx: u32,
     pad: [u32; 3],
-    viewport_constants: ViewportConstants,
+    view_constants: ViewConstants,
 }
 
 fn main() {
@@ -120,7 +120,7 @@ fn main() {
         );
 
         // Calculate the new viewport constants from the latest state
-        let viewport_constants = ViewportConstants::build(&camera, tex_key.width, tex_key.height)
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
             .finish();
 
@@ -132,7 +132,7 @@ fn main() {
         viewport_constants_buf.rebind(upload_buffer(Constants {
             frame_idx,
             pad: [0; 3],
-            viewport_constants,
+            view_constants,
         }));
 
         frame_idx += 1;

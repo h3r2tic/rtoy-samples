@@ -50,13 +50,12 @@ fn main() {
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
 
-        let viewport_constants =
-            ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).finish();
 
-        raster_constants_buf.rebind(upload_buffer(viewport_constants));
+        raster_constants_buf.rebind(upload_buffer(view_constants));
 
         rt_shadows.prepare_frame(
-            viewport_constants,
+            view_constants,
             Vector3::new(light_angle.cos(), 0.5, light_angle.sin()),
         );
 

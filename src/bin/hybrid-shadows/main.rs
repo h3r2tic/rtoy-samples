@@ -4,7 +4,7 @@ use rtoy_rt::*;
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
 struct Constants {
-    viewport_constants: ViewportConstants,
+    view_constants: ViewConstants,
     light_dir: Vector4,
 }
 
@@ -59,15 +59,14 @@ fn main() {
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
 
-        let viewport_constants =
-            ViewportConstants::build(&camera, tex_key.width, tex_key.height).finish();
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).finish();
 
         light_angle += 0.01;
 
-        raster_constants_buf.rebind(upload_buffer(viewport_constants));
+        raster_constants_buf.rebind(upload_buffer(view_constants));
 
         rt_constants_buf.rebind(upload_buffer(Constants {
-            viewport_constants,
+            view_constants,
             light_dir: Vector4::new(light_angle.cos(), 0.5, light_angle.sin(), 0.0),
         }));
 

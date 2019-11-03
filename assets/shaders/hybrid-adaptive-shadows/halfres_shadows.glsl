@@ -1,3 +1,4 @@
+#include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
 #include "rendertoy::shaders/sampling.inc"
 #include "rtoy-rt::shaders/rt.inc"
@@ -11,10 +12,7 @@ uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
-    mat4 view_to_clip;
-    mat4 clip_to_view;
-    mat4 world_to_view;
-    mat4 view_to_world;
+    ViewConstants view_constants;
     vec4 light_dir_pad;
 };
 
@@ -24,7 +22,7 @@ void main() {
     uint quad_rotation_idx = (gl_GlobalInvocationID.x >> 1u) & 3u;
     pix += ivec2(0, quad_rotation_idx & 1);
 
-    vec2 uv = get_uv(pix, gbufferTex_size);
+    vec2 uv = get_uv(vec2(pix), gbufferTex_size);
     vec4 gbuffer = texelFetch(gbufferTex, pix, 0);
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
 
@@ -35,18 +33,20 @@ void main() {
 
     if (gbuffer.a != 0.0 && ndotl > 0.0) {
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
-        vec4 ray_origin_vs = clip_to_view * ray_origin_cs;
-        vec4 ray_origin_ws = view_to_world * ray_origin_vs;
+        vec4 ray_origin_vs = view_constants.sample_to_view * ray_origin_cs;
+        vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 
         vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-        vec4 ray_dir_ws = view_to_world * (clip_to_view * ray_dir_cs);
+        vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.sample_to_view * ray_dir_cs);
         vec3 v = -normalize(ray_dir_ws.xyz);
+
+        const float ray_bias = 1e-4;
 
         Ray r;
         r.d = l;
         r.o = ray_origin_ws.xyz;
-        r.o += (v + r.d) * (1e-4 * max(length(r.o), abs(ray_origin_vs.z / ray_origin_vs.w)));
+        r.o += (v + r.d) * (ray_bias * max(length(r.o), abs(ray_origin_vs.z / ray_origin_vs.w)));
 
         if (raytrace_intersects_any(r)) {
             result = 0.0;
