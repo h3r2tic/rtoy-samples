@@ -1,8 +1,6 @@
 use rendertoy::*;
 use rtoy_rt::*;
-use rtoy_samples::rt_shadows::*;
-use rtoy_samples::ssao::*;
-use rtoy_samples::taa::*;
+use rtoy_samples::{rt_shadows::*, ssao::*, taa::*};
 
 fn main() {
     let mut rtoy = Rendertoy::new();
@@ -16,11 +14,7 @@ fn main() {
     //let scene = load_gltf_scene(asset!("meshes/honda_scrambler/scene.gltf"), 10.0);
     //let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
     let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let bvh = vec![(
-        scene.clone(),
-        Vector3::new(0.0, 0.0, 0.0),
-        UnitQuaternion::identity(),
-    )];
+    let bvh = vec![(scene.clone(), Vector3::zeros(), UnitQuaternion::identity())];
     let gpu_bvh = upload_bvh(bvh);
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
@@ -76,6 +70,7 @@ fn main() {
 
                 #[allow(dead_code)]
                 #[derive(Clone, Copy)]
+                #[repr(C)]
                 struct MergeConstants {
                     view_constants: ViewConstants,
                     light_dir: Vector4,
