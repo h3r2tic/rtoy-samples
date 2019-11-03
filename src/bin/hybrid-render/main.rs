@@ -13,9 +13,8 @@ fn main() {
 
     //let scene = load_gltf_scene(asset!("meshes/honda_scrambler/scene.gltf"), 10.0);
     //let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
-    let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let bvh = vec![(scene.clone(), Vector3::zeros(), UnitQuaternion::identity())];
-    let gpu_bvh = upload_bvh(bvh);
+    let mesh = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
+    let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
@@ -34,8 +33,7 @@ fn main() {
             ]),
             shader_uniforms!(
                 constants: raster_constants_buf.clone(),
-                instance_transform: raster_mesh_transform(Vector3::zeros(), UnitQuaternion::identity()),
-                :upload_raster_mesh(make_raster_mesh(scene.clone()))
+                :upload_raster_scene(&scene)
             ),
         );
 
@@ -47,7 +45,7 @@ fn main() {
             .add(RtShadows::new(
                 tex_key,
                 gbuffer_tex.clone(),
-                gpu_bvh,
+                upload_bvh(scene),
                 light_controller.clone(),
             ))
             .get_output_tex();

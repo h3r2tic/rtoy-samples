@@ -51,6 +51,14 @@ vec3 neutral_tonemap(vec3 col) {
     return col * final_mult;
 }
 
+float sharpen_remap(float l) {
+    return sqrt(l);
+}
+
+float sharpen_inv_remap(float l) {
+    return l * l;
+}
+
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
@@ -61,25 +69,33 @@ void main() {
 
 	const ivec2 dim_offsets[] = { ivec2(1, 0), ivec2(0, 1) };
 
-	float center = calculate_luma(col.rgb);
+	float center = sharpen_remap(calculate_luma(col.rgb));
+    vec2 wts;
+
+    //float sharpen_amount = 1.0;
 
 	for (int dim = 0; dim < 2; ++dim) {
 		ivec2 n0coord = pix + dim_offsets[dim];
 		ivec2 n1coord = pix - dim_offsets[dim];
 
-		float n0 = calculate_luma(texelFetch(inputTex, n0coord, 0).rgb);
-		float n1 = calculate_luma(texelFetch(inputTex, n1coord, 0).rgb);
-		float wt = max(0, 1 - 4 * (abs(center - n0) + abs(center - n1)));
+		float n0 = sharpen_remap(calculate_luma(texelFetch(inputTex, n0coord, 0).rgb));
+		float n1 = sharpen_remap(calculate_luma(texelFetch(inputTex, n1coord, 0).rgb));
+		float wt = max(0, 1.0 - 6.0 * (abs(center - n0) + abs(center - n1)));
+        wt = min(wt, sharpen_amount * wt * 1.25);
+        
 		neighbors += n0 * wt;
 		neighbors += n1 * wt;
 		wt_sum += wt * 2;
+        wts[dim] = wt;
 	}
 
-	float sharpened_luma = max(0, center * (wt_sum * sharpen_amount + 1) - neighbors * sharpen_amount);
+    float sharpened_luma = max(0, center * (wt_sum + 1) - neighbors);
+    sharpened_luma = sharpen_inv_remap(sharpened_luma);
 
-	col.rgb *= max(0.0, sharpened_luma / max(1e-5, center));
+	col.rgb *= max(0.0, sharpened_luma / max(1e-5, calculate_luma(col.rgb)));
 
     col.rgb = neutral_tonemap(col.rgb);
+    //col.rg = (1.0.xx-wts) * 0.4;
     //col.r = col.a * 10.0;
     //col.rgb = 1.0 - exp(-col.rgb);
 

@@ -173,14 +173,13 @@ float mitchell_netravali(float x) {
 
 vec3 fetch_center_filtered(ivec2 pix) {
     vec4 res = 0.0.xxxx;
-    float scl = 1.1;
 
     for (int y = -1; y <= 1; ++y) {
         for (int x = -1; x <= 1; ++x) {
             ivec2 src = pix + ivec2(x, y);
             vec4 col = vec4(decode(texelFetch(inputTex, src, 0).rgb), 1);
             float dist = length(-jitter - vec2(x, y));
-            float wt = mitchell_netravali(dist * scl);
+            float wt = mitchell_netravali(dist);
             col *= wt;
             res += col;
         }

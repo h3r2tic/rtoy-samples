@@ -22,6 +22,7 @@ pub struct Taa {
     prev_world_to_clip: Matrix4,
     sub_passes: RenderPassList,
     tex_key: TextureKey,
+    samples: Vec<Vector2>,
 }
 
 pub struct TaaInput {
@@ -72,6 +73,15 @@ impl Taa {
             temporal_blend,
         };
 
+        let samples = (0..16)
+            .map(|i| {
+                Vector2::new(
+                    radical_inverse(i % 16 + 1, 2) - 0.5,
+                    radical_inverse(i % 16 + 1, 3) - 0.5,
+                )
+            })
+            .collect();
+
         Self {
             taa_constants,
             temporal_accum,
@@ -79,6 +89,7 @@ impl Taa {
             prev_world_to_clip: Matrix4::identity(),
             sub_passes,
             tex_key,
+            samples,
         }
     }
 
@@ -94,11 +105,21 @@ impl RenderPass for Taa {
         frame_state: &FrameState,
         frame_idx: u32,
     ) {
-        let scramble: u32 = rand::random();
-        let jitter = Vector2::new(
-            radical_inverse(scramble % 64 + 1, 2) - 0.5,
-            radical_inverse(scramble % 64 + 1, 3) - 0.5,
-        );
+        // Re-shuffle the jitter sequence if we've just used it up
+        if 0 == frame_idx % self.samples.len() as u32 {
+            use rand::{prelude::*, seq::SliceRandom};
+            let prev_sample = self.samples.last().copied();
+            loop {
+                // Will most likely shuffle only once. Re-shuffles if the first sample
+                // in the new sequence is the same as the last sample in the last.
+                self.samples.shuffle(&mut thread_rng());
+                if self.samples.first().copied() != prev_sample {
+                    break;
+                }
+            }
+        }
+
+        let jitter = self.samples[frame_idx as usize % self.samples.len()];
 
         let mut view_constants = *view_constants;
         view_constants.set_pixel_offset(jitter, self.tex_key.width, self.tex_key.height);
