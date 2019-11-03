@@ -1,5 +1,6 @@
 use rendertoy::*;
 use rtoy_rt::*;
+use rtoy_samples::rt_shadows::*;
 
 fn main() {
     let mut rtoy = Rendertoy::new();
@@ -36,7 +37,8 @@ fn main() {
         ),
     );
 
-    let mut rt_shadows = rtoy_samples::rt_shadows::RtShadows::new(tex_key, gbuffer_tex, gpu_bvh);
+    let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
+    let mut rt_shadows = RtShadows::new(tex_key, gbuffer_tex, gpu_bvh, light_controller.clone());
 
     let out_tex = compute_tex!(
         "splat red to rgb",
@@ -54,10 +56,10 @@ fn main() {
 
         raster_constants_buf.rebind(upload_buffer(view_constants));
 
-        rt_shadows.prepare_frame(
-            view_constants,
-            Vector3::new(light_angle.cos(), 0.5, light_angle.sin()),
-        );
+        light_controller.set(DirectionalLightState::new(
+            Vector3::new(light_angle.cos(), 0.5, light_angle.sin()).normalize(),
+        ));
+        rt_shadows.prepare_frame(&view_constants, frame_state, 0);
 
         light_angle += 0.01;
 
