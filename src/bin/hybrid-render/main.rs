@@ -1,6 +1,7 @@
 use rendertoy::*;
 use rtoy_rt::*;
 use rtoy_samples::rt_shadows::*;
+use rtoy_samples::ssao::*;
 use rtoy_samples::taa::*;
 
 fn main() {
@@ -45,11 +46,11 @@ fn main() {
         );
 
         let ao_tex = sub_passes
-            .add(rtoy_samples::ssao::Ssao::new(tex_key, gbuffer_tex.clone()))
+            .add(Ssao::new(tex_key, gbuffer_tex.clone()))
             .get_output_tex();
 
         let rt_shadows_tex = sub_passes
-            .add(rtoy_samples::rt_shadows::RtShadows::new(
+            .add(RtShadows::new(
                 tex_key,
                 gbuffer_tex.clone(),
                 gpu_bvh,
