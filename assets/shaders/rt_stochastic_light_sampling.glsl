@@ -43,7 +43,7 @@ layout(std430) buffer light_count_buf {
     uint tri_light_count;
 };
 
-const uint light_count = 3;
+const uint light_count = 1;
 
 Triangle get_light_source(uint idx) {
     LightTriangle lt = light_triangles[idx];
@@ -74,8 +74,8 @@ Triangle get_light_source(uint idx) {
 }
 
 
-//const float light_intensity_scale = 10.0;
-const float light_intensity_scale = 2.7;// * 3.0 / light_count;
+const float light_intensity_scale = 30.0;
+//const float light_intensity_scale = 2.7;// * 3.0 / light_count;
 
 const vec3 light_colors[3] = vec3[](
     mix(vec3(0.7, 0.2, 1), 1.0.xxx, 0.75) * 1.0 * light_intensity_scale,
@@ -384,7 +384,7 @@ void main() {
     vec3 eye_pos = (view_constants.view_to_world * vec4(0, 0, 0, 1)).xyz;
 
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_dir_cs);
+    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.sample_to_view * ray_dir_cs);
     vec3 v = -normalize(ray_dir_ws.xyz);
 
     float distance_to_surface = 1e10;
@@ -393,7 +393,7 @@ void main() {
         col = 0.0.xxxx;
 
         vec4 ray_origin_cs = vec4(uv_to_cs(uv), gbuffer.w, 1.0);
-        vec4 ray_origin_vs = view_constants.clip_to_view * ray_origin_cs;
+        vec4 ray_origin_vs = view_constants.sample_to_view * ray_origin_cs;
         vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 

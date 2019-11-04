@@ -11,13 +11,18 @@ fn main() {
         format: 0,
     };
 
-    //let scene = load_gltf_scene(asset!("meshes/honda_scrambler/scene.gltf"), 10.0);
-    //let scene = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
-    let mesh = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
+    let mesh = load_gltf_scene(
+        asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),
+        1.0,
+    );
+    //let mesh = load_gltf_scene(asset!("meshes/honda_scrambler/scene.gltf"), 10.0);
+    //let mesh = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
+    //let mesh = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
     let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
+    camera.fov = 55.0;
 
     let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
 
@@ -63,7 +68,7 @@ fn main() {
         let light_controller = light_controller.clone();
 
         sub_passes.add(
-            move |view_constants: &ViewConstants, _frame_state: &FrameState, _frame_idx: u32| {
+            move |view_constants: &ViewConstants, _frame_state: &FrameState, frame_idx: u32| {
                 raster_constants_buf.rebind(upload_buffer(*view_constants));
 
                 #[allow(dead_code)]
@@ -72,11 +77,13 @@ fn main() {
                 struct MergeConstants {
                     view_constants: ViewConstants,
                     light_dir: Vector4,
+                    frame_idx: u32,
                 }
 
                 merge_constants_buf.rebind(upload_buffer(MergeConstants {
                     view_constants: *view_constants,
                     light_dir: light_controller.get().direction.to_homogeneous(),
+                    frame_idx,
                 }));
             },
         );
@@ -97,6 +104,7 @@ fn main() {
     );
 
     let mut frame_idx = 0;
+    //let mut light_angle = 1.7f32;
     let mut light_angle = 0.0f32;
 
     rtoy.draw_forever(|frame_state| {
@@ -105,9 +113,15 @@ fn main() {
 
         taa.prepare_frame(&view_constants, frame_state, frame_idx);
 
-        light_angle += 0.01;
+        //light_angle += 0.01;
         light_controller.set(DirectionalLightState::new(
-            Vector3::new(light_angle.cos(), 0.5, light_angle.sin()).normalize(),
+            Vector3::new(
+                light_angle.cos(),
+                //1.0 - frame_state.mouse.pos.y / frame_state.window_size_pixels.1 as f32,
+                0.025,
+                light_angle.sin(),
+            )
+            .normalize(),
         ));
         frame_idx += 1;
 

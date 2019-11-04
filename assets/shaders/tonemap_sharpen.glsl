@@ -29,21 +29,9 @@ vec3 neutral_tonemap(vec3 col) {
 
     vec3 desat_col = mix(col.rgb, ycbcr.xxx, desat);
 
-#if 1
     float tm_luma = tonemap_curve(ycbcr.x);
     vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, calculate_luma(col.rgb)));
-    float final_mult = 0.95;
-#else
-    // Less clipping at the expense of luminance preservation
-    float sm0 = ycbcr.x;
-    float sm1 = max(max(col.r, col.g), col.b);
-    float sm_mix = clamp(length(ycbcr.yz), 0.0, 1.0);
-    float sm = mix(sm0, sm1, sm_mix);
-
-    float tm_luma = tonemap_curve(sm);
-    vec3 tm0 = col.rgb * max(0.0, tm_luma / max(1e-5, sm));
-    float final_mult = 1.0;
-#endif
+    float final_mult = 0.97;
     vec3 tm1 = tonemap_curve(desat_col);
 
     col = mix(tm0, tm1, bt * bt);
@@ -64,6 +52,7 @@ void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
 	vec4 col = texelFetch(inputTex, pix, 0);
 
+#if 1
 	float neighbors = 0;
 	float wt_sum = 0;
 
@@ -71,8 +60,6 @@ void main() {
 
 	float center = sharpen_remap(calculate_luma(col.rgb));
     vec2 wts;
-
-    //float sharpen_amount = 1.0;
 
 	for (int dim = 0; dim < 2; ++dim) {
 		ivec2 n0coord = pix + dim_offsets[dim];
@@ -86,16 +73,15 @@ void main() {
 		neighbors += n0 * wt;
 		neighbors += n1 * wt;
 		wt_sum += wt * 2;
-        wts[dim] = wt;
 	}
 
     float sharpened_luma = max(0, center * (wt_sum + 1) - neighbors);
     sharpened_luma = sharpen_inv_remap(sharpened_luma);
 
 	col.rgb *= max(0.0, sharpened_luma / max(1e-5, calculate_luma(col.rgb)));
+#endif
 
     col.rgb = neutral_tonemap(col.rgb);
-    //col.rg = (1.0.xx-wts) * 0.4;
     //col.r = col.a * 10.0;
     //col.rgb = 1.0 - exp(-col.rgb);
 
