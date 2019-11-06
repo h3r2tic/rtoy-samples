@@ -13,6 +13,10 @@ layout(std430) buffer mesh_uv_buf {
     vec2 uvs[];
 };
 
+layout(std430) buffer mesh_color_buf {
+    vec4 colors[];
+};
+
 layout(std430) buffer mesh_tangent_buf {
     vec4 tangents[];
 };
@@ -26,6 +30,7 @@ layout(std430) buffer instance_transform {
 };
 
 out vec3 v_normal;
+out vec4 v_color;
 out vec3 v_tangent;
 out vec3 v_bitangent;
 out vec3 v_world_position;
@@ -48,6 +53,7 @@ void main() {
 	gl_Position = clip_position;
 
     v_uv = uvs[gl_VertexID];
+    v_color = colors[gl_VertexID];
     v_tangent = tangent;
     v_bitangent = bitangent;
     v_material_id = material_ids[gl_VertexID];

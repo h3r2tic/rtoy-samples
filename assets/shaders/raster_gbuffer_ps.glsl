@@ -9,16 +9,22 @@ layout(std430) buffer constants {
 };
 
 struct Material {
+    float base_color_mult[4];
     uvec2 normal_map;
     uvec2 spec_map;
     uvec2 albedo_map;
 };
+
+vec4 array_to_vec4(float v[4]) {
+    return vec4(v[0], v[1], v[2], v[3]);
+}
 
 layout(std430) buffer mesh_materials_buf {
     Material materials[];
 };
 
 in vec3 v_normal;
+in vec4 v_color;
 in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec3 v_world_position;
@@ -52,7 +58,10 @@ void main() {
 
     mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
 
-    vec3 albedo = texture2D(albedoTex, uv).rgb;
+    vec3 albedo =
+        texture2D(albedoTex, uv).rgb *
+        clamp(v_color.rgb, 0.0.xxx, 1.0.xxx) *
+        array_to_vec4(material.base_color_mult).rgb;
     
     //ts_normal = vec3(0, 0, 1);
     //roughness = float(v_material_id) * 0.2;
