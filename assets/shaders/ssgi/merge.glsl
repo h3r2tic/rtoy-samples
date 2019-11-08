@@ -67,7 +67,7 @@ void main() {
 
     vec3 result = vec3(0, 0, 0);
     //vec3 sun_color = vec3(1.4, 1, 0.8) * 2.8;
-    vec3 sun_color = sample_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 1.2;
+    vec3 sun_color = sample_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
 
     if (gbuffer.a == 0.0) {
         result = sample_environment_light(-v);
