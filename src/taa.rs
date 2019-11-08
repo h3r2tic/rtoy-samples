@@ -106,13 +106,15 @@ impl RenderPass for Taa {
         frame_idx: u32,
     ) {
         // Re-shuffle the jitter sequence if we've just used it up
-        if 0 == frame_idx % self.samples.len() as u32 {
-            use rand::{prelude::*, seq::SliceRandom};
+        if 0 == frame_idx % self.samples.len() as u32 && frame_idx > 0 {
+            use rand::{seq::SliceRandom, rngs::SmallRng, SeedableRng};
+            let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
+
             let prev_sample = self.samples.last().copied();
             loop {
                 // Will most likely shuffle only once. Re-shuffles if the first sample
                 // in the new sequence is the same as the last sample in the last.
-                self.samples.shuffle(&mut thread_rng());
+                self.samples.shuffle(&mut rng);
                 if self.samples.first().copied() != prev_sample {
                     break;
                 }

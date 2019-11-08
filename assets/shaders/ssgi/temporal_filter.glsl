@@ -13,6 +13,8 @@ vec4 run_filter(in vec2 fragCoord)
     vec2 uv = get_uv(outputTex_size);
     
     vec4 center = texelFetch(inputTex, px, 0);
+    //return center;
+
     vec4 reproj = texelFetch(reprojectionTex, px, 0);
     vec4 history = textureLod(historyTex, uv + reproj.xy, 0);
     
