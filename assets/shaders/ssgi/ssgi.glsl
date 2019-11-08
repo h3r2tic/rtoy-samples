@@ -1,6 +1,7 @@
 #include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
 #include "rendertoy::shaders/sampling.inc"
+#include "rtoy-rt::shaders/rt.inc"
 #include "../inc/uv.inc"
 #include "../inc/pack_unpack.inc"
 
@@ -26,16 +27,20 @@ layout(std430) buffer constants {
 const float temporal_rotations[] = {60.0, 300.0, 180.0, 240.0, 120.0, 0.0};
 const float temporal_offsets[] = {0.0, 0.5, 0.25, 0.75};
 
-/*Ray offset_ray_origin(Ray r, vec3 v) {
+const uint ssgi_half_sample_count = 6;
+
+Ray offset_ray_origin(Ray r, vec3 v) {
     r.o += (v + r.d) * (1e-4 * length(r.o));
     return r;
-}*/
+}
 
 float fetch_depth(vec2 uv) {
     return texelFetch(depthTex, ivec2(inputTex_size.xy * uv), 0).x;
 }
 
 vec3 fetch_lighting(vec2 uv) {
+    //return 1.0.xxx;
+    
     vec4 reproj = texelFetch(reprojectionTex, ivec2(inputTex_size.xy * uv), 0);
     if (reproj.z > 0.5) {
         return texelFetch(lightingTex, ivec2(inputTex_size.xy * (uv + reproj.xy)), 0).xyz;
@@ -59,10 +64,22 @@ float integrate_arc(float h1, float h2, float n) {
 }
 
 float update_horizion_angle(float prev, float new) {
-    return new > prev ? max(new, prev) : mix(prev, new, 0.1);
+    float t = exp(-0.3 * float(ssgi_half_sample_count));
+    return new > prev ? max(new, prev) : mix(prev, new, t);
+    //return new > prev ? max(new, prev) : prev;
 }
 
-float process_sample(vec4 sample_cs, vec3 center_vs, vec3 normal_vs, vec3 v_vs, float ao_radius, float theta_cos_max, inout vec4 color_accum) {
+vec3 intersect_dir_plane(vec3 dir, vec3 normal, vec3 pt) {
+    float d = -dot(pt, normal);
+    float t = d / -dot(dir, normal);
+    return dir * t;
+}
+
+vec3 project_point_on_plane(vec3 point, vec3 normal) {
+    return point - dot(point, normal);
+}
+
+float process_sample(float t, inout vec3 prev_sample_vs, vec4 sample_cs, vec3 center_vs, vec3 normal_vs, vec3 v_vs, float ao_radius, float theta_cos_max, inout vec4 color_accum) {
     if (sample_cs.z > 0) {
         vec4 sample_vs4 = view_constants.sample_to_view * sample_cs;
         vec3 sample_vs = sample_vs4.xyz / sample_vs4.w;
@@ -72,18 +89,43 @@ float process_sample(vec4 sample_cs, vec3 center_vs, vec3 normal_vs, vec3 v_vs, 
         float sample_theta_cos = dot(sample_vs_offset, v_vs) / sample_vs_offset_len;
         if (sample_vs_offset_len < ao_radius)
         {
+            bool sample_visible = sample_theta_cos >= theta_cos_max;
+            float theta_delta = theta_cos_max;
             theta_cos_max = update_horizion_angle(theta_cos_max, sample_theta_cos);
-            vec3 lighting = fetch_lighting(cs_to_uv(sample_cs.xy));
-            vec3 sample_normal_vs = fetch_normal_vs(cs_to_uv(sample_cs.xy));
+            theta_delta = theta_cos_max - theta_delta;
 
-            float vis_term = 1.0;
-            vis_term *= max(0.0, dot(normalize(sample_vs_offset), normal_vs));
-            //vis_term *= dot(-normalize(sample_vs_offset), sample_normal_vs) > 0.0 ? 1.0 : 0.0;
-            vis_term *= max(0.0, dot(-normalize(sample_vs_offset), sample_normal_vs));
-            vis_term /= sample_vs_offset_len * sample_vs_offset_len;
+            if (sample_visible) {
+                vec3 lighting = fetch_lighting(cs_to_uv(sample_cs.xy));
+                vec3 sample_normal_vs = fetch_normal_vs(cs_to_uv(sample_cs.xy));
 
-            color_accum += vis_term * vec4(lighting, 1.0);
+                vec3 p0 = intersect_dir_plane(prev_sample_vs, normal_vs, center_vs);
+                vec3 p1 = intersect_dir_plane(prev_sample_vs, sample_normal_vs, sample_vs);
+                vec3 p2 = sample_vs;
+
+                p0 = normalize(p0 - center_vs);
+                p1 = normalize(p1 - center_vs);
+                p2 = normalize(p2 - center_vs);
+
+                p0 = project_point_on_plane(p0, normal_vs);
+                p1 = project_point_on_plane(p1, normal_vs);
+                p2 = project_point_on_plane(p2, normal_vs);
+
+                float vis_part = min(1.0, distance(p1, p2) / max(1e-5, distance(p0, p2)));
+
+                // HACK; TODO: fix all this nonsense
+                float vis_term = 1.0;
+                lighting *= max(0.0, dot(normalize(sample_vs_offset), normal_vs));
+                vis_term *= max(0.0, dot(-normalize(sample_vs_offset), sample_normal_vs));
+                lighting *= max(0.0, dot(-normalize(sample_vs_offset), sample_normal_vs));
+                vis_term /= max(1e-5, sample_vs_offset_len * sample_vs_offset_len);
+                //vis_term *= vis_part;
+                lighting *= distance(p1, p2);
+
+                color_accum += vec4(lighting, 1.0) * vis_term;
+            }
         }
+
+        prev_sample_vs = sample_vs;
     } else {
         // Sky; assume no occlusion
         theta_cos_max = update_horizion_angle(theta_cos_max, -1);
@@ -120,28 +162,7 @@ void main() {
         vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 
-#if 0
-        uint seed0 = hash(hash(frame_idx ^ hash(pix.x)) ^ pix.y);
-        uint seed1 = hash(seed0);
-
-        vec3 sr = uniform_sample_sphere(vec2(rand_float(seed0), rand_float(seed1)));
-        vec3 ao_dir = normal + sr;
-
-        Ray r;
-        r.o = ray_origin_ws.xyz;
-        r.d = ao_dir;
-        r = offset_ray_origin(r, v);
-
-        if (!raytrace_intersects_any(r, ao_radius)) {
-            col = 1.0.xxx;
-        }
-#else
-        uint seed0 = hash(hash(frame_idx ^ hash(pix.x)) ^ pix.y);
-        uint seed1 = hash(seed0);
-
         float spatial_direction_noise = 1.0 / 16.0 * ((((pix.x + pix.y) & 3) << 2) + (pix.x & 3));
-        //spatial_direction_noise = rand_float(seed0);
-        
         float temporal_direction_noise = temporal_rotations[frame_idx % 6] / 360.0;
         float spatial_offset_noise = (1.0 / 4.0) * ((pix.y - pix.x) & 3);
         float temporal_offset_noise = temporal_offsets[frame_idx / 6 % 4];
@@ -159,8 +180,7 @@ void main() {
 
             // TODO: better units (pixels? degrees?)
             // Calculate AO radius shrinkage (if camera is too close to a surface)
-            float max_ao_radius_cs = 0.17;
-            //float max_ao_radius_cs = 0.5;
+            float max_ao_radius_cs = 0.25;
             ao_radius_shrinkage = min(1.0, max_ao_radius_cs / cs_ao_radius_rescale);
         }
 
@@ -170,39 +190,10 @@ void main() {
 
         vec3 center_vs = ray_origin_vs.xyz / ray_origin_vs.w;
 
-        const uint half_sample_count = 6;
-        cs_slice_dir *= 1.0 / float(half_sample_count);
-
-        float theta_cos_max1 = -1.0;
-        float theta_cos_max2 = -1.0;
+        cs_slice_dir *= 1.0 / float(ssgi_half_sample_count);
 
         vec2 vs_slice_dir = (vec4(cs_slice_dir, 0, 0) * view_constants.sample_to_view).xy;
         vec3 slice_normal_vs = normalize(cross(v_vs, vec3(vs_slice_dir, 0)));
-
-        vec4 color_accum = 0.0.xxxx;
-
-        for (uint i = 0; i < half_sample_count; ++i) {
-            {
-                float t = float(i) + rand_offset;
-
-                vec4 sample_cs = vec4(ray_origin_cs.xy - cs_slice_dir * t, 0, 1);
-                sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
-
-                theta_cos_max1 = process_sample(sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max1, color_accum);
-            }
-
-            {
-                float t = float(i) + (1.0 - rand_offset);
-
-                vec4 sample_cs = vec4(ray_origin_cs.xy + cs_slice_dir * t, 0, 1);
-                sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
-
-                theta_cos_max2 = process_sample(sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max2, color_accum);
-            }
-        }
-
-        float h1 = -acos(theta_cos_max1);
-        float h2 = +acos(theta_cos_max2);
 
         vec3 proj_normal_vs = normal_vs - slice_normal_vs * dot(slice_normal_vs, normal_vs);
         float slice_contrib_weight = length(proj_normal_vs);
@@ -212,15 +203,98 @@ void main() {
         //float n_angle = atan(dot(normal_vs, slice_tangent_vs), dot(normal_vs, v_vs));
         float n_angle = acos(clamp(dot(proj_normal_vs, v_vs), -1.0, 1.0)) * sign(dot(vs_slice_dir, proj_normal_vs.xy - v_vs.xy));
 
+        float theta_cos_max1 = cos(n_angle - PI / 2.0);
+        float theta_cos_max2 = cos(n_angle + PI / 2.0);
+
+        vec4 color_accum = 0.0.xxxx;
+
+        vec3 prev_sample0_vs = v_vs;
+        vec3 prev_sample1_vs = v_vs;
+
+        for (uint i = 0; i < ssgi_half_sample_count; ++i) {
+            {
+                float t = float(i) + rand_offset;
+
+                vec4 sample_cs = vec4(ray_origin_cs.xy - cs_slice_dir * t, 0, 1);
+                sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
+
+                theta_cos_max1 = process_sample(t / ssgi_half_sample_count, prev_sample0_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max1, color_accum);
+            }
+
+            {
+                float t = float(i) + (1.0 - rand_offset);
+
+                vec4 sample_cs = vec4(ray_origin_cs.xy + cs_slice_dir * t, 0, 1);
+                sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
+
+                theta_cos_max2 = process_sample(t / ssgi_half_sample_count, prev_sample1_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max2, color_accum);
+            }
+        }
+
+        float h1 = -acos(theta_cos_max1);
+        float h2 = +acos(theta_cos_max2);
+
         float h1p = n_angle + max(h1 - n_angle, -PI / 2.0);
         float h2p = n_angle + min(h2 - n_angle, PI / 2.0);
 
-        float inv_ao = integrate_arc(h1p, h2p, n_angle);
+        float ndotv = max(1e-5, dot(normal_vs, v_vs));
+        float inv_ao_0_1 = min(1.0, integrate_arc(h1p, h2p, n_angle) * ndotv);
+        float inv_ao = inv_ao_0_1 / ndotv;
+
         col.a = max(0.0, inv_ao);
-        //col.rgb = max(0.0, 1.0 - inv_ao) * color_accum.rgb / max(1e-5, color_accum.w);
-        // TODO: probably wrong to not use AO here, but filtering those separately gives better stability
-        col.rgb = color_accum.rgb / max(1e-5, color_accum.w);
+        // TODO: fix inv ao scaling term
+        //col.rgb = max(0.0, 1.0 - inv_ao_0_1) * color_accum.rgb / max(1e-5, color_accum.w);
+        col.rgb = color_accum.rgb / max(1e-5, color_accum.w) / max(0.1, ndotv);
         col *= slice_contrib_weight;
+
+#if 0
+        {
+            col.rgb = 0.0.xxx;
+
+            int gi_sample_count = 16;
+            float gi_wt_sum = 0.0;
+
+            for (int i = 0; i < gi_sample_count; ++i) {
+                uint seed0 = hash(hash((frame_idx + i * 10811) ^ hash(pix.x)) ^ pix.y);
+                uint seed1 = hash(seed0);
+
+                vec3 sr = uniform_sample_sphere(vec2(rand_float(seed0), rand_float(seed1)));
+                vec3 ao_dir = normalize(normal + sr);
+
+                Ray r;
+                r.o = ray_origin_ws.xyz;
+                r.d = ao_dir;
+                r = offset_ray_origin(r, v);
+
+                RtHit hit;
+                hit.t = ao_radius;
+                if (raytrace(r, hit)) {
+                    vec3 hit_pos_ws = r.o + r.d * hit.t;
+                    vec4 hit_pos_vs = view_constants.world_to_view * vec4(hit_pos_ws, 1);
+                    vec4 hit_pos_cs = view_constants.view_to_clip * hit_pos_vs;
+                    hit_pos_cs /= hit_pos_cs.w;
+                    vec2 hit_pos_uv = cs_to_uv(hit_pos_cs.xy);
+
+                    if (hit_pos_uv == clamp(hit_pos_uv, 0.0.xx, 1.0.xx)) {
+                        vec4 sample_cs = vec4(hit_pos_cs.xy, 0, 1);
+                        sample_cs.z = fetch_depth(hit_pos_uv);
+                        vec4 sample_vs = view_constants.clip_to_view * sample_cs;
+                        
+                        vec3 p0 = hit_pos_vs.xyz / hit_pos_vs.w;
+                        vec3 p1 = sample_vs.xyz / sample_vs.w;
+
+                        if (abs(p0.z - p1.z) < 2)
+                        {
+                            col.rgb += fetch_lighting(hit_pos_uv);
+                            gi_wt_sum += 1;
+                        }
+                    }
+                }
+            }
+
+            col.rgb /= gi_sample_count;
+            //col.rgb /= max(1e-5, gi_wt_sum);
+        }
 #endif
     }
 

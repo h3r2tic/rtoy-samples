@@ -23,6 +23,7 @@ fn main() {
         20.0,
     );
     let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
+    let bvh = upload_bvh(scene.clone());
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
@@ -100,6 +101,7 @@ fn main() {
                 lightingTex: lighting_tex.clone(),
                 depthTex: depth_tex.clone(),
                 reprojectionTex: reprojection_tex.clone(),
+                :bvh.clone(),
             ),
         );
 
@@ -128,7 +130,7 @@ fn main() {
             .add(RtShadows::new(
                 tex_key,
                 gbuffer_tex.clone(),
-                upload_bvh(scene),
+                bvh,
                 light_controller.clone(),
             ))
             .get_output_tex();

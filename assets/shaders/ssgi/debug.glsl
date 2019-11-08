@@ -12,8 +12,12 @@ void main() {
 	vec4 b = textureLod(ssgiTex, uv, 0);
     vec4 c = a;
     //vec4 c = 1.0 - clamp(b, 0.0, 1.0).aaaa;
-    //vec4 c = b.aaaa;
-    //vec4 c = vec4(b.rgb * (1.0 - clamp(b.a, 0.0, 1.0)), 1);
+    //vec4 c = max(0.0.xxxx, b.aaaa - 0.8) + b.aaaa * 0.03;
+    //c = b.aaaa;
+    //vec4 c = smoothstep(0.6, 1.5, b).aaaa;
+    //c = vec4(b.rgb * (1.0 - clamp(b.a, 0.0, 1.0)), 1);
+
+    //c = pow(c, 30.0.xxxx);
 
 	imageStore(outputTex, pix, c);
 }

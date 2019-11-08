@@ -78,8 +78,8 @@ void main() {
 
         vec4 ssgi = texelFetch(aoTex, pix, 0);
         result += albedo * env_color * clamp(ssgi.a, 0.0, 1.0);
-        //result += albedo * ssgi.rgb;
-        result += albedo * ssgi.rgb * clamp(1.0 - ssgi.a, 0.0, 1.0);
+        result += albedo * ssgi.rgb;
+        //result += albedo * ssgi.rgb * clamp(1.0 - ssgi.a, 0.0, 1.0);
 
         float shadows = texelFetch(shadowsTex, pix, 0).r;
         float ndotl = max(0, dot(normal, light_dir_pad.xyz));

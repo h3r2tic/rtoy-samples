@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Tomasz Stachowiak <h3@h3.gd>"]
 edition = "2018"
 
-description = "Shader include parser and crawler"
+description = "Rendering playground"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/h3r2tic/rtoy-samples"

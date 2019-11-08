@@ -120,6 +120,7 @@ impl RenderPass for Taa {
         }
 
         let jitter = self.samples[frame_idx as usize % self.samples.len()];
+        //let jitter = Vector2::new(0.5, 0.5);
 
         let mut view_constants = *view_constants;
         view_constants.set_pixel_offset(jitter, self.tex_key.width, self.tex_key.height);
