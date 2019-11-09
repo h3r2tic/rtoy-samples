@@ -2028,7 +2028,7 @@ dependencies = [
 [[package]]
 name = "snoozy"
 version = "0.1.1"
-source = "git+https://github.com/h3r2tic/snoozy#acea165fe46eb0e988c36e8be9928c68c274d0fa"
+source = "git+https://github.com/h3r2tic/snoozy#772e6ee06bd2397a39d016fd0bf67e13baab6751"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2205,7 +2205,7 @@ name = "twox-hash"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
