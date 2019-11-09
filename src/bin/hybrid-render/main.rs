@@ -26,7 +26,8 @@ fn main() {
 
     let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
 
-    let mut taa = Taa::new(tex_key, |sub_passes| {
+    let mut taa = Taa::new(tex_key);
+    taa.setup(|sub_passes| {
         let mut raster_constants_buf = upload_buffer(0u32).into_named();
         let mut merge_constants_buf = upload_buffer(0u32).into_named();
 

@@ -108,8 +108,6 @@ fn main() {
             frame_idx = 0;
         }
 
-        temporal_accum.prepare_frame(frame_idx);
-
         // Jitter the image in a Gaussian kernel in order to anti-alias the result. This is why we have
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post
         // filter perceptually sharpens it whilst keeping the image alias-free.
@@ -123,6 +121,8 @@ fn main() {
         let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
             .finish();
+
+        temporal_accum.prepare_frame(&view_constants, frame_state, frame_idx);
 
         sharpen_amount.rebind(const_f32(((frame_idx as f32).sqrt() / 256.0).min(0.7)));
 
