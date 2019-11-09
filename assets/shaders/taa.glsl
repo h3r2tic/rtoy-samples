@@ -1,4 +1,5 @@
 #include "inc/uv.inc"
+#include "inc/color.inc"
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
@@ -11,13 +12,9 @@ layout(std430) buffer constants {
     vec2 jitter;
 };
 
-float calculate_luma(vec3 col) {
-	return dot(vec3(0.2126, 0.7152, 0.0722), col);
-}
-
 #define ENCODING_VARIANT 2
 
-vec3 decode(vec3 a) {
+vec3 decode_rgb(vec3 a) {
     #if 0 == ENCODING_VARIANT
     return a;
     #elif 1 == ENCODING_VARIANT
@@ -27,7 +24,7 @@ vec3 decode(vec3 a) {
     #endif
 }
 
-vec3 encode(vec3 a) {
+vec3 encode_rgb(vec3 a) {
     #if 0 == ENCODING_VARIANT
     return a;
     #elif 1 == ENCODING_VARIANT
@@ -36,6 +33,14 @@ vec3 encode(vec3 a) {
     a = exp(a) - 1;
     return a * a;
     #endif
+}
+
+vec3 decode(vec3 a) {
+    return decode_rgb(a);
+}
+
+vec3 encode(vec3 a) {
+    return encode_rgb(a);
 }
 
 vec4 fetchHistory(vec2 uv)
@@ -188,30 +193,39 @@ vec3 fetch_center_filtered(ivec2 pix) {
     return res.rgb / res.a;
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
+vec4 taa(vec2 fragCoord)
 {
     ivec2 px = ivec2(fragCoord);
     vec2 uv = get_uv(outputTex_size);
     
     vec3 center = decode(texelFetch(inputTex, px, 0).rgb);
-	//vec4 history = texelFetch(historyTex, px, 0);
+    center = rgb_to_ycbcr(center);
+
     vec4 reproj = texelFetch(reprojectionTex, px, 0);
     vec2 history_uv = uv + reproj.xy * vec2(1.0, 1.0);
-    vec3 history = max(0.0.xxx, fetchHistoryCatmullRom(history_uv).xyz);
+
+#if 1
+    float history_g = fetchHistoryCatmullRom(history_uv).y;
+    vec3 history = fetchHistory(history_uv).rgb;
+    if (history.y > 1e-5) {
+        history *= history_g / history.y;
+    }
+#else
+    vec3 history = fetchHistoryCatmullRom(history_uv).rgb;
+#endif
+
+    history = rgb_to_ycbcr(history);
     
 	vec3 vsum = vec3(0.);
 	vec3 vsum2 = vec3(0.);
 	float wsum = 0;
-
-    vec3 nmin = center;
-    vec3 nmax = center;
     
 	const int k = 1;
     for (int y = -k; y <= k; ++y) {
         for (int x = -k; x <= k; ++x) {
             vec3 neigh = decode(texelFetch(inputTex, px + ivec2(x, y), 0).rgb);
-            //nmin = min(nmin, neigh);
-            //nmax = max(nmax, neigh);
+            neigh = rgb_to_ycbcr(neigh);
+
 			float w = exp(-3.0 * float(x * x + y * y) / float((k+1.) * (k+1.)));
 			vsum += neigh * w;
 			vsum2 += neigh * neigh * w;
@@ -223,8 +237,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 	vec3 ex2 = vsum2 / wsum;
 	vec3 dev = sqrt(max(vec3(0.0), ex2 - ex * ex));
 
-    //float local_contrast = calculate_luma(dev / (min(ex, history) + 1e-5));
-    float local_contrast = calculate_luma(dev / (ex + 1e-5));
+    float local_contrast = dev.x / (ex.x + 1e-5);
 
     vec2 history_pixel = history_uv * outputTex_size.xy;
     float texel_center_dist = dot(1.0.xx, abs(0.5 - fract(history_pixel)));
@@ -234,49 +247,36 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     box_size *= mix(0.5, 1.0, clamp(1.0 - texel_center_dist, 0.0, 1.0));
 
     center = fetch_center_filtered(px);
+    center = rgb_to_ycbcr(center);
 
     const float n_deviations = 1.5;
-	nmin = mix(center, ex, box_size * box_size) - dev * box_size * n_deviations;
-	nmax = mix(center, ex, box_size * box_size) + dev * box_size * n_deviations;
-    nmin = max(nmin, 0.0.xxx);
+	vec3 nmin = mix(center, ex, box_size * box_size) - dev * box_size * n_deviations;
+	vec3 nmax = mix(center, ex, box_size * box_size) + dev * box_size * n_deviations;
 
     float blend_factor = 1.0;
     
 	#if 1
-		vec3 result;
-		if (true) {
-			vec3 clamped_history = clamp(history, nmin, nmax);
-            blend_factor = mix(1.0, 1.0 / 12.0, reproj.z);
+		vec3 clamped_history = clamp(history, nmin, nmax);
+        blend_factor = mix(1.0, 1.0 / 12.0, reproj.z);
 
-            // "Anti-flicker"
-            float clamp_dist = dot(1.0.xxx, (min(abs(history - nmin), abs(history - nmax))) / max(max(history, ex), 1e-5));
-            blend_factor *= mix(0.2, 1.0, smoothstep(0.0, 4.0, clamp_dist));
+        // "Anti-flicker"
+        float clamp_dist = (min(abs(history.x - nmin.x), abs(history.x - nmax.x))) / max(max(history.x, ex.x), 1e-5);
+        blend_factor *= mix(0.2, 1.0, smoothstep(0.0, 2.0, clamp_dist));
 
-			result = mix(clamped_history, center, blend_factor);
-		} else if (true) {
-            //float blend = mix(1.0, 1.0 / 16, smoothstep(0.05, 0.0, length(reproj.xy)));
-            float blend = 1.0 / 16;
-			result = mix(history.rgb, center, blend);
-		} else {
-			result = center;
-		}
+		vec3 result = mix(clamped_history, center, blend_factor);
+        result = ycbcr_to_rgb(result);
 
-		fragColor = vec4(encode(result), blend_factor);
+		return vec4(encode(result), blend_factor);
 	#else
-		fragColor = vec4(encode(center), 1.0);
+        center = ycbcr_to_rgb(center);
+		return vec4(encode(center), 1.0);
 	#endif
-
-    //fragColor = vec4(texel_center_dist.xxx, 1);
-    //fragColor = vec4(box_size.xxx, 1);
-    //fragColor = vec4((dev / (ex + 1e-5)), 1);
 }
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
-	vec2 fragCoord = vec2(gl_GlobalInvocationID.xy) + 0.5;
-	vec4 finalColor;
+	vec2 frag_coord = vec2(gl_GlobalInvocationID.xy) + 0.5;
+	vec4 color = taa(frag_coord);
 
-	mainImage(finalColor, fragCoord);
-
-	imageStore(outputTex, ivec2(gl_GlobalInvocationID.xy), finalColor);
+	imageStore(outputTex, ivec2(gl_GlobalInvocationID.xy), color);
 }
