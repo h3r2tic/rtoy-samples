@@ -244,12 +244,15 @@ fn main() {
         camera.update(frame_state);
         let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).finish();
 
-        let theta = (frame_state.mouse.pos.x / frame_state.window_size_pixels.0 as f32)
+        /*let theta = (frame_state.mouse.pos.x / frame_state.window_size_pixels.0 as f32)
             * std::f32::consts::PI
             * -2.0;
         let phi = (frame_state.mouse.pos.y / frame_state.window_size_pixels.1 as f32)
             * std::f32::consts::PI
             * 0.5;
+        dbg!((theta, phi));*/
+        let theta = -4.54;
+        let phi = 1.48;
         let light_dir = spherical_to_cartesian(theta, phi);
 
         light_controller.set(DirectionalLightState::new(light_dir));
