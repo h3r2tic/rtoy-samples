@@ -51,10 +51,13 @@ fn main() {
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/lambert_convolve_octamap.glsl")),
-        shader_uniforms!(input_tex: sky_tex),
+        shader_uniforms!(input_tex: sky_tex.clone()),
     );
 
-    let mut taa = Taa::new(tex_key, |sub_passes| {
+    let mut taa = Taa::new(tex_key);
+    let taa_output = taa.get_output_tex();
+
+    taa.setup(|sub_passes| {
         let mut prev_world_to_clip = Matrix4::identity();
 
         let mut raster_constants_buf = upload_buffer(0u32).into_named();
@@ -81,7 +84,7 @@ fn main() {
             shader_uniforms!(inputTex: gbuffer_tex.clone()),
         );
 
-        let mut lighting_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
+        //let mut lighting_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
 
         let reprojection_tex = compute_tex(
             tex_key.with_format(gl::RGBA16F),
@@ -92,23 +95,36 @@ fn main() {
             ),
         );
 
+        let normal_tex = compute_tex(
+            tex_key.with_format(gl::RGBA8_SNORM),
+            load_cs(asset!("shaders/extract_gbuffer_view_normal_rgba8.glsl")),
+            shader_uniforms!(
+                // Contains view constants at offset 0
+                constants: ao_constants_buf.clone(),
+                inputTex: gbuffer_tex.clone()
+            ),
+        );
+
+        let reprojected_lighting_tex = compute_tex(
+            tex_key.with_format(gl::R11F_G11F_B10F),
+            load_cs(asset!("shaders/reproject_lighting.glsl")),
+            shader_uniforms!(
+                lightingTex: taa_output,
+                reprojectionTex: reprojection_tex.clone(),
+            ),
+        );
+
         let ssgi_tex = compute_tex(
             tex_key.with_format(gl::RGBA16F),
             load_cs(asset!("shaders/ssgi/ssgi.glsl")),
             shader_uniforms!(
                 constants: ao_constants_buf.clone(),
-                inputTex: gbuffer_tex.clone(),
-                lightingTex: lighting_tex.clone(),
+                gbufferTex: gbuffer_tex.clone(),
+                reprojectedLightingTex: reprojected_lighting_tex.clone(),
                 depthTex: depth_tex.clone(),
-                reprojectionTex: reprojection_tex.clone(),
+                normalTex: normal_tex.clone(),
                 :bvh.clone(),
             ),
-        );
-
-        let normal_tex = compute_tex(
-            tex_key.with_format(gl::R32UI),
-            load_cs(asset!("shaders/extract_gbuffer_normal.glsl")),
-            shader_uniforms!(inputTex: gbuffer_tex.clone()),
         );
 
         let ssgi_tex = compute_tex(
@@ -135,23 +151,25 @@ fn main() {
             ))
             .get_output_tex();
 
-        lighting_tex.rebind(compute_tex(
+        // lighting_tex.rebind
+        let lighting_tex = compute_tex(
             tex_key.with_format(gl::R11F_G11F_B10F),
             load_cs(asset!("shaders/ssgi/merge.glsl")),
             shader_uniforms!(
             aoTex: ssgi_tex.clone(),
             shadowsTex: rt_shadows_tex,
             gbuffer: gbuffer_tex.clone(),
-            skyTex: sky_lambert_tex,
+            skyTex: sky_tex,
+            skyLambertTex: sky_lambert_tex,
             constants: merge_constants_buf.clone()),
-        ));
+        );
 
         let out_tex = compute_tex(
             tex_key.with_format(gl::R11F_G11F_B10F),
             load_cs(asset!("shaders/ssgi/debug.glsl")),
             shader_uniforms!(
-                    finalTex: lighting_tex.clone(),
-                    ssgiTex: ssgi_tex.clone(),
+                finalTex: lighting_tex.clone(),
+                ssgiTex: ssgi_tex.clone(),
             ),
         );
 

@@ -8,13 +8,13 @@
 // TODO: proper constant in a common include file
 #define PI 3.14159265359
 
-uniform sampler2D inputTex;
-uniform vec4 inputTex_size;
+uniform sampler2D gbufferTex;
+uniform vec4 gbufferTex_size;
 
-uniform sampler2D lightingTex;
-uniform sampler2D reprojectionTex;
+uniform sampler2D reprojectedLightingTex;
 
 uniform sampler2D depthTex;
+uniform sampler2D normalTex;
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
@@ -29,29 +29,38 @@ const float temporal_offsets[] = {0.0, 0.5, 0.25, 0.75};
 
 const uint ssgi_half_sample_count = 6;
 
+float fast_sqrt(float x) {
+    return uintBitsToFloat(0x1fbd1df5 + (floatBitsToUint(x) >> 1u));
+}
+
+// max absolute error 9.0x10^-3
+// Eberly's polynomial degree 1 - respect bounds
+// 4 VGPR, 12 FR (8 FR, 1 QR), 1 scalar
+// input [-1, 1] and output [0, PI]
+float fast_acos(float inX) 
+{ 
+    float x = abs(inX); 
+    float res = -0.156583f * x + (PI / 2.0); 
+    res *= fast_sqrt(1.0f - x); 
+    return (inX >= 0) ? res : PI - res; 
+}
+
 Ray offset_ray_origin(Ray r, vec3 v) {
     r.o += (v + r.d) * (1e-4 * length(r.o));
     return r;
 }
 
 float fetch_depth(vec2 uv) {
-    return texelFetch(depthTex, ivec2(inputTex_size.xy * uv), 0).x;
+    return texelFetch(depthTex, ivec2(gbufferTex_size.xy * uv), 0).x;
 }
 
 vec3 fetch_lighting(vec2 uv) {
-    vec4 reproj = texelFetch(reprojectionTex, ivec2(inputTex_size.xy * uv), 0);
-    if (reproj.z > 0.5) {
-        return texelFetch(lightingTex, ivec2(inputTex_size.xy * (uv + reproj.xy)), 0).xyz;
-    } else {
-        return 0.0.xxx;
-    }
+    return texelFetch(reprojectedLightingTex, ivec2(gbufferTex_size.xy * uv), 0).xyz;
 }
 
 vec3 fetch_normal_vs(vec2 uv) {
-    ivec2 pix = ivec2(inputTex_size.xy * uv);
-    vec4 gbuffer = texelFetch(inputTex, pix, 0);
-    vec3 normal = unpack_normal_11_10_11(gbuffer.x);
-    vec3 normal_vs = normalize((view_constants.world_to_view * vec4(normal, 0)).xyz);
+    ivec2 pix = ivec2(gbufferTex_size.xy * uv);
+    vec3 normal_vs = texelFetch(normalTex, pix, 0).xyz;
     return normal_vs;
 }
 
@@ -82,7 +91,7 @@ vec3 project_point_on_plane(vec3 point, vec3 normal) {
     return point - normal * dot(point, normal);
 }
 
-float process_sample(float intsgn, float n_angle, float t, inout vec3 prev_sample_vs, vec4 sample_cs, vec3 center_vs, vec3 normal_vs, vec3 v_vs, float ao_radius, float theta_cos_max, inout vec4 color_accum) {
+float process_sample(float intsgn, float n_angle, inout vec3 prev_sample_vs, vec4 sample_cs, vec3 center_vs, vec3 normal_vs, vec3 v_vs, float ao_radius, float theta_cos_max, inout vec4 color_accum) {
     if (sample_cs.z > 0) {
         vec4 sample_vs4 = view_constants.sample_to_view * sample_cs;
         vec3 sample_vs = sample_vs4.xyz / sample_vs4.w;
@@ -124,8 +133,8 @@ float process_sample(float intsgn, float n_angle, float t, inout vec3 prev_sampl
 #if 1
                 n_angle *= -intsgn;
 
-                float h1 = acos(theta_prev);
-                float h2 = acos(theta_cos_max);
+                float h1 = fast_acos(theta_prev);
+                float h2 = fast_acos(theta_cos_max);
 
                 float h1p = n_angle + max(h1 - n_angle, -PI / 2.0);
                 float h2p = n_angle + min(h2 - n_angle, PI / 2.0);
@@ -155,7 +164,7 @@ layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
-    vec4 gbuffer = texelFetch(inputTex, pix, 0);
+    vec4 gbuffer = texelFetch(gbufferTex, pix, 0);
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
     vec3 normal_vs = normalize((view_constants.world_to_view * vec4(normal, 0)).xyz);
 
@@ -187,7 +196,7 @@ void main() {
         float ss_angle = fract(spatial_direction_noise + temporal_direction_noise) * PI;
         float rand_offset = fract(spatial_offset_noise + temporal_offset_noise);
 
-        vec2 cs_slice_dir = vec2(cos(ss_angle) * inputTex_size.y / inputTex_size.x, sin(ss_angle));
+        vec2 cs_slice_dir = vec2(cos(ss_angle) * gbufferTex_size.y / gbufferTex_size.x, sin(ss_angle));
 
         float ao_radius_shrinkage;
         {
@@ -219,7 +228,7 @@ void main() {
 
         //vec3 slice_tangent_vs = normalize(cross(slice_normal_vs, v_vs));
         //float n_angle = atan(dot(normal_vs, slice_tangent_vs), dot(normal_vs, v_vs));
-        float n_angle = acos(clamp(dot(proj_normal_vs, v_vs), -1.0, 1.0)) * sign(dot(vs_slice_dir, proj_normal_vs.xy - v_vs.xy));
+        float n_angle = fast_acos(clamp(dot(proj_normal_vs, v_vs), -1.0, 1.0)) * sign(dot(vs_slice_dir, proj_normal_vs.xy - v_vs.xy));
 
         float theta_cos_max1 = cos(n_angle - PI / 2.0);
         float theta_cos_max2 = cos(n_angle + PI / 2.0);
@@ -230,27 +239,27 @@ void main() {
         vec3 prev_sample1_vs = v_vs;
 
         for (uint i = 0; i < ssgi_half_sample_count; ++i) {
-            if (!false) {
+            {
                 float t = float(i) + rand_offset;
 
                 vec4 sample_cs = vec4(ray_origin_cs.xy - cs_slice_dir * t, 0, 1);
                 sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
 
-                theta_cos_max1 = process_sample(1, n_angle, t / ssgi_half_sample_count, prev_sample0_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max1, color_accum);
+                theta_cos_max1 = process_sample(1, n_angle, prev_sample0_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max1, color_accum);
             }
 
-            if (!false) {
+            {
                 float t = float(i) + (1.0 - rand_offset);
 
                 vec4 sample_cs = vec4(ray_origin_cs.xy + cs_slice_dir * t, 0, 1);
                 sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
 
-                theta_cos_max2 = process_sample(-1, n_angle, t / ssgi_half_sample_count, prev_sample1_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max2, color_accum);
+                theta_cos_max2 = process_sample(-1, n_angle, prev_sample1_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max2, color_accum);
             }
         }
 
-        float h1 = -acos(theta_cos_max1);
-        float h2 = +acos(theta_cos_max2);
+        float h1 = -fast_acos(theta_cos_max1);
+        float h2 = +fast_acos(theta_cos_max2);
 
         float h1p = n_angle + max(h1 - n_angle, -PI / 2.0);
         float h2p = n_angle + min(h2 - n_angle, PI / 2.0);

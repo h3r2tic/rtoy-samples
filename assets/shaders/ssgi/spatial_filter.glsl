@@ -8,11 +8,9 @@ uniform sampler2D normalTex;
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
-vec4 process_sample(vec4 ssgi, float depth, float normal_packed, float center_depth, vec3 center_normal, inout float w_sum) {
+vec4 process_sample(vec4 ssgi, float depth, vec3 normal, float center_depth, vec3 center_normal, inout float w_sum) {
     if (depth != 0.0)
     {
-        vec3 normal = unpack_normal_11_10_11_no_normalize(normal_packed);
-
         //float depth_diff = (1.0 / center_depth) - (1.0 / depth);
         //float depth_factor = exp2(-(200.0 * center_depth) * abs(depth_diff));
         float depth_diff = 1.0 - (center_depth / depth);
@@ -53,7 +51,7 @@ void main() {
 
     float center_depth = texelFetch(depthTex, pix, 0).x;
     if (center_depth != 0.0) {
-        vec3 center_normal = unpack_normal_11_10_11(texelFetch(normalTex, pix, 0).x);
+        vec3 center_normal = texelFetch(normalTex, pix, 0).xyz;
 
 #if 1
     	vec4 center_ssgi = texelFetch(ssgiTex, pix, 0);
@@ -67,8 +65,8 @@ void main() {
                     ivec2 sample_pix = pix + ivec2(x, y);
                     float depth = texelFetch(depthTex, sample_pix, 0).x;
                     vec4 ssgi = texelFetch(ssgiTex, sample_pix, 0);
-                    float normal_packed = texelFetch(normalTex, sample_pix, 0).x;
-                    result += process_sample(ssgi, depth, normal_packed, center_depth, center_normal, w_sum);
+                    vec3 normal = texelFetch(normalTex, sample_pix, 0).xyz;
+                    result += process_sample(ssgi, depth, normal, center_depth, center_normal, w_sum);
                 }
             }
         }

@@ -11,6 +11,8 @@ uniform vec4 gbuffer_size;
 
 uniform sampler2D aoTex;
 uniform sampler2D shadowsTex;
+
+uniform sampler2D skyLambertTex;
 uniform sampler2D skyTex;
 uniform vec4 skyTex_size;
 
@@ -46,9 +48,14 @@ vec3 sample_environment_light(vec3 dir) {
     return getSkyColor(dir);
 }
 
-vec3 sample_lambert_convolved_environment_light(vec3 dir) {
+vec3 sample_quantized_environment_light(vec3 dir) {
     dir = normalize(dir);
     return texelFetch(skyTex, ivec2(skyTex_size.xy * octa_encode(dir)), 0).rgb;
+}
+
+vec3 sample_lambert_convolved_environment_light(vec3 dir) {
+    dir = normalize(dir);
+    return texelFetch(skyLambertTex, ivec2(skyTex_size.xy * octa_encode(dir)), 0).rgb;
 }
 
 layout (local_size_x = 8, local_size_y = 8) in;
@@ -67,7 +74,8 @@ void main() {
 
     vec3 result = vec3(0, 0, 0);
     //vec3 sun_color = vec3(1.4, 1, 0.8) * 2.8;
-    vec3 sun_color = sample_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
+    //vec3 sun_color = sample_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
+    vec3 sun_color = sample_quantized_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
 
     if (gbuffer.a == 0.0) {
         result = sample_environment_light(-v);

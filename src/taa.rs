@@ -31,42 +31,11 @@ pub struct TaaInput {
 }
 
 impl Taa {
-    pub fn new(
-        tex_key: TextureKey,
-        render_fn: impl FnOnce(&mut RenderPassList) -> TaaInput,
-    ) -> Self {
-        let mut sub_passes = Vec::new();
-
-        let TaaInput {
-            gbuffer_tex,
-            color_tex,
-        } = render_fn(&mut sub_passes);
-
+    pub fn new(tex_key: TextureKey) -> Self {
         let taa_constants = upload_buffer(0u32).into_named();
         let reproj_constants = upload_buffer(0u32).into_named();
-
-        let reprojection_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F),
-            load_cs(asset!("shaders/reproject.glsl")),
-            shader_uniforms!(
-                constants: reproj_constants.clone(),
-                inputTex: gbuffer_tex.clone()
-            ),
-        );
-
         let temporal_blend = const_f32(1f32).into_named();
-
-        let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
-        accum_tex.rebind(compute_tex(
-            tex_key.with_format(gl::RGBA16F),
-            load_cs(asset!("shaders/taa.glsl")),
-            shader_uniforms!(
-                inputTex: color_tex,
-                historyTex: accum_tex.clone(),
-                reprojectionTex: reprojection_tex,
-                constants: taa_constants.clone(),
-            ),
-        ));
+        let accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
 
         let temporal_accum = crate::TemporalAccumulation {
             tex: accum_tex,
@@ -87,10 +56,37 @@ impl Taa {
             temporal_accum,
             reproj_constants,
             prev_world_to_clip: Matrix4::identity(),
-            sub_passes,
+            sub_passes: Vec::new(),
             tex_key,
             samples,
         }
+    }
+
+    pub fn setup(&mut self, render_fn: impl FnOnce(&mut RenderPassList) -> TaaInput) {
+        let TaaInput {
+            gbuffer_tex,
+            color_tex,
+        } = render_fn(&mut self.sub_passes);
+
+        let reprojection_tex = compute_tex(
+            self.tex_key.with_format(gl::RGBA16F),
+            load_cs(asset!("shaders/reproject.glsl")),
+            shader_uniforms!(
+                constants: self.reproj_constants.clone(),
+                inputTex: gbuffer_tex.clone()
+            ),
+        );
+
+        self.temporal_accum.tex.rebind(compute_tex(
+            self.tex_key.with_format(gl::RGBA16F),
+            load_cs(asset!("shaders/taa.glsl")),
+            shader_uniforms!(
+                inputTex: color_tex,
+                historyTex: self.temporal_accum.tex.clone(),
+                reprojectionTex: reprojection_tex,
+                constants: self.taa_constants.clone(),
+            ),
+        ));
     }
 
     pub fn get_output_tex(&self) -> SnoozyRef<Texture> {
@@ -107,7 +103,7 @@ impl RenderPass for Taa {
     ) {
         // Re-shuffle the jitter sequence if we've just used it up
         if 0 == frame_idx % self.samples.len() as u32 && frame_idx > 0 {
-            use rand::{seq::SliceRandom, rngs::SmallRng, SeedableRng};
+            use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
             let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
 
             let prev_sample = self.samples.last().copied();
