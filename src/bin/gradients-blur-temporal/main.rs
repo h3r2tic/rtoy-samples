@@ -3,7 +3,7 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    let mut time_asset = const_f32(0f32).into_named();
+    let mut time = const_f32(0f32).into_named();
 
     let tex_key = TextureKey {
         width: 256,
@@ -14,7 +14,7 @@ fn main() {
     let gradients_tex = compute_tex(
         tex_key,
         load_cs(asset!("shaders/gradients.glsl")),
-        shader_uniforms!(time: time_asset.clone()),
+        shader_uniforms!(time: time.clone()),
     );
 
     let blurred_tex = compute_tex(
@@ -34,14 +34,15 @@ fn main() {
         shader_uniforms!(
             inputTex1: temporal_tex.clone(),
             inputTex2: blurred_tex,
-            blendAmount: 0.1f32,
+            blendAmount: 0.02f32,
         ),
     ));
 
     let mut t = 0.0f32;
     rtoy.draw_forever(|_frame_state| {
         t += 0.01;
-        time_asset.rebind(const_f32(t));
+        time.rebind(const_f32(t));
         temporal_tex.clone()
     });
 }
+
