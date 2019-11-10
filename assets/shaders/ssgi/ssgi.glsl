@@ -209,7 +209,7 @@ void main() {
 
             // TODO: better units (pixels? degrees?)
             // Calculate AO radius shrinkage (if camera is too close to a surface)
-            float max_ao_radius_cs = 0.25;
+            float max_ao_radius_cs = 0.4;
             //float max_ao_radius_cs = 1;
             ao_radius_shrinkage = min(1.0, max_ao_radius_cs / cs_ao_radius_rescale);
         }
