@@ -143,8 +143,11 @@ fn main() {
             ),
         );
 
-        let temporal_accum =
-            filter_ssgi_temporally(ssgi_tex, reprojection_tex, tex_key.with_format(gl::RGBA16F).half_res());
+        let temporal_accum = filter_ssgi_temporally(
+            ssgi_tex,
+            reprojection_tex,
+            tex_key.with_format(gl::RGBA16F).half_res(),
+        );
 
         let ssgi_tex = temporal_accum.tex.clone();
 
@@ -154,8 +157,6 @@ fn main() {
             shader_uniforms!(
                 constants: ao_constants_buf.clone(),
                 gbufferTex: gbuffer_tex.clone(),
-                normalTex: normal_tex.clone(),
-                depthTex: depth_tex.clone(),
                 ssgiTex: ssgi_tex,
                 :bvh.clone(),
             ),
@@ -184,14 +185,16 @@ fn main() {
             constants: merge_constants_buf.clone()),
         );
 
-        let out_tex = compute_tex(
+        /*let out_tex = compute_tex(
             tex_key.with_format(gl::R11F_G11F_B10F),
             load_cs(asset!("shaders/ssgi/debug.glsl")),
             shader_uniforms!(
                 finalTex: lighting_tex.clone(),
                 ssgiTex: ssgi_tex.clone(),
             ),
-        );
+        );*/
+
+        let out_tex = lighting_tex;
 
         let light_controller = light_controller.clone();
 
