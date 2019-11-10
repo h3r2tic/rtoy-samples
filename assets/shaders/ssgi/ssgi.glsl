@@ -12,8 +12,10 @@ uniform sampler2D gbufferTex;
 uniform vec4 gbufferTex_size;
 
 uniform sampler2D reprojectedLightingTex;
+uniform vec4 reprojectedLightingTex_size;
 
 uniform sampler2D depthTex;
+uniform vec4 depthTex_size;
 uniform sampler2D normalTex;
 
 uniform restrict writeonly image2D outputTex;
@@ -51,15 +53,16 @@ Ray offset_ray_origin(Ray r, vec3 v) {
 }
 
 float fetch_depth(vec2 uv) {
-    return texelFetch(depthTex, ivec2(gbufferTex_size.xy * uv), 0).x;
+    return texelFetch(depthTex, ivec2(depthTex_size.xy * uv), 0).x;
 }
 
 vec3 fetch_lighting(vec2 uv) {
-    return texelFetch(reprojectedLightingTex, ivec2(gbufferTex_size.xy * uv), 0).xyz;
+    //return 1.0.xxx;
+    return texelFetch(reprojectedLightingTex, ivec2(reprojectedLightingTex_size.xy * uv), 0).xyz;
 }
 
 vec3 fetch_normal_vs(vec2 uv) {
-    ivec2 pix = ivec2(gbufferTex_size.xy * uv);
+    ivec2 pix = ivec2(depthTex_size.xy * uv);
     vec3 normal_vs = texelFetch(normalTex, pix, 0).xyz;
     return normal_vs;
 }
@@ -164,7 +167,7 @@ layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
-    vec4 gbuffer = texelFetch(gbufferTex, pix, 0);
+    vec4 gbuffer = texelFetch(gbufferTex, pix*2, 0);
     vec3 normal = unpack_normal_11_10_11(gbuffer.x);
     vec3 normal_vs = normalize((view_constants.world_to_view * vec4(normal, 0)).xyz);
 

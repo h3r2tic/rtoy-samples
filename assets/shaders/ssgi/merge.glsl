@@ -4,7 +4,6 @@
 #include "../inc/uv.inc"
 #include "../inc/pack_unpack.inc"
 #include "../inc/brdf.inc"
-#include "../inc/atmosphere.inc"
 
 uniform sampler2D gbuffer;
 uniform vec4 gbuffer_size;
@@ -13,8 +12,10 @@ uniform sampler2D aoTex;
 uniform sampler2D shadowsTex;
 
 uniform sampler2D skyLambertTex;
+uniform sampler2D skyOctaTex;
+uniform vec4 skyOctaTex_size;
+
 uniform sampler2D skyTex;
-uniform vec4 skyTex_size;
 
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
@@ -25,37 +26,14 @@ layout(std430) buffer constants {
     uint frame_idx;
 };
 
-vec3 getSkyColor(vec3 rd) {
-    vec3 scatter = atmosphere2(
-        rd,                 // normalized ray direction
-        vec3(0,6371e3,0),               // ray origin
-        // sun pos
-        light_dir_pad.xyz,
-        6371e3,                         // radius of the planet in meters
-        6471e3,                         // radius of the atmosphere in meters
-        vec3(5.8e-6, 13.5e-6, 33.1e-6), // frostbite
-        21e-6,                          // Mie scattering coefficient
-        vec3(3.426e-7, 8.298e-7, 0.356e-7), // Ozone extinction, frostbite
-        8e3,                            // Rayleigh scale height
-        1.2e3,                          // Mie scale height
-        0.758                           // Mie preferred scattering direction
-    );
-    return scatter * 20.0;
-}
-
-vec3 sample_environment_light(vec3 dir) {
-    dir = normalize(dir);
-    return getSkyColor(dir);
-}
-
 vec3 sample_quantized_environment_light(vec3 dir) {
     dir = normalize(dir);
-    return texelFetch(skyTex, ivec2(skyTex_size.xy * octa_encode(dir)), 0).rgb;
+    return texelFetch(skyOctaTex, ivec2(skyOctaTex_size.xy * octa_encode(dir)), 0).rgb;
 }
 
 vec3 sample_lambert_convolved_environment_light(vec3 dir) {
     dir = normalize(dir);
-    return texelFetch(skyLambertTex, ivec2(skyTex_size.xy * octa_encode(dir)), 0).rgb;
+    return texelFetch(skyLambertTex, ivec2(skyOctaTex_size.xy * octa_encode(dir)), 0).rgb;
 }
 
 layout (local_size_x = 8, local_size_y = 8) in;
@@ -73,12 +51,10 @@ void main() {
     vec4 gbuffer = texelFetch(gbuffer, pix, 0);
 
     vec3 result = vec3(0, 0, 0);
-    //vec3 sun_color = vec3(1.4, 1, 0.8) * 2.8;
-    //vec3 sun_color = sample_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
     vec3 sun_color = sample_quantized_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
 
     if (gbuffer.a == 0.0) {
-        result = sample_environment_light(-v);
+        result = textureLod(skyTex, uv, 0.0).rgb;
     } else {
         vec3 normal = unpack_normal_11_10_11(gbuffer.x);
         vec3 albedo = unpack_color_888(floatBitsToUint(gbuffer.z));
@@ -95,7 +71,7 @@ void main() {
         //result = albedo;
     }
 
-    //result = texture(skyTex, uv).rgb;
+    //result = texture(skyOctaTex, uv).rgb;
 
     imageStore(outputTex, pix, vec4(result, 1));
 }

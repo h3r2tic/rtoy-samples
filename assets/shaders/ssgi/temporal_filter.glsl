@@ -15,7 +15,7 @@ vec4 run_filter(in vec2 fragCoord)
     vec4 center = texelFetch(inputTex, px, 0);
     //return center;
 
-    vec4 reproj = texelFetch(reprojectionTex, px, 0);
+    vec4 reproj = texelFetch(reprojectionTex, px * 2, 0);
     vec4 history = textureLod(historyTex, uv + reproj.xy, 0);
     
 	vec4 vsum = 0.0.xxxx;

@@ -34,7 +34,7 @@ fn main() {
     //let mut light_angle = 1.0f32;
 
     let mut sky_constants = upload_buffer(0u32).into_named();
-    let sky_tex = compute_tex(
+    let sky_octa_tex = compute_tex(
         TextureKey {
             width: 128,
             height: 128,
@@ -51,7 +51,7 @@ fn main() {
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/lambert_convolve_octamap.glsl")),
-        shader_uniforms!(input_tex: sky_tex.clone()),
+        shader_uniforms!(input_tex: sky_octa_tex.clone()),
     );
 
     let mut taa = Taa::new(tex_key);
@@ -63,6 +63,12 @@ fn main() {
         let mut raster_constants_buf = upload_buffer(0u32).into_named();
         let mut merge_constants_buf = upload_buffer(0u32).into_named();
         let mut reproj_constants = upload_buffer(0u32).into_named();
+
+        let sky_tex = compute_tex(
+            tex_key.with_format(gl::RGBA16F).res_div_round_up(16, 4),
+            load_cs(asset!("shaders/ssgi/sky.glsl")),
+            shader_uniforms!(constants: merge_constants_buf.clone()),
+        );
 
         let gbuffer_tex = raster_tex(
             tex_key.with_format(gl::RGBA32F),
@@ -79,7 +85,7 @@ fn main() {
         let mut ao_constants_buf = upload_buffer(0u32).into_named();
 
         let depth_tex = compute_tex(
-            tex_key.with_format(gl::R16F),
+            tex_key.with_format(gl::R16F).half_res(),
             load_cs(asset!("shaders/extract_gbuffer_depth.glsl")),
             shader_uniforms!(inputTex: gbuffer_tex.clone()),
         );
@@ -96,7 +102,7 @@ fn main() {
         );
 
         let normal_tex = compute_tex(
-            tex_key.with_format(gl::RGBA8_SNORM),
+            tex_key.with_format(gl::RGBA8_SNORM).half_res(),
             load_cs(asset!("shaders/extract_gbuffer_view_normal_rgba8.glsl")),
             shader_uniforms!(
                 // Contains view constants at offset 0
@@ -106,8 +112,8 @@ fn main() {
         );
 
         let reprojected_lighting_tex = compute_tex(
-            tex_key.with_format(gl::R11F_G11F_B10F),
-            load_cs(asset!("shaders/reproject_lighting.glsl")),
+            tex_key.with_format(gl::R11F_G11F_B10F).half_res(),
+            load_cs(asset!("shaders/ssgi/reproject_lighting.glsl")),
             shader_uniforms!(
                 lightingTex: taa_output,
                 reprojectionTex: reprojection_tex.clone(),
@@ -115,7 +121,7 @@ fn main() {
         );
 
         let ssgi_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F),
+            tex_key.with_format(gl::RGBA16F).half_res(),
             load_cs(asset!("shaders/ssgi/ssgi.glsl")),
             shader_uniforms!(
                 constants: ao_constants_buf.clone(),
@@ -128,19 +134,32 @@ fn main() {
         );
 
         let ssgi_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F),
+            tex_key.with_format(gl::RGBA16F).half_res(),
             load_cs(asset!("shaders/ssgi/spatial_filter.glsl")),
             shader_uniforms!(
                 ssgiTex: ssgi_tex,
-                depthTex: depth_tex,
-                normalTex: normal_tex,
+                depthTex: depth_tex.clone(),
+                normalTex: normal_tex.clone(),
             ),
         );
 
         let temporal_accum =
-            filter_ssgi_temporally(ssgi_tex, reprojection_tex, tex_key.with_format(gl::RGBA16F));
+            filter_ssgi_temporally(ssgi_tex, reprojection_tex, tex_key.with_format(gl::RGBA16F).half_res());
 
         let ssgi_tex = temporal_accum.tex.clone();
+
+        let ssgi_tex = compute_tex(
+            tex_key.with_format(gl::RGBA16F),
+            load_cs(asset!("shaders/ssgi/upsample.glsl")),
+            shader_uniforms!(
+                constants: ao_constants_buf.clone(),
+                gbufferTex: gbuffer_tex.clone(),
+                normalTex: normal_tex.clone(),
+                depthTex: depth_tex.clone(),
+                ssgiTex: ssgi_tex,
+                :bvh.clone(),
+            ),
+        );
 
         let rt_shadows_tex = sub_passes
             .add(RtShadows::new(
@@ -159,6 +178,7 @@ fn main() {
             aoTex: ssgi_tex.clone(),
             shadowsTex: rt_shadows_tex,
             gbuffer: gbuffer_tex.clone(),
+            skyOctaTex: sky_octa_tex,
             skyTex: sky_tex,
             skyLambertTex: sky_lambert_tex,
             constants: merge_constants_buf.clone()),

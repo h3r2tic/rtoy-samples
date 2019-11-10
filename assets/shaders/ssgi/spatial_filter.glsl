@@ -58,7 +58,7 @@ void main() {
         w_sum = 1.0;
         result = center_ssgi;
 
-        const int kernel_half_size = 2;
+        const int kernel_half_size = 1;
         for (int y = -kernel_half_size; y <= kernel_half_size; ++y) {
             for (int x = -kernel_half_size; x <= kernel_half_size; ++x) {
                 if (x != 0 || y != 0) {
