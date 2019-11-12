@@ -28,8 +28,8 @@ fn main() {
 
     let mut taa = Taa::new(tex_key);
     taa.setup(|sub_passes| {
-        let mut raster_constants_buf = upload_buffer(0u32).make_unique();
-        let mut merge_constants_buf = upload_buffer(0u32).make_unique();
+        let mut raster_constants_buf = upload_buffer(0u32).isolate();
+        let mut merge_constants_buf = upload_buffer(0u32).isolate();
 
         let gbuffer_tex = raster_tex(
             tex_key.with_format(gl::RGBA32F),

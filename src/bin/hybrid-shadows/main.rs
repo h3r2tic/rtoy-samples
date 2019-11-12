@@ -28,8 +28,8 @@ fn main() {
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
 
-    let mut rt_constants_buf = upload_buffer(0u32).make_unique();
-    let mut raster_constants_buf = upload_buffer(0u32).make_unique();
+    let mut rt_constants_buf = upload_buffer(0u32).isolate();
+    let mut raster_constants_buf = upload_buffer(0u32).isolate();
 
     let gbuffer_tex = raster_tex(
         tex_key,

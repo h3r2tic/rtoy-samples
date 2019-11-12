@@ -23,10 +23,10 @@ impl RenderPass for TemporalAccumulation {
 
 pub fn accumulate_temporally(tex: SnoozyRef<Texture>, tex_key: TextureKey) -> TemporalAccumulation {
     // We temporally accumulate raytraced images. The blend factor gets re-defined every frame.
-    let temporal_blend = const_f32(1f32).make_unique();
+    let temporal_blend = const_f32(1f32).isolate();
 
     // Need a valid value for the accumulation history. Black will do.
-    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
+    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
 
     // Re-define the resource with a cycle upon itself -- every time it gets evaluated,
     // it will use its previous value for "history", and produce a new value.
@@ -51,8 +51,8 @@ pub fn accumulate_reproject_temporally(
     reprojection_tex: SnoozyRef<Texture>,
     tex_key: TextureKey,
 ) -> TemporalAccumulation {
-    let temporal_blend = const_f32(1f32).make_unique();
-    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
+    let temporal_blend = const_f32(1f32).isolate();
+    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
     accum_tex.rebind(compute_tex(
         tex_key,
         load_cs(asset!("shaders/taa.glsl")),

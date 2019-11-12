@@ -3,9 +3,9 @@ use rendertoy::*;
 fn main() {
     let mut rtoy = Rendertoy::new();
 
-    let mut time = const_f32(0f32).make_unique();
-    let mut mouse_x = const_f32(0f32).make_unique();
-    let mut frame_index = const_u32(0).make_unique();
+    let mut time = const_f32(0f32).isolate();
+    let mut mouse_x = const_f32(0f32).isolate();
+    let mut frame_index = const_u32(0).isolate();
 
     let tex_key_f16 = TextureKey {
         width: rtoy.width(),
@@ -84,7 +84,7 @@ fn main() {
         ),
     );
 
-    let mut accum_lighting_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
+    let mut accum_lighting_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
 
     accum_lighting_tex.rebind(compute_tex(
         tex_key_f32,

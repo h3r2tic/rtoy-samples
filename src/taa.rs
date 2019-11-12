@@ -32,10 +32,10 @@ pub struct TaaInput {
 
 impl Taa {
     pub fn new(tex_key: TextureKey) -> Self {
-        let taa_constants = upload_buffer(0u32).make_unique();
-        let reproj_constants = upload_buffer(0u32).make_unique();
-        let temporal_blend = const_f32(1f32).make_unique();
-        let accum_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
+        let taa_constants = upload_buffer(0u32).isolate();
+        let reproj_constants = upload_buffer(0u32).isolate();
+        let temporal_blend = const_f32(1f32).isolate();
+        let accum_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
 
         let temporal_accum = crate::TemporalAccumulation {
             tex: accum_tex,

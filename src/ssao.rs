@@ -5,8 +5,8 @@ fn filter_ssao_temporally(
     reprojection_tex: SnoozyRef<Texture>,
     tex_key: TextureKey,
 ) -> crate::TemporalAccumulation {
-    let temporal_blend = const_f32(1f32).make_unique();
-    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
+    let temporal_blend = const_f32(1f32).isolate();
+    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
     accum_tex.rebind(compute_tex(
         tex_key,
         load_cs(asset!("shaders/ssao_temporal_filter.glsl")),
@@ -32,8 +32,8 @@ pub struct Ssao {
 
 impl Ssao {
     pub fn new(tex_key: TextureKey, gbuffer_tex: SnoozyRef<Texture>) -> Self {
-        let ao_constants_buf = upload_buffer(0u32).make_unique();
-        let reproj_constants = upload_buffer(0u32).make_unique();
+        let ao_constants_buf = upload_buffer(0u32).isolate();
+        let reproj_constants = upload_buffer(0u32).isolate();
 
         let reprojection_tex = compute_tex(
             tex_key.with_format(gl::RGBA16F),

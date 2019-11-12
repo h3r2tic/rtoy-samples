@@ -117,8 +117,8 @@ fn main() {
     camera.move_smoothness = 3.0;
     camera.look_smoothness = 3.0;
 
-    let mut constants_buf = upload_buffer(0u32).make_unique();
-    let mut reproj_constants = upload_buffer(0u32).make_unique();
+    let mut constants_buf = upload_buffer(0u32).isolate();
+    let mut reproj_constants = upload_buffer(0u32).isolate();
 
     let gbuffer_tex = raster_tex(
         tex_key,
@@ -172,7 +172,7 @@ fn main() {
             ),
         );
 
-        let mut variance_estimate = load_tex(asset!("rendertoy::images/black.png")).make_unique();
+        let mut variance_estimate = load_tex(asset!("rendertoy::images/black.png")).isolate();
         variance_estimate.rebind(compute_tex(
             tex_key,
             load_cs(asset!("shaders/stochastic_light_variance_estimate.glsl")),
@@ -198,7 +198,7 @@ fn main() {
         )
     };
 
-    let mut variance_estimate2 = load_tex(asset!("rendertoy::images/black.png")).make_unique();
+    let mut variance_estimate2 = load_tex(asset!("rendertoy::images/black.png")).isolate();
 
     variance_estimate2.rebind(compute_tex(
         tex_key,
