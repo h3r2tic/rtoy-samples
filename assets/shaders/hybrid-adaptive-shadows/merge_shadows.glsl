@@ -13,11 +13,6 @@ uniform sampler2D sparseShadowsTex;
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
-layout(std430) buffer constants {
-    ViewConstants view_constants;
-    vec4 light_dir_pad;
-};
-
 #if 1
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
@@ -48,6 +43,11 @@ void main() {
     imageStore(outputTex, pix, result.xxxx);
 }
 #else
+layout(std430) buffer constants {
+    ViewConstants view_constants;
+    vec4 light_dir_pad;
+};
+
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);

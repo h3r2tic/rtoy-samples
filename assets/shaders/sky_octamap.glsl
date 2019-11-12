@@ -7,7 +7,7 @@
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
-layout(std430) buffer constants {
+uniform constants {
     vec3 light_dir;
 };
 

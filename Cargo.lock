@@ -689,7 +689,7 @@ dependencies = [
 [[package]]
 name = "gl"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#953ac7f52392e6cb030fbe5c2667e57888c8140a"
+source = "git+https://github.com/h3r2tic/rendertoy#cf3479dc5dcf71502843b53b7df892e629c76e97"
 dependencies = [
  "gl_generator 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1771,7 +1771,7 @@ dependencies = [
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#953ac7f52392e6cb030fbe5c2667e57888c8140a"
+source = "git+https://github.com/h3r2tic/rendertoy#cf3479dc5dcf71502843b53b7df892e629c76e97"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",

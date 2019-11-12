@@ -21,8 +21,8 @@ aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }
 # [patch."https://github.com/h3r2tic/rtoy-rt"]
 # rtoy-rt = { path = "../rtoy-rt" }
 # 
-# [patch."https://github.com/h3r2tic/rendertoy"]
-# rendertoy = { path = "../rendertoy" }
+ # [patch."https://github.com/h3r2tic/rendertoy"]
+ # rendertoy = { path = "../rendertoy" }
 # 
 # [patch."https://github.com/h3r2tic/snoozy"]
 # snoozy = { path = "../snoozy" }
