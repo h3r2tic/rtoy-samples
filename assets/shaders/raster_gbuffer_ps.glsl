@@ -44,8 +44,8 @@ void main() {
 
     //vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
     vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
-    vec4 metallicRoughness = texture2D(metallicRoughnessTex, uv);
-    vec3 ts_normal = (texture2D(normalTex, uv).xyz * 2.0 - 1.0);
+    vec4 metallicRoughness = texture(metallicRoughnessTex, uv);
+    vec3 ts_normal = (texture(normalTex, uv).xyz * 2.0 - 1.0);
 
     float z_over_w = v_clip_position.z / v_clip_position.w;
     //float roughness = 0.25;
@@ -59,7 +59,7 @@ void main() {
     mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
 
     vec3 albedo =
-        texture2D(albedoTex, uv).rgb *
+        texture(albedoTex, uv).rgb *
         clamp(v_color.rgb, 0.0.xxx, 1.0.xxx) *
         array_to_vec4(material.base_color_mult).rgb;
     

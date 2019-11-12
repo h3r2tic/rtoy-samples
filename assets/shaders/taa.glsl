@@ -45,7 +45,7 @@ vec3 encode(vec3 a) {
 
 vec4 fetchHistory(vec2 uv)
 {
-	return vec4(decode(texture2D(historyTex, uv, 0.0).xyz), 1);
+	return vec4(decode(textureLod(historyTex, uv, 0.0).xyz), 1);
 }
 
 vec4 fetchHistoryPx(ivec2 pix)
