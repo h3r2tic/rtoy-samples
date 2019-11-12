@@ -26,7 +26,7 @@ impl RtShadows {
         gpu_bvh: SnoozyRef<ShaderUniformBundle>,
         light_controller: Rc<Cell<DirectionalLightState>>,
     ) -> Self {
-        let rt_constants_buf = upload_buffer(0u32).into_named();
+        let rt_constants_buf = upload_buffer(0u32).make_unique();
         let halfres_shadow_tex = compute_tex(
             tex_key.half_res().with_format(gl::R8),
             load_cs(asset!(

@@ -27,7 +27,7 @@ fn main() {
         ),
     );
 
-    let mut temporal_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
+    let mut temporal_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
     temporal_tex.rebind(compute_tex(
         tex_key,
         load_cs(asset!("shaders/blend.glsl")),

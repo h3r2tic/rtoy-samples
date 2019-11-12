@@ -689,7 +689,7 @@ dependencies = [
 [[package]]
 name = "gl"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#38d987ed0cec9416cd3c7760387d4db623e5b87c"
+source = "git+https://github.com/h3r2tic/rendertoy#953ac7f52392e6cb030fbe5c2667e57888c8140a"
 dependencies = [
  "gl_generator 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1771,7 +1771,7 @@ dependencies = [
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#38d987ed0cec9416cd3c7760387d4db623e5b87c"
+source = "git+https://github.com/h3r2tic/rendertoy#953ac7f52392e6cb030fbe5c2667e57888c8140a"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2028,7 +2028,7 @@ dependencies = [
 [[package]]
 name = "snoozy"
 version = "0.1.1"
-source = "git+https://github.com/h3r2tic/snoozy#772e6ee06bd2397a39d016fd0bf67e13baab6751"
+source = "git+https://github.com/h3r2tic/snoozy#e7003439625dd53da294feb7faa1883ed6c5c9a0"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",

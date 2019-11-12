@@ -41,7 +41,7 @@ void main() {
     vec3 normal = octa_decode(uv);
     vec4 col = 0.0.xxxx;
 
-    int sample_cnt = 256;
+    int sample_cnt = 1024;
     for (int i = 0; i < sample_cnt; ++i)
     {
         vec3 sr = uniform_sample_sphere(halton(i));

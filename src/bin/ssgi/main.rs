@@ -33,11 +33,11 @@ fn main() {
     let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
     //let mut light_angle = 1.0f32;
 
-    let mut sky_constants = upload_buffer(0u32).into_named();
+    let mut sky_constants = upload_buffer(0u32).make_unique();
     let sky_octa_tex = compute_tex(
         TextureKey {
-            width: 128,
-            height: 128,
+            width: 64,
+            height: 64,
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/sky_octamap.glsl")),
@@ -46,8 +46,8 @@ fn main() {
 
     let sky_lambert_tex = compute_tex(
         TextureKey {
-            width: 128,
-            height: 128,
+            width: 64,
+            height: 64,
             format: gl::RGBA16F,
         },
         load_cs(asset!("shaders/lambert_convolve_octamap.glsl")),
@@ -60,9 +60,9 @@ fn main() {
     taa.setup(|sub_passes| {
         let mut prev_world_to_clip = Matrix4::identity();
 
-        let mut raster_constants_buf = upload_buffer(0u32).into_named();
-        let mut merge_constants_buf = upload_buffer(0u32).into_named();
-        let mut reproj_constants = upload_buffer(0u32).into_named();
+        let mut raster_constants_buf = upload_buffer(0u32).make_unique();
+        let mut merge_constants_buf = upload_buffer(0u32).make_unique();
+        let mut reproj_constants = upload_buffer(0u32).make_unique();
 
         let sky_tex = compute_tex(
             tex_key.with_format(gl::RGBA16F).res_div_round_up(16, 4),
@@ -82,7 +82,7 @@ fn main() {
             ),
         );
 
-        let mut ao_constants_buf = upload_buffer(0u32).into_named();
+        let mut ao_constants_buf = upload_buffer(0u32).make_unique();
 
         let depth_tex = compute_tex(
             tex_key.with_format(gl::R16F).half_res(),
@@ -90,7 +90,7 @@ fn main() {
             shader_uniforms!(inputTex: gbuffer_tex.clone()),
         );
 
-        //let mut lighting_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
+        //let mut lighting_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
 
         let reprojection_tex = compute_tex(
             tex_key.with_format(gl::RGBA16F),
@@ -294,8 +294,8 @@ fn filter_ssgi_temporally(
     reprojection_tex: SnoozyRef<Texture>,
     tex_key: TextureKey,
 ) -> rtoy_samples::TemporalAccumulation {
-    let temporal_blend = const_f32(1f32).into_named();
-    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
+    let temporal_blend = const_f32(1f32).make_unique();
+    let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
     accum_tex.rebind(compute_tex(
         tex_key,
         load_cs(asset!("shaders/ssgi/temporal_filter.glsl")),

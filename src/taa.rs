@@ -32,10 +32,10 @@ pub struct TaaInput {
 
 impl Taa {
     pub fn new(tex_key: TextureKey) -> Self {
-        let taa_constants = upload_buffer(0u32).into_named();
-        let reproj_constants = upload_buffer(0u32).into_named();
-        let temporal_blend = const_f32(1f32).into_named();
-        let accum_tex = load_tex(asset!("rendertoy::images/black.png")).into_named();
+        let taa_constants = upload_buffer(0u32).make_unique();
+        let reproj_constants = upload_buffer(0u32).make_unique();
+        let temporal_blend = const_f32(1f32).make_unique();
+        let accum_tex = load_tex(asset!("rendertoy::images/black.png")).make_unique();
 
         let temporal_accum = crate::TemporalAccumulation {
             tex: accum_tex,
@@ -120,6 +120,8 @@ impl RenderPass for Taa {
         let jitter = self.samples[frame_idx as usize % self.samples.len()];
         //let jitter = Vector2::new(0.5, 0.5);
 
+        let unjittered_view_constants = *view_constants;
+
         // Create derived constants with jittered sample positions
         let mut view_constants = *view_constants;
         view_constants.set_pixel_offset(jitter, self.tex_key.width, self.tex_key.height);
@@ -150,7 +152,7 @@ impl RenderPass for Taa {
         }
 
         self.reproj_constants.rebind(upload_buffer(ReprojConstants {
-            view_constants: view_constants,
+            view_constants: unjittered_view_constants,
             prev_world_to_clip: self.prev_world_to_clip,
         }));
 
