@@ -29,3 +29,12 @@ aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }
 # 
 # [patch."https://github.com/h3r2tic/snoozy-macros"]
 # snoozy-macros = { path = "../snoozy-macros" }
+
+[profile.dev]
+lto = false
+incremental = true
+
+[profile.release]
+opt-level = 2
+lto = false
+incremental = true
