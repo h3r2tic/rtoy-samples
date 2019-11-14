@@ -6,7 +6,7 @@ uniform sampler2D inputTex;
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
-uniform constants {
+layout(std140) uniform constants {
     ViewConstants view_constants;
     mat4 prev_world_to_clip;
 };

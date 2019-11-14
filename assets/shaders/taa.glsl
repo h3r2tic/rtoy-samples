@@ -8,7 +8,7 @@ uniform sampler2D inputTex;
 uniform sampler2D historyTex;
 uniform sampler2D reprojectionTex;
 
-uniform constants {
+layout(std140) uniform constants {
     vec2 jitter;
 };
 

@@ -14,7 +14,7 @@ uniform vec4 rtPixelLocationTex_size;
 uniform restrict writeonly image2D outputTex;
 uniform vec4 outputTex_size;
 
-uniform constants {
+layout(std140) uniform constants {
     ViewConstants view_constants;
     vec4 light_dir_pad;
 };
