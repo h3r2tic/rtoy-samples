@@ -73,5 +73,11 @@ void main() {
 
     //result = texture(skyOctaTex, uv).rgb;
 
+    {
+        uint seed0 = hash(hash(pix.x) ^ pix.y);
+        float rnd = rand_float(seed0);
+        result.rgb += (rnd - 0.5) / 256.0;
+    }
+
     imageStore(outputTex, pix, vec4(result, 1));
 }

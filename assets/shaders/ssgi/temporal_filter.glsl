@@ -15,7 +15,7 @@ vec4 run_filter(in vec2 fragCoord)
     vec4 center = texelFetch(inputTex, px, 0);
     //return center;
 
-    vec4 reproj = texelFetch(reprojectionTex, px * 2, 0);
+    vec4 reproj = texelFetch(reprojectionTex, px, 0);
     vec4 history = textureLod(historyTex, uv + reproj.xy, 0);
     
 	vec4 vsum = 0.0.xxxx;
@@ -28,7 +28,7 @@ vec4 run_filter(in vec2 fragCoord)
 	const int k = 1;
     for (int y = -k; y <= k; ++y) {
         for (int x = -k; x <= k; ++x) {
-            vec4 neigh = texelFetch(inputTex, px + ivec2(x, y), 0);
+            vec4 neigh = texelFetch(inputTex, px + ivec2(x, y) * 2, 0);
 			float w = exp(-3.0 * float(x * x + y * y) / float((k+1.) * (k+1.)));
 			vsum += neigh * w;
 			vsum2 += neigh * neigh * w;

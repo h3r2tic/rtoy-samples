@@ -56,7 +56,12 @@ void main() {
     float roughness = clamp(metallicRoughness.y, 0.1, 0.9);
     float metallic = 1;//metallicRoughness.z;
 
-    mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
+    vec3 normal = v_normal;
+    if (dot(v_bitangent, v_bitangent) > 0.0) {
+        mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
+        normal = tbn * ts_normal;
+    }
+    normal = normalize(normal);
 
     vec3 albedo =
         texture(albedoTex, uv).rgb *
@@ -67,7 +72,7 @@ void main() {
     //roughness = float(v_material_id) * 0.2;
 
     vec4 res = 0.0.xxxx;
-    res.x = pack_normal_11_10_11(normalize(tbn * ts_normal));
+    res.x = pack_normal_11_10_11(normal);
     res.y = roughness * roughness;      // UE4 remap
     //res.z = metallic;
     res.z = uintBitsToFloat(pack_color_888(albedo));

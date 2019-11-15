@@ -42,7 +42,7 @@ void do_shadow_rt(ivec2 pix) {
         Ray r;
         r.d = l;
         r.o = ray_origin_ws.xyz;
-        r.o += (v + r.d) * (1e-4 * max(length(r.o), abs(ray_origin_vs.z / ray_origin_vs.w)));
+        r.o += (v + normal) * (1e-4 * max(length(r.o), abs(ray_origin_vs.z / ray_origin_vs.w)));
 
         if (raytrace_intersects_any(r)) {
             result = 0.0;
