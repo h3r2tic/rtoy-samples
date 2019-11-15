@@ -191,43 +191,39 @@ void main() {
         vec4 ray_origin_ws = view_constants.view_to_world * ray_origin_vs;
         ray_origin_ws /= ray_origin_ws.w;
 
+        float spatial_direction_noise = 1.0 / 16.0 * ((((pix.x + pix.y) & 3) << 2) + (pix.x & 3));
+        float temporal_direction_noise = temporal_rotations[frame_idx % 6] / 360.0;
+        float spatial_offset_noise = (1.0 / 4.0) * ((pix.y - pix.x) & 3);
+        float temporal_offset_noise = temporal_offsets[frame_idx / 6 % 4];
+
+        uint seed0 = hash(hash(frame_idx ^ hash(pix.x)) ^ pix.y);
+        spatial_direction_noise += rand_float(seed0) * 0.1;
+
+        float ss_angle = fract(spatial_direction_noise + temporal_direction_noise) * PI;
+        float rand_offset = fract(spatial_offset_noise + temporal_offset_noise);
+
+        vec2 cs_slice_dir = vec2(cos(ss_angle) * gbufferTex_size.y / gbufferTex_size.x, sin(ss_angle));
+
         float ao_radius_shrinkage;
         {
             // Convert AO radius into world scale
             float cs_ao_radius_rescale = ao_radius * view_constants.view_to_clip[1][1] / (-ray_origin_vs.z / ray_origin_vs.w);
+            cs_slice_dir *= cs_ao_radius_rescale;
 
             // TODO: better units (pixels? degrees?)
             // Calculate AO radius shrinkage (if camera is too close to a surface)
             float max_ao_radius_cs = 0.4;
-            //float max_ao_radius_cs = 100;
+            //float max_ao_radius_cs = 1;
             ao_radius_shrinkage = min(1.0, max_ao_radius_cs / cs_ao_radius_rescale);
-            ao_radius_shrinkage *= cs_ao_radius_rescale;
         }
 
+        // Shrink the AO radius
+        cs_slice_dir *= ao_radius_shrinkage;
         float ao_radius = ao_radius * ao_radius_shrinkage;
+
         vec3 center_vs = ray_origin_vs.xyz / ray_origin_vs.w;
-        vec2 cs_slice_dir;
-        float rand_offset;
 
-        {
-            float spatial_direction_noise = 1.0 / 16.0 * ((((pix.x + pix.y) & 3) << 2) + (pix.x & 3));
-            uint seed0 = hash(hash(frame_idx ^ hash(pix.x)) ^ pix.y);
-            spatial_direction_noise += rand_float(seed0) * 0.1;
-
-            float temporal_direction_noise = temporal_rotations[frame_idx % 6] / 360.0;
-            float spatial_offset_noise = (1.0 / 4.0) * ((pix.y - pix.x) & 3);
-            float temporal_offset_noise = temporal_offsets[frame_idx / 6 % 4];
-
-            float ss_angle = fract(spatial_direction_noise + temporal_direction_noise) * PI;
-            rand_offset = fract(spatial_offset_noise + temporal_offset_noise);
-
-            cs_slice_dir = vec2(cos(ss_angle) * gbufferTex_size.y / gbufferTex_size.x, sin(ss_angle));
-
-            // Shrink the AO radius
-            cs_slice_dir *= ao_radius_shrinkage;
-            cs_slice_dir *= 1.0 / float(ssgi_half_sample_count);
-        }
-
+        cs_slice_dir *= 1.0 / float(ssgi_half_sample_count);
         vec2 vs_slice_dir = (vec4(cs_slice_dir, 0, 0) * view_constants.sample_to_view).xy;
         vec3 slice_normal_vs = normalize(cross(v_vs, vec3(vs_slice_dir, 0)));
 
