@@ -1547,7 +1547,6 @@ dependencies = [
  "rtoy-rt 0.1.0",
  "snoozy 0.1.1",
  "snoozy-macros 0.1.0",
- "tokio 0.2.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

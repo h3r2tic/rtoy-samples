@@ -17,7 +17,6 @@ snoozy-macros = { git = "https://github.com/h3r2tic/snoozy-macros" }
 rand = { version = "0.7", features = ["small_rng"] }
 rand_distr = "0.2"
 aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }
-tokio = "0.2.0-alpha.6"
 futures-preview = { version = "=0.3.0-alpha.19", features = ["compat"] }
 
 [patch."https://github.com/h3r2tic/rtoy-rt"]
@@ -31,9 +30,6 @@ snoozy = { path = "../snoozy" }
 # 
 [patch."https://github.com/h3r2tic/snoozy-macros"]
 snoozy-macros = { path = "../snoozy-macros" }
-
-#[patch.crates-io]
-#shader-prepper = { path = "../shader-prepper" }
 
 [profile.dev]
 lto = false

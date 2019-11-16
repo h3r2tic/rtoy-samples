@@ -22,7 +22,7 @@ struct ReprojConstants {
 
 #[snoozy]
 async fn build_light_gpu_data(
-    ctx: &mut Context,
+    ctx: &Context,
     mesh: &SnoozyRef<TriangleMesh>,
 ) -> Result<ShaderUniformBundle> {
     let mesh = ctx.get(mesh).await?;
