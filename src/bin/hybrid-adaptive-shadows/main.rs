@@ -3,7 +3,7 @@ use rtoy_rt::*;
 use rtoy_samples::rt_shadows::*;
 
 fn main() {
-    let mut rtoy = Rendertoy::new();
+    let rtoy = Rendertoy::new();
 
     let tex_key = TextureKey {
         width: rtoy.width(),

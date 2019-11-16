@@ -1,7 +1,7 @@
 use rendertoy::*;
 
 fn main() {
-    let mut rtoy = Rendertoy::new();
+    let rtoy = Rendertoy::new();
 
     let mut time = const_f32(0f32).isolate();
     let mut mouse_x = const_f32(0f32).isolate();

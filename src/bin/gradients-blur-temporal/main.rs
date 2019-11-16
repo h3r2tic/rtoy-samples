@@ -1,9 +1,9 @@
 use rendertoy::*;
 
 fn main() {
-    let mut rtoy = Rendertoy::new();
+    let rtoy = Rendertoy::new();
 
-    let mut time = const_f32(0f32).into_named();
+    let mut time = const_f32(0f32).isolate();
 
     let tex_key = TextureKey {
         width: 256,

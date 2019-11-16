@@ -1,7 +1,7 @@
 use rendertoy::*;
 
 fn main() {
-    let mut rtoy = Rendertoy::new();
+    let rtoy = Rendertoy::new();
     let tex_key = TextureKey::fullscreen(&rtoy, gl::RGBA32F);
 
     let mesh = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);

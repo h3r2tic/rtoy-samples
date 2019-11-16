@@ -21,11 +21,11 @@ struct ReprojConstants {
 }
 
 #[snoozy]
-fn build_light_gpu_data(
+async fn build_light_gpu_data(
     ctx: &mut Context,
     mesh: &SnoozyRef<TriangleMesh>,
 ) -> Result<ShaderUniformBundle> {
-    let mesh = ctx.get(mesh)?;
+    let mesh = ctx.get(mesh).await?;
 
     let mut tris: Vec<([[f32; 3]; 3], [f32; 3])> = Vec::with_capacity(mesh.indices.len() / 3);
     let mut weights: Vec<f64> = Vec::with_capacity(mesh.indices.len() / 3);
@@ -75,7 +75,7 @@ fn build_light_gpu_data(
 }
 
 fn main() {
-    let mut rtoy = Rendertoy::new();
+    let rtoy = Rendertoy::new();
 
     let tex_key = TextureKey {
         width: rtoy.width(),

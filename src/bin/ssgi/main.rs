@@ -13,7 +13,7 @@ fn spherical_to_cartesian(theta: f32, phi: f32) -> Vector3 {
 }
 
 fn main() {
-    let mut rtoy = Rendertoy::new();
+    let rtoy = Rendertoy::new();
 
     let tex_key = TextureKey {
         width: rtoy.width(),
