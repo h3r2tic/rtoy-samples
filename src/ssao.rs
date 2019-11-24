@@ -36,7 +36,7 @@ impl Ssao {
         let reproj_constants = upload_buffer(0u32).isolate();
 
         let reprojection_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F),
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT),
             load_cs(asset!("shaders/reproject.glsl")),
             shader_uniforms!(
                 constants: reproj_constants.clone(),
@@ -45,13 +45,13 @@ impl Ssao {
         );
 
         let depth_tex = compute_tex(
-            tex_key.with_format(gl::R16F),
+            tex_key.with_format(Format::R16G16_SFLOAT),
             load_cs(asset!("shaders/extract_gbuffer_depth.glsl")),
             shader_uniforms!(inputTex: gbuffer_tex.clone()),
         );
 
         let ao_tex = compute_tex(
-            tex_key.with_format(gl::R16F),
+            tex_key.with_format(Format::R16G16_SFLOAT),
             load_cs(asset!("shaders/ssao.glsl")),
             shader_uniforms!(
                 constants: ao_constants_buf.clone(),
@@ -61,19 +61,19 @@ impl Ssao {
         );
 
         let normal_tex = compute_tex(
-            tex_key.with_format(gl::R32UI),
+            tex_key.with_format(Format::R32_UINT),
             load_cs(asset!("shaders/extract_gbuffer_normal.glsl")),
             shader_uniforms!(inputTex: gbuffer_tex),
         );
 
         let ao_tex = compute_tex(
-            tex_key.with_format(gl::R8),
+            tex_key.with_format(Format::R8_UNORM),
             load_cs(asset!("shaders/ssao_spatial_filter.glsl")),
             shader_uniforms!(aoTex: ao_tex, depthTex: depth_tex, normalTex: normal_tex,),
         );
 
         let temporal_accum =
-            filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(gl::R16F));
+            filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(Format::R16G16_SFLOAT));
 
         Self {
             temporal_accum,

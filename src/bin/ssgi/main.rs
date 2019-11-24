@@ -41,7 +41,7 @@ fn main() {
         TextureKey {
             width: 64,
             height: 64,
-            format: gl::RGBA16F,
+            format: Format::R16G16B16A16_SFLOAT,
         },
         load_cs(asset!("shaders/sky_octamap.glsl")),
         shader_uniforms!(constants: sky_constants.clone()),
@@ -51,7 +51,7 @@ fn main() {
         TextureKey {
             width: 64,
             height: 64,
-            format: gl::RGBA16F,
+            format: Format::R16G16B16A16_SFLOAT,
         },
         load_cs(asset!("shaders/lambert_convolve_octamap.glsl")),
         shader_uniforms!(input_tex: sky_octa_tex.clone()),
@@ -68,7 +68,7 @@ fn main() {
         let mut reproj_constants = upload_buffer(0u32).isolate();
 
         let sky_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F).res_div_round_up(16, 4),
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT).res_div_round_up(16, 4),
             load_cs(asset!("shaders/ssgi/sky.glsl")),
             shader_uniforms!(constants: merge_constants_buf.clone()),
         );
@@ -88,7 +88,7 @@ fn main() {
         let mut ao_constants_buf = upload_buffer(0u32).isolate();
 
         let depth_tex = compute_tex(
-            tex_key.with_format(gl::R16F).half_res(),
+            tex_key.with_format(Format::R16G16_SFLOAT).half_res(),
             load_cs(asset!("shaders/extract_gbuffer_depth.glsl")),
             shader_uniforms!(inputTex: gbuffer_tex.clone()),
         );
@@ -96,7 +96,7 @@ fn main() {
         //let mut lighting_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
 
         let reprojection_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F),
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT),
             load_cs(asset!("shaders/reproject.glsl")),
             shader_uniforms!(
                 constants: reproj_constants.clone(),
@@ -124,7 +124,7 @@ fn main() {
         );
 
         let ssgi_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F).half_res(),
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT).half_res(),
             load_cs(asset!("shaders/ssgi/ssgi.glsl")),
             shader_uniforms!(
                 constants: ao_constants_buf.clone(),
@@ -137,7 +137,7 @@ fn main() {
         );
 
         let ssgi_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F).half_res(),
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT).half_res(),
             load_cs(asset!("shaders/ssgi/spatial_filter.glsl")),
             shader_uniforms!(
                 ssgiTex: ssgi_tex,
@@ -149,13 +149,13 @@ fn main() {
         let temporal_accum = filter_ssgi_temporally(
             ssgi_tex,
             reprojection_tex,
-            tex_key.with_format(gl::RGBA16F).half_res(),
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT).half_res(),
         );
 
         let ssgi_tex = temporal_accum.tex.clone();
 
         let ssgi_tex = compute_tex(
-            tex_key.with_format(gl::RGBA16F),
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT),
             load_cs(asset!("shaders/ssgi/upsample.glsl")),
             shader_uniforms!(
                 constants: ao_constants_buf.clone(),

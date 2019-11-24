@@ -137,7 +137,7 @@ fn main() {
         TextureKey {
             width: rtoy.width(),
             height: rtoy.height(),
-            format: gl::RGBA16F,
+            format: Format::R16G16B16A16_SFLOAT,
         },
         load_cs(asset!("shaders/reproject.glsl")),
         shader_uniforms!(constants: reproj_constants.clone(), inputTex: gbuffer_tex.clone(),),

@@ -28,7 +28,7 @@ impl RtShadows {
     ) -> Self {
         let rt_constants_buf = upload_buffer(0u32).isolate();
         let halfres_shadow_tex = compute_tex(
-            tex_key.half_res().with_format(gl::R8),
+            tex_key.half_res().with_format(Format::R8_UNORM),
             load_cs(asset!(
                 "shaders/hybrid-adaptive-shadows/halfres_shadows.glsl"
             )),
@@ -39,7 +39,7 @@ impl RtShadows {
             ),
         );
 
-        let discontinuity_tex_key = tex_key.half_res().with_format(gl::R8);
+        let discontinuity_tex_key = tex_key.half_res().with_format(Format::R8_UNORM);
 
         // Calculate a half-res discontinuity map
         let discontinuity_tex = compute_tex(
@@ -52,7 +52,7 @@ impl RtShadows {
 
         let tile_tex_key = discontinuity_tex_key
             .res_div_round_up(8, 8)
-            .with_format(gl::R32F);
+            .with_format(Format::R32_SFLOAT);
 
         // Reduce the discontinuity map 8x into tiles of discontinuity counts
         let discontinuity_tile_tex = compute_tex(
@@ -68,7 +68,7 @@ impl RtShadows {
 
         // Allocate individual pixels within tile space
         let rt_pixel_location_tex = compute_tex(
-            tex_key.half_res().with_format(gl::RG32F),
+            tex_key.half_res().with_format(Format::R32G32_SFLOAT),
             load_cs(asset!(
                 "shaders/hybrid-adaptive-shadows/alloc_rt_pixel_locations.glsl"
             )),
@@ -80,7 +80,7 @@ impl RtShadows {
 
         // Calculate the sparse shadows
         let sparse_shadow_tex = compute_tex(
-            tex_key.with_format(gl::R8),
+            tex_key.with_format(Format::R8_UNORM),
             load_cs(asset!(
                 "shaders/hybrid-adaptive-shadows/sparse_shadows_trace.glsl"
             )),
@@ -95,7 +95,7 @@ impl RtShadows {
 
         // Merge half-res and sparse shadows
         let shadow_tex = compute_tex(
-            tex_key.with_format(gl::R8),
+            tex_key.with_format(Format::R8_UNORM),
             load_cs(asset!("shaders/hybrid-adaptive-shadows/merge_shadows.glsl")),
             shader_uniforms!(
                 constants: rt_constants_buf.clone(),

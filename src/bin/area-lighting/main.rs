@@ -10,7 +10,7 @@ fn main() {
     let tex_key_f16 = TextureKey {
         width: rtoy.width(),
         height: rtoy.height(),
-        format: gl::RGBA16F,
+        format: Format::R16G16B16A16_SFLOAT,
     };
 
     let tex_key_f32 = TextureKey {

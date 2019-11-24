@@ -8,7 +8,7 @@ fn main() {
     let tex_key = TextureKey {
         width: 256,
         height: 256,
-        format: gl::RGBA16F,
+        format: Format::R16G16B16A16_SFLOAT,
     };
 
     let gradients_tex = compute_tex(

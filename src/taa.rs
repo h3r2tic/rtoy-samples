@@ -69,7 +69,7 @@ impl Taa {
         } = render_fn(&mut self.sub_passes);
 
         let reprojection_tex = compute_tex(
-            self.tex_key.with_format(gl::RGBA16F),
+            self.tex_key.with_format(Format::R16G16B16A16_SFLOAT),
             load_cs(asset!("shaders/reproject.glsl")),
             shader_uniforms!(
                 constants: self.reproj_constants.clone(),
@@ -78,7 +78,7 @@ impl Taa {
         );
 
         self.temporal_accum.tex.rebind(compute_tex(
-            self.tex_key.with_format(gl::RGBA16F),
+            self.tex_key.with_format(Format::R16G16B16A16_SFLOAT),
             load_cs(asset!("shaders/taa.glsl")),
             shader_uniforms!(
                 inputTex: color_tex,
