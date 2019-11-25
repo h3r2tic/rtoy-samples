@@ -72,8 +72,11 @@ impl Ssao {
             shader_uniforms!(aoTex: ao_tex, depthTex: depth_tex, normalTex: normal_tex,),
         );
 
-        let temporal_accum =
-            filter_ssao_temporally(ao_tex, reprojection_tex, tex_key.with_format(Format::R16G16_SFLOAT));
+        let temporal_accum = filter_ssao_temporally(
+            ao_tex,
+            reprojection_tex,
+            tex_key.with_format(Format::R16G16_SFLOAT),
+        );
 
         Self {
             temporal_accum,

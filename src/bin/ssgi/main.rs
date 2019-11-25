@@ -68,7 +68,9 @@ fn main() {
         let mut reproj_constants = upload_buffer(0u32).isolate();
 
         let sky_tex = compute_tex(
-            tex_key.with_format(Format::R16G16B16A16_SFLOAT).res_div_round_up(16, 4),
+            tex_key
+                .with_format(Format::R16G16B16A16_SFLOAT)
+                .res_div_round_up(16, 4),
             load_cs(asset!("shaders/ssgi/sky.glsl")),
             shader_uniforms!(constants: merge_constants_buf.clone()),
         );

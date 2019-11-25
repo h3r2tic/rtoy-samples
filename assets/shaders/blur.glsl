@@ -1,7 +1,12 @@
-uniform restrict writeonly image2D outputTex;
-uniform int blurRadius;
-uniform ivec2 blurDir;
-uniform sampler2D inputImage;
+#extension GL_EXT_samplerless_texture_functions : require
+
+uniform restrict writeonly layout(binding = 0) image2D outputTex;
+uniform layout(binding = 1) texture2D inputImage;
+
+layout(std140, binding = 2) uniform globals {
+    ivec2 blurDir;
+    int blurRadius;
+};
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {

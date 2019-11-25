@@ -3,11 +3,7 @@ use rendertoy::*;
 fn main() {
     let rtoy = Rendertoy::new();
 
-    let tex_key = TextureKey {
-        width: 256,
-        height: 256,
-        format: Format::R16G16B16A16_SFLOAT,
-    };
+    let tex_key = TextureKey::new(256, 256, Format::R16G16B16A16_SFLOAT);
 
     let gradients_tex = compute_tex(
         tex_key,

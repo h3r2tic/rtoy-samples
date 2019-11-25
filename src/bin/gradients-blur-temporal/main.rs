@@ -4,12 +4,7 @@ fn main() {
     let rtoy = Rendertoy::new();
 
     let mut time = const_f32(0f32).isolate();
-
-    let tex_key = TextureKey {
-        width: 256,
-        height: 256,
-        format: Format::R16G16B16A16_SFLOAT,
-    };
+    let tex_key = TextureKey::new(256, 256, Format::R16G16B16A16_SFLOAT);
 
     let gradients_tex = compute_tex(
         tex_key,
@@ -28,6 +23,12 @@ fn main() {
     );
 
     let mut temporal_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
+    /*let mut temporal_tex = compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/gradients.glsl")),
+        shader_uniforms!(),
+    ).isolate();*/
+
     temporal_tex.rebind(compute_tex(
         tex_key,
         load_cs(asset!("shaders/blend.glsl")),

@@ -1,16 +1,20 @@
-uniform restrict writeonly image2D outputTex;
-uniform sampler2D inputTex1;
-uniform sampler2D inputTex2;
-uniform float blendAmount;
-uniform vec4 outputTex_size;
+#extension GL_EXT_samplerless_texture_functions : require
+
+uniform restrict writeonly layout(binding = 0) image2D outputTex;
+uniform layout(binding = 1) texture2D inputTex1;
+uniform layout(binding = 2) texture2D inputTex2;
+
+layout(std140, binding = 3) uniform globals {
+    vec4 outputTex_size;
+    float blendAmount;
+};
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
-	vec2 uv = (vec2(pix) + 0.5) * outputTex_size.zw;
 
-	vec4 a = textureLod(inputTex1, uv, 0);
-	vec4 b = textureLod(inputTex2, uv, 0);
+	vec4 a = texelFetch(inputTex1, pix, 0);
+	vec4 b = texelFetch(inputTex2, pix, 0);
     vec4 c = b * blendAmount;
     if (blendAmount != 1.0) {
         c += a * (1.0 - blendAmount);
