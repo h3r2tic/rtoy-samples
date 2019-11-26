@@ -1,6 +1,8 @@
-uniform restrict writeonly image2D outputTex;
-uniform sampler2D inputTex;
-uniform float sharpen_amount;
+uniform restrict writeonly layout(binding = 0) image2D outputTex;
+uniform layout(binding = 1) texture2D inputTex;
+layout(std140, binding = 2) uniform globals {
+    float sharpen_amount;
+};
 
 // Rec. 709
 float calculate_luma(vec3 col) {

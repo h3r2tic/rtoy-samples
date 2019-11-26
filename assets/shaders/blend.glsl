@@ -1,5 +1,3 @@
-#extension GL_EXT_samplerless_texture_functions : require
-
 uniform restrict writeonly layout(binding = 0) image2D outputTex;
 uniform layout(binding = 1) texture2D inputTex1;
 uniform layout(binding = 2) texture2D inputTex2;

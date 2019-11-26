@@ -5,11 +5,11 @@ fn main() {
 
     let mut mouse_x = const_f32(0f32).isolate();
 
-    let tex_key = TextureKey {
-        width: rtoy.width(),
-        height: rtoy.height(),
-        format: gl::RGBA32F,
-    };
+    let tex_key = TextureKey::new(
+        rtoy.width(),
+        rtoy.height(),
+        Format::R32G32B32A32_SFLOAT,
+    );
 
     let tex = compute_tex!(
         "EV shift",
