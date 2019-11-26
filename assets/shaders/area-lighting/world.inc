@@ -56,7 +56,7 @@ RaySampleInfo setup_cameraRay(vec2 fragCoord, vec2 aaoffset)
 
     float invAspectRatio = iResolution.y / iResolution.x;
     vec2 imagePlaneUV = (fragCoord + aaoffset) / iResolution.xy - .5;
-    imagePlaneUV.y *= invAspectRatio;
+    imagePlaneUV.y *= -invAspectRatio;
 
     vec3 iu = vec3(0., 1., 0.);
 

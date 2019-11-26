@@ -1,20 +1,19 @@
-uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+uniform restrict writeonly layout(binding = 0) image2D outputTex;
+layout(std140, binding = 1) uniform globals {
+    vec4 outputTex_size;
+    float g_mouseX;
+    uint g_frameIndex;
+};
 
-uniform float g_mouseX;
 #define iMouse vec4(g_mouseX, 0, 0, 0)
-
 #define iResolution outputTex_size
 
 #include "math.inc"
 #include "world.inc"
 #include "brdf.inc"
 
-uniform sampler2D g_primaryVisTex;
-//uniform sampler2D g_blueNoise;
-uniform sampler2D g_whiteNoise;
-
-uniform uint g_frameIndex;
+uniform layout(binding = 2) texture2D g_primaryVisTex;
+uniform layout(binding = 3) texture2D g_whiteNoise;
 
 // Buffer B does the sampling and accumulation work 
 

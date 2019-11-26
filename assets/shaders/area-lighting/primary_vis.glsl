@@ -1,15 +1,17 @@
-uniform sampler2D g_roughnessMultTex;
+uniform layout(binding = 0) texture2D g_roughnessMultTex;
+layout(std140, binding = 1) uniform globals {
+    vec4 outputTex_size;
+    vec4 g_roughnessMultTex_size;
+    float g_mouseX;
+};
 
-uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
-
-uniform float g_mouseX;
 #define iMouse vec4(g_mouseX, 0, 0, 0)
-
 #define iResolution outputTex_size
 
 #include "math.inc"
 #include "world.inc"
+
+uniform restrict writeonly layout(binding = 2) image2D outputTex;
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
@@ -19,7 +21,10 @@ void main() {
 
     SurfaceInfo surface = dist_march(0.0, currSample.origin,  currSample.direction);
 	surface.roughnessMult *= 0.75;
-	surface.roughnessMult *= pow(texture(g_roughnessMultTex, vec2(fragCoord) * outputTex_size.zw).x, 1.5);
+
+    ivec2 rpix = ivec2(gl_GlobalInvocationID.xy) / ivec2(2, 1);
+    rpix %= ivec2(g_roughnessMultTex_size.xy);
+	surface.roughnessMult *= pow(texelFetch(g_roughnessMultTex, rpix, 0).x, 1.5);
 
 	imageStore(outputTex, ivec2(gl_GlobalInvocationID.xy), packSurfaceInfo(surface));
 }

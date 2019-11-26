@@ -1,16 +1,12 @@
-uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+uniform restrict writeonly layout(binding = 0) image2D outputTex;
+uniform layout(binding = 1) texture2D g_filteredLightingTex;
+uniform layout(binding = 2) texture2D g_prevOutputTex;
 
-uniform sampler2D g_filteredLightingTex;
-uniform sampler2D g_prevOutputTex;
-
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
+void mainImage(out vec4 fragColor, in ivec2 pix)
 {
-    ivec2 px = ivec2(fragCoord);
-    
-    vec3 center = texelFetch(g_filteredLightingTex, px, 0).rgb;
+    vec3 center = texelFetch(g_filteredLightingTex, pix, 0).rgb;
     //vec4 history = 0.0.xxxx;
-	vec4 history = 1.*texelFetch(g_prevOutputTex, px, 0);
+	vec4 history = 1.*texelFetch(g_prevOutputTex, pix, 0);
     
 	vec3 vsum = vec3(0.);
 	vec3 vsum2 = vec3(0.);
@@ -22,7 +18,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 	const int k = 2;
     for (int y = -k; y <= k; ++y) {
         for (int x = -k; x <= k; ++x) {
-            vec3 neigh = texelFetch(g_filteredLightingTex, px + ivec2(x, y), 0).rgb;
+            vec3 neigh = texelFetch(g_filteredLightingTex, pix + ivec2(x, y), 0).rgb;
             //nmin = min(nmin, neigh);
             //nmax = max(nmax, neigh);
 			float w = exp(-3.0 * float(x * x + y * y) / float((k+1.) * (k+1.)));
@@ -63,10 +59,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
-	vec2 fragCoord = vec2(gl_GlobalInvocationID.xy) + 0.5;
+	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
 	vec4 finalColor;
 
-	mainImage(finalColor, fragCoord);
-
-	imageStore(outputTex, ivec2(gl_GlobalInvocationID.xy), finalColor);
+	mainImage(finalColor, pix);
+	imageStore(outputTex, pix, finalColor);
 }
