@@ -14,11 +14,11 @@ struct Constants {
 fn main() {
     let rtoy = Rendertoy::new();
 
-    let tex_key = TextureKey {
-        width: rtoy.width(),
-        height: rtoy.height(),
-        format: gl::RGBA32F,
-    };
+    let tex_key = TextureKey::new(
+        rtoy.width(),
+        rtoy.height(),
+        Format::R32G32B32A32_SFLOAT,
+    );
 
     let dredd = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
     //let lighthouse = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
