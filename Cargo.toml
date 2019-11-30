@@ -30,6 +30,9 @@ snoozy = { path = "../snoozy" }
 # 
 [patch."https://github.com/h3r2tic/snoozy-macros"]
 snoozy-macros = { path = "../snoozy-macros" }
+#
+[patch.crates-io]
+ vk-mem = { git = "https://github.com/h3r2tic/vk-mem-rs.git" }  # Forked for static CRT on Windows
 
 [profile.dev]
 lto = false

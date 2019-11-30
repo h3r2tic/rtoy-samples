@@ -3,11 +3,7 @@ use rendertoy::*;
 fn main() {
     let rtoy = Rendertoy::new();
 
-    let tex_key = TextureKey {
-        width: rtoy.width(),
-        height: rtoy.height(),
-        format: gl::RGBA32F,
-    };
+    let tex_key = TextureKey::new(rtoy.width(), rtoy.height(), Format::R32G32B32A32_SFLOAT);
 
     let scene = vec![
         (
