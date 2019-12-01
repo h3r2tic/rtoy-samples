@@ -5,12 +5,15 @@
 #include "inc/uv.inc"
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
     uint frame_idx;
     uint pad[3];
     ViewConstants view_constants;
+};
+
+layout(std140) uniform globals {
+    uniform vec4 outputTex_size;
 };
 
 vec3 sample_environment_light(vec3 dir) {

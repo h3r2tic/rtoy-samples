@@ -7,11 +7,7 @@ fn main() {
     let mut mouse_x = const_f32(0f32).isolate();
     let mut frame_index = const_u32(0).isolate();
 
-    let tex_key_f16 = TextureKey::new(
-        rtoy.width(),
-        rtoy.height(),
-        Format::R16G16B16A16_SFLOAT,
-    );
+    let tex_key_f16 = TextureKey::new(rtoy.width(), rtoy.height(), Format::R16G16B16A16_SFLOAT);
 
     let tex_key_f32 = tex_key_f16.with_format(Format::R32G32B32A32_SFLOAT);
 
