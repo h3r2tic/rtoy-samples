@@ -2,13 +2,13 @@
 
 uniform restrict writeonly image2D outputTex;
 
-layout(std140) uniform globals {
-    vec4 outputTex_size;
-};
-
 uniform texture2D inputTex;
 uniform texture2D historyTex;
 uniform texture2D reprojectionTex;
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+};
 
 uniform sampler linear_sampler;
 
@@ -18,8 +18,6 @@ vec4 run_filter(in vec2 fragCoord)
     vec2 uv = get_uv(outputTex_size);
     
     vec4 center = texelFetch(inputTex, px, 0);
-    //return center;
-
     vec4 reproj = texelFetch(reprojectionTex, px * 2, 0);
     vec4 history = textureLod(sampler2D(historyTex, linear_sampler), uv + reproj.xy, 0);
     

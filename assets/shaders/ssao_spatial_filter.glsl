@@ -1,12 +1,17 @@
 #include "inc/pack_unpack.inc"
 #include "inc/uv.inc"
 
-uniform sampler2D aoTex;
-uniform sampler2D depthTex;
-uniform sampler2D normalTex;
+uniform texture2D aoTex;
+uniform texture2D depthTex;
+uniform texture2D normalTex;
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+};
+
+uniform sampler linear_sampler;
 
 vec2 process_sample(float ao, float depth, float normal_packed, float center_depth, vec3 center_normal) {
     if (depth != 0.0)
@@ -33,9 +38,9 @@ vec2 process_sample(float ao, float depth, float normal_packed, float center_dep
 }
 
 vec2 process_four_samples(vec2 uv, float center_depth, vec3 center_normal) {
-    vec4 ao = textureGather(aoTex, uv, 0);
-    vec4 depth = textureGather(depthTex, uv, 0);
-    vec4 normal = textureGather(normalTex, uv, 0);
+    vec4 ao = textureGather(sampler2D(aoTex, linear_sampler), uv, 0);
+    vec4 depth = textureGather(sampler2D(depthTex, linear_sampler), uv, 0);
+    vec4 normal = textureGather(sampler2D(normalTex, linear_sampler), uv, 0);
 
     return 
         process_sample(ao.x, depth.x, normal.x, center_depth, center_normal) +

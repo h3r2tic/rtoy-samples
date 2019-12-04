@@ -29,8 +29,8 @@ fn main() {
     let out_tex = compute_tex!(
         "splat red to rgb",
         tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
-        #input: ssao.get_output_tex(),
-        .rgb = @input.rrr
+        #ssao: ssao.get_output_tex(),
+        .rgb = @ssao.rrr
     );
 
     let mut frame_idx = 0;
