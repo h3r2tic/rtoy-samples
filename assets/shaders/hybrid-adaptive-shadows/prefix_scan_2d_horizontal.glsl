@@ -1,7 +1,7 @@
 layout (local_size_x = 512, local_size_y = 1) in;
 
-uniform layout(r32f) readonly image2D inputTex;
-uniform restrict writeonly image2D outputTex;
+uniform texture2D inputTex;
+writeonly uniform restrict image2D outputTex;
 
 shared uint shared_data[gl_WorkGroupSize.x * 2];
 
@@ -10,7 +10,7 @@ uint align64(uint a) {
 }
 
 uint load_input(uint x, uint y) {
-    return floatBitsToUint(imageLoad(inputTex, ivec2(x, y)).x);
+    return floatBitsToUint(texelFetch(inputTex, ivec2(x, y), 0).x);
 }
 
 void store_output(uint x, uint y, uint val) {

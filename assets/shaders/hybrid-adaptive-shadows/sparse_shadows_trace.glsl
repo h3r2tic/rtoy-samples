@@ -4,8 +4,8 @@
 #include "../inc/pack_unpack.inc"
 
 uniform texture2D gbufferTex;
-uniform layout(rg32f) readonly image2D rtPixelLocationTex;
-uniform layout(r32f) readonly image2D tileAllocOffsetTex;
+uniform texture2D rtPixelLocationTex;
+uniform texture2D tileAllocOffsetTex;
 uniform restrict writeonly image2D outputTex;
 
 layout(std140) uniform globals {
@@ -65,7 +65,7 @@ layout (local_size_x = 64, local_size_y = 1) in;
 void main() {
     if (gl_LocalInvocationIndex == 0) {
         ivec2 total_rt_px_count_loc = ivec2(tileAllocOffsetTex_size.xy) - 1;
-        total_rt_px_count = floatBitsToUint(imageLoad(tileAllocOffsetTex, total_rt_px_count_loc).x);
+        total_rt_px_count = floatBitsToUint(texelFetch(tileAllocOffsetTex, total_rt_px_count_loc, 0).x);
     }
 
     barrier();
@@ -76,7 +76,7 @@ void main() {
     // Rendertoy doesn't have indirect dispatch. Just branch out for now.
     if (pixel_idx < total_rt_px_count) {
         ivec2 alloc_pix = ivec2(pixel_idx % uint(rtPixelLocationTex_size.x), pixel_idx / uint(rtPixelLocationTex_size.x));
-        ivec2 quad = floatBitsToInt(imageLoad(rtPixelLocationTex, alloc_pix).xy);
+        ivec2 quad = floatBitsToInt(texelFetch(rtPixelLocationTex, alloc_pix, 0).xy);
         ivec2 pix = 2 * quad;
 
         uint quad_rotation_idx = (quad.x >> 1u) & 3u;

@@ -3,7 +3,7 @@
 
 uniform texture2D aoTex;
 uniform texture2D depthTex;
-uniform texture2D normalTex;
+uniform utexture2D normalTex;
 
 uniform restrict writeonly image2D outputTex;
 
@@ -13,10 +13,10 @@ layout(std140) uniform globals {
 
 uniform sampler linear_sampler;
 
-vec2 process_sample(float ao, float depth, float normal_packed, float center_depth, vec3 center_normal) {
+vec2 process_sample(float ao, float depth, uint normal_packed, float center_depth, vec3 center_normal) {
     if (depth != 0.0)
     {
-        vec3 normal = unpack_normal_11_10_11_no_normalize(normal_packed);
+        vec3 normal = unpack_normal_11_10_11_uint_no_normalize(normal_packed);
 
         //float depth_diff = (1.0 / center_depth) - (1.0 / depth);
         //float depth_factor = exp2(-(200.0 * center_depth) * abs(depth_diff));
@@ -40,7 +40,7 @@ vec2 process_sample(float ao, float depth, float normal_packed, float center_dep
 vec2 process_four_samples(vec2 uv, float center_depth, vec3 center_normal) {
     vec4 ao = textureGather(sampler2D(aoTex, linear_sampler), uv, 0);
     vec4 depth = textureGather(sampler2D(depthTex, linear_sampler), uv, 0);
-    vec4 normal = textureGather(sampler2D(normalTex, linear_sampler), uv, 0);
+    uvec4 normal = textureGather(usampler2D(normalTex, linear_sampler), uv, 0);
 
     return 
         process_sample(ao.x, depth.x, normal.x, center_depth, center_normal) +
@@ -56,7 +56,7 @@ void main() {
 
     float center_depth = texelFetch(depthTex, pix, 0).x;
     if (center_depth != 0.0) {
-        vec3 center_normal = unpack_normal_11_10_11(texelFetch(normalTex, pix, 0).x);
+        vec3 center_normal = unpack_normal_11_10_11_uint_no_normalize(texelFetch(normalTex, pix, 0).x);
 
 #if 0
     	float center_ao = texelFetch(aoTex, pix, 0).x;
@@ -69,7 +69,7 @@ void main() {
                     ivec2 sample_pix = pix + ivec2(x, y);
                     float depth = texelFetch(depthTex, sample_pix, 0).x;
                     float ao = texelFetch(aoTex, sample_pix, 0).x;
-                    float normal_packed = texelFetch(normalTex, sample_pix, 0).x;
+                    uint normal_packed = texelFetch(normalTex, sample_pix, 0).x;
                     result += process_sample(ao, depth, normal_packed, center_depth, center_normal);
                 }
             }
