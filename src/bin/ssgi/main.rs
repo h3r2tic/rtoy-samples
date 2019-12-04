@@ -15,11 +15,7 @@ fn spherical_to_cartesian(theta: f32, phi: f32) -> Vector3 {
 fn main() {
     let rtoy = Rendertoy::new();
 
-    let tex_key = TextureKey {
-        width: rtoy.width(),
-        height: rtoy.height(),
-        format: 0,
-    };
+    let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
     let mesh = load_gltf_scene(
         asset!("meshes/pica_pica_-_mini_diorama_01/scene.gltf"),
@@ -38,21 +34,21 @@ fn main() {
 
     let mut sky_constants = upload_buffer(0u32).isolate();
     let sky_octa_tex = compute_tex(
-        TextureKey {
-            width: 64,
-            height: 64,
-            format: Format::R16G16B16A16_SFLOAT,
-        },
+        TextureKey::new(
+            64,
+            64,
+            Format::R16G16B16A16_SFLOAT,
+        ),
         load_cs(asset!("shaders/sky_octamap.glsl")),
         shader_uniforms!(constants: sky_constants.clone()),
     );
 
     let sky_lambert_tex = compute_tex(
-        TextureKey {
-            width: 64,
-            height: 64,
-            format: Format::R16G16B16A16_SFLOAT,
-        },
+        TextureKey::new(
+            64,
+            64,
+            Format::R16G16B16A16_SFLOAT,
+        ),
         load_cs(asset!("shaders/lambert_convolve_octamap.glsl")),
         shader_uniforms!(input_tex: sky_octa_tex.clone()),
     );
@@ -76,7 +72,7 @@ fn main() {
         );
 
         let gbuffer_tex = raster_tex(
-            tex_key.with_format(gl::RGBA32F),
+            tex_key.with_format(Format::R32G32B32A32_SFLOAT),
             make_raster_pipeline(vec![
                 load_vs(asset!("shaders/raster_simple_vs.glsl")),
                 load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
@@ -107,7 +103,7 @@ fn main() {
         );
 
         let normal_tex = compute_tex(
-            tex_key.with_format(gl::RGBA8_SNORM).half_res(),
+            tex_key.with_format(Format::R8G8B8A8_SRGB).half_res(),
             load_cs(asset!("shaders/extract_gbuffer_view_normal_rgba8.glsl")),
             shader_uniforms!(
                 // Contains view constants at offset 0
@@ -117,7 +113,7 @@ fn main() {
         );
 
         let reprojected_lighting_tex = compute_tex(
-            tex_key.with_format(gl::R11F_G11F_B10F).half_res(),
+            tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32).half_res(),
             load_cs(asset!("shaders/ssgi/reproject_lighting.glsl")),
             shader_uniforms!(
                 lightingTex: taa_output,
@@ -178,7 +174,7 @@ fn main() {
 
         // lighting_tex.rebind
         let lighting_tex = compute_tex(
-            tex_key.with_format(gl::R11F_G11F_B10F),
+            tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
             load_cs(asset!("shaders/ssgi/merge.glsl")),
             shader_uniforms!(
             aoTex: ssgi_tex.clone(),
@@ -191,7 +187,7 @@ fn main() {
         );
 
         /*let out_tex = compute_tex(
-            tex_key.with_format(gl::R11F_G11F_B10F),
+            tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
             load_cs(asset!("shaders/ssgi/debug.glsl")),
             shader_uniforms!(
                 finalTex: lighting_tex.clone(),
@@ -258,7 +254,7 @@ fn main() {
     });
 
     let out_tex = compute_tex(
-        tex_key.with_format(gl::R11F_G11F_B10F),
+        tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             inputTex: taa.get_output_tex(),

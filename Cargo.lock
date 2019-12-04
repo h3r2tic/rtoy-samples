@@ -89,7 +89,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "ash"
 version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/MaikKlein/ash.git#0b689273c635edac14e566092a5d4a6ca3c70e18"
 dependencies = [
  "shared_library 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -99,7 +99,7 @@ name = "ash-window"
 version = "0.1.0"
 source = "git+https://github.com/norse-rs/ash-window.git#9b6ab4d03b015ecae8ec9c771461e80446487ad4"
 dependencies = [
- "ash 0.29.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)",
  "raw-window-handle 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1372,7 +1372,7 @@ version = "0.1.0"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ash 0.29.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)",
  "ash-window 0.1.0 (git+https://github.com/norse-rs/ash-window.git)",
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo_metadata 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1845,7 +1845,7 @@ name = "vk-mem"
 version = "0.2.0"
 source = "git+https://github.com/h3r2tic/vk-mem-rs.git#87716c0b65117f73e4c571b38ff37fc287e163a8"
 dependencies = [
- "ash 0.29.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)",
  "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cc 1.0.47 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1855,7 +1855,7 @@ name = "vk-sync"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "ash 0.29.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)",
 ]
 
 [[package]]
@@ -2035,7 +2035,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
 "checksum approx 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f0e60b75072ecd4168020818c0107f2857bb6c4e64252d8d3983f6263b40a5c3"
 "checksum arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
-"checksum ash 0.29.0 (registry+https://github.com/rust-lang/crates.io-index)" = "003d1fb2eb12eb06d4a03dbe02eea67a9fac910fa97932ab9e3a75b96a1ea5e5"
+"checksum ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)" = "<none>"
 "checksum ash-window 0.1.0 (git+https://github.com/norse-rs/ash-window.git)" = "<none>"
 "checksum async-trait 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)" = "3495c8ae99b96d8a84050dee9d7b9d6425f9bfe84c2e3f800c2c2859457f8590"
 "checksum atty 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)" = "1803c647a3ec87095e7ae7acfca019e98de5ec9a7d01343f611cf3152ed71a90"

@@ -1,10 +1,13 @@
 #include "../inc/uv.inc"
 
-uniform sampler2D inputTex;
-uniform vec4 inputTex_size;
-
+uniform texture2D inputTex;
+uniform sampler linear_sampler;
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    vec4 inputTex_size;
+    vec4 outputTex_size;
+};
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
@@ -19,7 +22,7 @@ void main() {
 
     for (int y = 0; y < 4; ++y) {
         for (int x = 0; x < 4; ++x) {
-            sum += dot(textureGather(inputTex, uv + input_texel_size * 2.0 * vec2(x, y), 0), vec4(1.0));
+            sum += dot(textureGather(sampler2D(inputTex, linear_sampler), uv + input_texel_size * 2.0 * vec2(x, y), 0), vec4(1.0));
         }
     }
 

@@ -7,9 +7,12 @@
 #include "../inc/atmosphere.inc"
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform constants {
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+};
+
+layout(std430) buffer constants {
     ViewConstants view_constants;
     vec4 light_dir_pad;
     uint frame_idx;

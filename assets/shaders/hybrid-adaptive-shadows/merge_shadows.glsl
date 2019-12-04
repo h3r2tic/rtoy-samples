@@ -3,15 +3,18 @@
 #include "../inc/uv.inc"
 #include "../inc/pack_unpack.inc"
 
-uniform sampler2D gbuffer;
-uniform vec4 gbuffer_size;
+uniform texture2D gbuffer;
 
-uniform sampler2D halfresShadowsTex;
-uniform sampler2D discontinuityTex;
-uniform sampler2D sparseShadowsTex;
+uniform texture2D halfresShadowsTex;
+uniform texture2D discontinuityTex;
+uniform texture2D sparseShadowsTex;
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+    vec4 gbuffer_size;
+};
 
 #if 1
 layout (local_size_x = 8, local_size_y = 8) in;

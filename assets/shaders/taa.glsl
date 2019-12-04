@@ -2,14 +2,19 @@
 #include "inc/color.inc"
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform sampler2D inputTex;
-uniform sampler2D historyTex;
-uniform sampler2D reprojectionTex;
+uniform texture2D inputTex;
+uniform texture2D historyTex;
+uniform texture2D reprojectionTex;
 
-uniform constants {
+uniform sampler linear_sampler;
+
+layout(std430) buffer constants {
     vec2 jitter;
+};
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
 };
 
 #define ENCODING_VARIANT 2
@@ -45,7 +50,7 @@ vec3 encode(vec3 a) {
 
 vec4 fetchHistory(vec2 uv)
 {
-	return vec4(decode(textureLod(historyTex, uv, 0.0).xyz), 1);
+	return vec4(decode(textureLod(sampler2D(historyTex, linear_sampler), uv, 0.0).xyz), 1);
 }
 
 vec4 fetchHistoryPx(ivec2 pix)

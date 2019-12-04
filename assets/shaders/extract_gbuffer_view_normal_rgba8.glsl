@@ -1,11 +1,13 @@
 #include "rendertoy::shaders/view_constants.inc"
 #include "inc/pack_unpack.inc"
 
-uniform sampler2D inputTex;
-uniform vec4 inputTex_size;
-
+uniform texture2D inputTex;
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    vec4 inputTex_size;
+    vec4 outputTex_size;
+};
 
 uniform constants {
     ViewConstants view_constants;

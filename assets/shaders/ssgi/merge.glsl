@@ -5,22 +5,25 @@
 #include "../inc/pack_unpack.inc"
 #include "../inc/brdf.inc"
 
-uniform sampler2D gbuffer;
-uniform vec4 gbuffer_size;
+uniform texture2D gbuffer;
+uniform texture2D aoTex;
+uniform texture2D shadowsTex;
 
-uniform sampler2D aoTex;
-uniform sampler2D shadowsTex;
+uniform texture2D skyLambertTex;
+uniform texture2D skyOctaTex;
+uniform texture2D skyTex;
 
-uniform sampler2D skyLambertTex;
-uniform sampler2D skyOctaTex;
-uniform vec4 skyOctaTex_size;
-
-uniform sampler2D skyTex;
+uniform sampler linear_sampler;
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform constants {
+layout(std140) uniform globals {
+    vec4 gbuffer_size;
+    vec4 skyOctaTex_size;
+    vec4 outputTex_size;
+};
+
+layout(std430) buffer constants {
     ViewConstants view_constants;
     vec4 light_dir_pad;
     uint frame_idx;
@@ -54,7 +57,7 @@ void main() {
     vec3 sun_color = sample_quantized_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
 
     if (gbuffer.a == 0.0) {
-        result = textureLod(skyTex, uv, 0.0).rgb;
+        result = textureLod(sampler2D(skyTex, linear_sampler), uv, 0.0).rgb;
     } else {
         vec3 normal = unpack_normal_11_10_11(gbuffer.x);
         vec3 albedo = unpack_color_888(floatBitsToUint(gbuffer.z));

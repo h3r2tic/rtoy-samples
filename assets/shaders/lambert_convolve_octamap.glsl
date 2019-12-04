@@ -6,11 +6,13 @@
 #include "inc/atmosphere.inc"
 #include "inc/pack_unpack.inc"
 
-uniform sampler2D input_tex;
-uniform vec4 input_tex_size;
-
+uniform texture2D input_tex;
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    vec4 input_tex_size;
+    vec4 outputTex_size;
+};
 
 vec4 sample_input(vec3 dir) {
     return texelFetch(input_tex, ivec2(input_tex_size.xy * octa_encode(dir)), 0);

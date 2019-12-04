@@ -1,8 +1,10 @@
-uniform sampler2D inputTex;
-uniform vec4 inputTex_size;
-
+uniform texture2D inputTex;
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    vec4 inputTex_size;
+    vec4 outputTex_size;
+};
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {

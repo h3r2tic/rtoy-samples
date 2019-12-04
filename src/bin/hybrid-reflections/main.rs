@@ -16,7 +16,7 @@ fn main() {
     let tex_key = TextureKey {
         width: rtoy.width(),
         height: rtoy.height(),
-        format: gl::RGBA32F,
+        format: Format::R32G32B32A32_SFLOAT,
     };
 
     let mesh = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);

@@ -1,7 +1,9 @@
 layout (local_size_x = 1, local_size_y = 512) in;
 
 uniform layout(r32f) readonly image2D inputTex;
-uniform vec4 inputTex_size;
+layout(std140) uniform globals {
+    vec4 inputTex_size;
+};
 uniform restrict writeonly image2D outputTex;
 
 shared uint shared_data[gl_WorkGroupSize.y * 2];

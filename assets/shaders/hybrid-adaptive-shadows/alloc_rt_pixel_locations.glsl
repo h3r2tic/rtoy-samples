@@ -1,10 +1,12 @@
 layout (local_size_x = 8, local_size_y = 8) in;
 
-uniform sampler2D discontinuityTex;
+uniform texture2D discontinuityTex;
 uniform layout(r32f) readonly image2D tileAllocOffsetTex;
-
 uniform layout(rg32f) restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    uniform vec4 outputTex_size;
+};
 
 shared uint alloc_count;
 

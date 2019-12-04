@@ -1,12 +1,15 @@
 #include "../inc/pack_unpack.inc"
 #include "../inc/uv.inc"
 
-uniform sampler2D ssgiTex;
-uniform sampler2D depthTex;
-uniform sampler2D normalTex;
+uniform texture2D ssgiTex;
+uniform texture2D depthTex;
+uniform texture2D normalTex;
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+};
 
 vec4 process_sample(vec4 ssgi, float depth, vec3 normal, float center_depth, vec3 center_normal, inout float w_sum) {
     if (depth != 0.0)

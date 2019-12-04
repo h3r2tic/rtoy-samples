@@ -1,18 +1,15 @@
-#extension GL_ARB_bindless_texture : require
-#include "rendertoy::shaders/view_constants.inc"
+#extension GL_EXT_nonuniform_qualifier: require
+#include "rendertoy::shaders/bindless.inc"
 #include "inc/pack_unpack.inc"
 
 layout(location = 0) out vec4 out_color;
 
-layout(std430) buffer constants {
-    ViewConstants view_constants;
-};
-
 struct Material {
     float base_color_mult[4];
-    uvec2 normal_map;
-    uvec2 spec_map;
-    uvec2 albedo_map;
+    uint normal_map;
+    uint spec_map;
+    uint albedo_map;
+    uint pad;
 };
 
 vec4 array_to_vec4(float v[4]) {
@@ -23,29 +20,31 @@ layout(std430) buffer mesh_materials_buf {
     Material materials[];
 };
 
-in vec3 v_normal;
-in vec4 v_color;
-in vec3 v_tangent;
-in vec3 v_bitangent;
-in vec3 v_world_position;
-in vec4 v_clip_position;
-in vec2 v_uv;
-flat in uint v_material_id;
+uniform sampler linear_sampler;
+
+layout(location = 0) in vec3 v_normal;
+layout(location = 1) in vec4 v_color;
+layout(location = 2) in vec3 v_tangent;
+layout(location = 3) in vec3 v_bitangent;
+layout(location = 4) in vec3 v_world_position;
+layout(location = 5) in vec4 v_clip_position;
+layout(location = 6) in vec2 v_uv;
+layout(location = 7) flat in uint v_material_id;
+
 
 //uniform sampler2D metallicRoughnessTex;
 //uniform sampler2D normalTex;
 
-void main() {
-    Material material = materials[v_material_id];
-
-    sampler2D normalTex = sampler2D(material.normal_map);
-    sampler2D metallicRoughnessTex = sampler2D(material.spec_map);
-    sampler2D albedoTex = sampler2D(material.albedo_map);
-
+void real_main(
+    Material material,
+    texture2D normalTex,
+    texture2D metallicRoughnessTex,
+    texture2D albedoTex
+) {
     //vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
     vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
-    vec4 metallicRoughness = texture(metallicRoughnessTex, uv);
-    vec3 ts_normal = (texture(normalTex, uv).xyz * 2.0 - 1.0);
+    vec4 metallicRoughness = texture(sampler2D(metallicRoughnessTex, linear_sampler), uv);
+    vec3 ts_normal = (texture(sampler2D(normalTex, linear_sampler), uv).xyz * 2.0 - 1.0);
 
     float z_over_w = v_clip_position.z / v_clip_position.w;
     //float roughness = 0.25;
@@ -59,7 +58,7 @@ void main() {
     mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
 
     vec3 albedo =
-        texture(albedoTex, uv).rgb *
+        texture(sampler2D(albedoTex, linear_sampler), uv).rgb *
         clamp(v_color.rgb, 0.0.xxx, 1.0.xxx) *
         array_to_vec4(material.base_color_mult).rgb;
     
@@ -74,4 +73,14 @@ void main() {
     //res.z = v_material_id;
     res.w = z_over_w;
     out_color = res;
+}
+
+void main() {
+    Material material = materials[v_material_id];
+    real_main(
+        material,
+        all_textures[nonuniformEXT(material.normal_map)],
+        all_textures[nonuniformEXT(material.spec_map)],
+        all_textures[nonuniformEXT(material.albedo_map)]
+    );
 }

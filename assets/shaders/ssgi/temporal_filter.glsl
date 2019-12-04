@@ -1,11 +1,16 @@
 #include "../inc/uv.inc"
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform sampler2D inputTex;
-uniform sampler2D historyTex;
-uniform sampler2D reprojectionTex;
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+};
+
+uniform texture2D inputTex;
+uniform texture2D historyTex;
+uniform texture2D reprojectionTex;
+
+uniform sampler linear_sampler;
 
 vec4 run_filter(in vec2 fragCoord)
 {
@@ -16,7 +21,7 @@ vec4 run_filter(in vec2 fragCoord)
     //return center;
 
     vec4 reproj = texelFetch(reprojectionTex, px * 2, 0);
-    vec4 history = textureLod(historyTex, uv + reproj.xy, 0);
+    vec4 history = textureLod(sampler2D(historyTex, linear_sampler), uv + reproj.xy, 0);
     
 	vec4 vsum = 0.0.xxxx;
 	vec4 vsum2 = 0.0.xxxx;

@@ -32,7 +32,7 @@ fn main() {
         let mut merge_constants_buf = upload_buffer(0u32).isolate();
 
         let gbuffer_tex = raster_tex(
-            tex_key.with_format(gl::RGBA32F),
+            tex_key.with_format(Format::R32G32B32A32_SFLOAT),
             make_raster_pipeline(vec![
                 load_vs(asset!("shaders/raster_simple_vs.glsl")),
                 load_ps(asset!("shaders/raster_gbuffer_ps.glsl")),
@@ -57,7 +57,7 @@ fn main() {
             .get_output_tex();
 
         let lighting_tex = compute_tex(
-            tex_key.with_format(gl::R11F_G11F_B10F),
+            tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
             load_cs(asset!("shaders/hybrid-render/merge.glsl")),
             shader_uniforms!(
             aoTex: ao_tex,
@@ -96,7 +96,7 @@ fn main() {
     });
 
     let out_tex = compute_tex(
-        tex_key.with_format(gl::R11F_G11F_B10F),
+        tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             inputTex: taa.get_output_tex(),

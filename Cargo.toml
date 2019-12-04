@@ -36,6 +36,7 @@ vk-mem = { git = "https://github.com/h3r2tic/vk-mem-rs.git" }  # Forked for stat
 spirv-reflect = { git = "https://github.com/h3r2tic/spirv-reflect-rs.git" }  # Fixed a crash
 rspirv = { git = "https://github.com/gfx-rs/rspirv.git", revision = "07be249" } # Official crate hasn't been updated in a while
 spirv_headers = { git = "https://github.com/gfx-rs/rspirv.git", revision = "07be249" }  # Must match rspirv
+ash = { git = "https://github.com/MaikKlein/ash.git", revision = "0b68927" }
 
 [profile.dev]
 lto = false

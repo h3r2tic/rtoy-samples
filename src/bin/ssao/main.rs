@@ -2,7 +2,7 @@ use rendertoy::*;
 
 fn main() {
     let rtoy = Rendertoy::new();
-    let tex_key = TextureKey::fullscreen(&rtoy, gl::RGBA32F);
+    let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
     let mesh = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
     let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
@@ -28,7 +28,7 @@ fn main() {
 
     let out_tex = compute_tex!(
         "splat red to rgb",
-        tex_key.with_format(gl::R11F_G11F_B10F),
+        tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
         #input: ssao.get_output_tex(),
         .rgb = @input.rrr
     );

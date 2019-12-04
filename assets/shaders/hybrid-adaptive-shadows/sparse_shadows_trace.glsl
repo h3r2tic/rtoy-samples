@@ -3,18 +3,19 @@
 #include "../inc/uv.inc"
 #include "../inc/pack_unpack.inc"
 
-uniform sampler2D gbufferTex;
-uniform vec4 gbufferTex_size;
-
+uniform texture2D gbufferTex;
 uniform layout(rg32f) readonly image2D rtPixelLocationTex;
 uniform layout(r32f) readonly image2D tileAllocOffsetTex;
-uniform vec4 tileAllocOffsetTex_size;
-uniform vec4 rtPixelLocationTex_size;
-
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform constants {
+layout(std140) uniform globals {
+    vec4 gbufferTex_size;
+    vec4 tileAllocOffsetTex_size;
+    vec4 rtPixelLocationTex_size;
+    vec4 outputTex_size;
+};
+
+layout(std430) buffer constants {
     ViewConstants view_constants;
     vec4 light_dir_pad;
 };

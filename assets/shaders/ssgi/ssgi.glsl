@@ -8,22 +8,23 @@
 // TODO: proper constant in a common include file
 #define PI 3.14159265359
 
-uniform sampler2D gbufferTex;
-uniform vec4 gbufferTex_size;
-
-uniform sampler2D reprojectedLightingTex;
-uniform vec4 reprojectedLightingTex_size;
-
-uniform sampler2D depthTex;
-uniform vec4 depthTex_size;
-uniform sampler2D normalTex;
+uniform texture2D gbufferTex;
+uniform texture2D reprojectedLightingTex;
+uniform texture2D depthTex;
+uniform texture2D normalTex;
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform constants {
+layout(std430) buffer constants {
     ViewConstants view_constants;
     uint frame_idx;
+};
+
+layout(std140) uniform globals {
+    vec4 gbufferTex_size;
+    vec4 reprojectedLightingTex_size;
+    vec4 depthTex_size;
+    vec4 outputTex_size;
 };
 
 const float temporal_rotations[] = {60.0, 300.0, 180.0, 240.0, 120.0, 0.0};
