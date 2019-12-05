@@ -30,7 +30,7 @@ layout(std140) uniform globals {
 const float temporal_rotations[] = {60.0, 300.0, 180.0, 240.0, 120.0, 0.0};
 const float temporal_offsets[] = {0.0, 0.5, 0.25, 0.75};
 
-const uint ssgi_half_sample_count = 64;
+const uint ssgi_half_sample_count = 8;
 
 float fast_sqrt(float x) {
     return uintBitsToFloat(0x1fbd1df5 + (floatBitsToUint(x) >> 1u));
@@ -206,8 +206,8 @@ void main() {
 
             // TODO: better units (pixels? degrees?)
             // Calculate AO radius shrinkage (if camera is too close to a surface)
-            //float max_ao_radius_cs = 0.4;
-            float max_ao_radius_cs = 100;
+            float max_ao_radius_cs = 0.4;
+            //float max_ao_radius_cs = 100;
             ao_radius_shrinkage = min(1.0, max_ao_radius_cs / cs_ao_radius_rescale);
         }
 
