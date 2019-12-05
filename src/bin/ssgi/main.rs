@@ -17,16 +17,17 @@ fn main() {
 
     let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
-    let mesh = load_gltf_scene(
+    /*let mesh = load_gltf_scene(
         asset!("meshes/pica_pica_-_mini_diorama_01/scene.gltf"),
         20.0,
-    );
+    );*/
+    let mesh = load_gltf_scene(asset!("meshes/cornell_box/scene.gltf"), 30.0);
     let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
     let bvh = upload_bvh(scene.clone());
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
-    //camera.fov = 55.0;
+    camera.fov = 20.0;
     let mut camera = CameraConvergenceEnforcer::new(camera);
 
     let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
@@ -35,8 +36,8 @@ fn main() {
     let mut sky_constants = upload_buffer(0u32).isolate();
     let sky_octa_tex = compute_tex(
         TextureKey::new(
-            64,
-            64,
+            128,
+            128,
             Format::R16G16B16A16_SFLOAT,
         ),
         load_cs(asset!("shaders/sky_octamap.glsl")),
@@ -45,8 +46,8 @@ fn main() {
 
     let sky_lambert_tex = compute_tex(
         TextureKey::new(
-            64,
-            64,
+            128,
+            128,
             Format::R16G16B16A16_SFLOAT,
         ),
         load_cs(asset!("shaders/lambert_convolve_octamap.glsl")),
@@ -144,14 +145,6 @@ fn main() {
             ),
         );
 
-        let temporal_accum = filter_ssgi_temporally(
-            ssgi_tex,
-            reprojection_tex,
-            tex_key.with_format(Format::R16G16B16A16_SFLOAT).half_res(),
-        );
-
-        let ssgi_tex = temporal_accum.tex.clone();
-
         let ssgi_tex = compute_tex(
             tex_key.with_format(Format::R16G16B16A16_SFLOAT),
             load_cs(asset!("shaders/ssgi/upsample.glsl")),
@@ -162,6 +155,11 @@ fn main() {
                 :bvh.clone(),
             ),
         );
+
+        let temporal_accum =
+            filter_ssgi_temporally(ssgi_tex, reprojection_tex, tex_key.with_format(Format::R16G16B16A16_SFLOAT));
+
+        let ssgi_tex = temporal_accum.tex.clone();
 
         let rt_shadows_tex = sub_passes
             .add(RtShadows::new(
@@ -263,6 +261,7 @@ fn main() {
     );
 
     let mut frame_idx = 0;
+    let mut light_pos: f32 = 0.0;
 
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
@@ -273,10 +272,16 @@ fn main() {
             * -2.0;
         let phi = (frame_state.mouse.pos.y / frame_state.window_size_pixels.1 as f32)
             * std::f32::consts::PI
-            * 0.5;
-        //dbg!((theta, phi));*/
-        let theta = -4.54;
-        let phi = 1.48;
+            * 0.5;*/
+        light_pos = (light_pos + frame_state.dt * 0.21) % (std::f32::consts::PI * 2.0);
+        let light_pos = (light_pos.sin() * 0.5 + 0.5).min(1.0).max(0.0);
+        let theta = (0.6 + 0.35 * light_pos) * std::f32::consts::PI * -2.0;
+        let phi =
+            (0.99 - 0.75 * (light_pos * std::f32::consts::PI).sin()) * std::f32::consts::PI * 0.5;
+        //dbg!((theta, phi));
+        //let theta = -4.54;
+        //let phi = 1.48;
+
         let light_dir = spherical_to_cartesian(theta, phi);
 
         light_controller.set(DirectionalLightState::new(light_dir));

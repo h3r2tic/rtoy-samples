@@ -30,7 +30,7 @@ layout(std140) uniform globals {
 const float temporal_rotations[] = {60.0, 300.0, 180.0, 240.0, 120.0, 0.0};
 const float temporal_offsets[] = {0.0, 0.5, 0.25, 0.75};
 
-const uint ssgi_half_sample_count = 6;
+const uint ssgi_half_sample_count = 64;
 
 float fast_sqrt(float x) {
     return uintBitsToFloat(0x1fbd1df5 + (floatBitsToUint(x) >> 1u));
@@ -49,7 +49,7 @@ float fast_acos(float inX)
 }
 
 Ray offset_ray_origin(Ray r, vec3 v) {
-    r.o += (v + r.d) * (1e-4 * length(r.o));
+    r.o += (v + r.d) * (1e-3 * length(r.o));
     return r;
 }
 
@@ -95,7 +95,7 @@ vec3 project_point_on_plane(vec3 point, vec3 normal) {
     return point - normal * dot(point, normal);
 }
 
-float process_sample(float intsgn, float n_angle, inout vec3 prev_sample_vs, vec4 sample_cs, vec3 center_vs, vec3 normal_vs, vec3 v_vs, float ao_radius, float theta_cos_max, inout vec4 color_accum) {
+float process_sample(uint i, float intsgn, float n_angle, inout vec3 prev_sample_vs, vec4 sample_cs, vec3 center_vs, vec3 normal_vs, vec3 v_vs, float ao_radius, float theta_cos_max, inout vec4 color_accum) {
     if (sample_cs.z > 0) {
         vec4 sample_vs4 = view_constants.sample_to_view * sample_cs;
         vec3 sample_vs = sample_vs4.xyz / sample_vs4.w;
@@ -106,7 +106,7 @@ float process_sample(float intsgn, float n_angle, inout vec3 prev_sample_vs, vec
         if (sample_vs_offset_len < ao_radius)
         {
             bool sample_visible = sample_theta_cos >= theta_cos_max;
-            float theta_prev = theta_cos_max;
+            float theta_cos_prev = theta_cos_max;
             float theta_delta = theta_cos_max;
             theta_cos_max = update_horizion_angle(theta_cos_max, sample_theta_cos);
             theta_delta = theta_cos_max - theta_delta;
@@ -115,29 +115,22 @@ float process_sample(float intsgn, float n_angle, inout vec3 prev_sample_vs, vec
                 vec3 lighting = fetch_lighting(cs_to_uv(sample_cs.xy));
 
                 vec3 sample_normal_vs = fetch_normal_vs(cs_to_uv(sample_cs.xy));
+                float theta_cos_prev_trunc = theta_cos_prev;
 
 #if 1
-                // TODO: finish the derivations, truncate arc integration angles
-                // instead of ad-hoc multiplying by projected arc length
-                vec3 p0 = prev_sample_vs * min(1.0, intersect_dir_plane_onesided(
-                    prev_sample_vs, normal_vs, center_vs
-                ));
-                vec3 p1 = prev_sample_vs * min(
-                    intersect_dir_plane_onesided(prev_sample_vs, sample_normal_vs, sample_vs),
-                    intersect_dir_plane_onesided(prev_sample_vs, normal_vs, center_vs)
-                );
-                vec3 p2 = sample_vs;
+                if (i > 0) {
+                    vec3 p1 = prev_sample_vs * min(
+                        intersect_dir_plane_onesided(prev_sample_vs, sample_normal_vs, sample_vs),
+                        intersect_dir_plane_onesided(prev_sample_vs, normal_vs, center_vs)
+                    );
 
-                p0 = project_point_on_plane(normalize(p0 - center_vs), normal_vs);
-                p1 = project_point_on_plane(normalize(p1 - center_vs), normal_vs);
-                p2 = project_point_on_plane(normalize(p2 - center_vs), normal_vs);
-
-                lighting *= min(1.0, distance(p1, p2) / max(1e-5, distance(p0, p2)));
+                    theta_cos_prev_trunc = clamp(dot(normalize(p1 - center_vs), v_vs), theta_cos_prev_trunc, theta_cos_max);
+                }
 #endif
 #if 1
                 n_angle *= -intsgn;
 
-                float h1 = fast_acos(theta_prev);
+                float h1 = fast_acos(theta_cos_prev_trunc);
                 float h2 = fast_acos(theta_cos_max);
 
                 float h1p = n_angle + max(h1 - n_angle, -PI / 2.0);
@@ -197,6 +190,9 @@ void main() {
         float spatial_offset_noise = (1.0 / 4.0) * ((pix.y - pix.x) & 3);
         float temporal_offset_noise = temporal_offsets[frame_idx / 6 % 4];
 
+        uint seed0 = hash(hash(frame_idx ^ hash(pix.x)) ^ pix.y);
+        spatial_direction_noise += rand_float(seed0) * 0.1;
+
         float ss_angle = fract(spatial_direction_noise + temporal_direction_noise) * PI;
         float rand_offset = fract(spatial_offset_noise + temporal_offset_noise);
 
@@ -210,8 +206,8 @@ void main() {
 
             // TODO: better units (pixels? degrees?)
             // Calculate AO radius shrinkage (if camera is too close to a surface)
-            float max_ao_radius_cs = 0.4;
-            //float max_ao_radius_cs = 1;
+            //float max_ao_radius_cs = 0.4;
+            float max_ao_radius_cs = 100;
             ao_radius_shrinkage = min(1.0, max_ao_radius_cs / cs_ao_radius_rescale);
         }
 
@@ -222,7 +218,6 @@ void main() {
         vec3 center_vs = ray_origin_vs.xyz / ray_origin_vs.w;
 
         cs_slice_dir *= 1.0 / float(ssgi_half_sample_count);
-
         vec2 vs_slice_dir = (vec4(cs_slice_dir, 0, 0) * view_constants.sample_to_view).xy;
         vec3 slice_normal_vs = normalize(cross(v_vs, vec3(vs_slice_dir, 0)));
 
@@ -249,7 +244,7 @@ void main() {
                 vec4 sample_cs = vec4(ray_origin_cs.xy - cs_slice_dir * t, 0, 1);
                 sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
 
-                theta_cos_max1 = process_sample(1, n_angle, prev_sample0_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max1, color_accum);
+                theta_cos_max1 = process_sample(i, 1, n_angle, prev_sample0_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max1, color_accum);
             }
 
             {
@@ -258,7 +253,7 @@ void main() {
                 vec4 sample_cs = vec4(ray_origin_cs.xy + cs_slice_dir * t, 0, 1);
                 sample_cs.z = fetch_depth(cs_to_uv(sample_cs.xy));
 
-                theta_cos_max2 = process_sample(-1, n_angle, prev_sample1_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max2, color_accum);
+                theta_cos_max2 = process_sample(i, -1, n_angle, prev_sample1_vs, sample_cs, center_vs, normal_vs, v_vs, ao_radius, theta_cos_max2, color_accum);
             }
         }
 
