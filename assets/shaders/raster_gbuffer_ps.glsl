@@ -41,8 +41,7 @@ void real_main(
     texture2D metallicRoughnessTex,
     texture2D albedoTex
 ) {
-    //vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
-    vec2 uv = v_uv * vec2(1, -1) + vec2(0, 1);
+    vec2 uv = v_uv;
     vec4 metallicRoughness = texture(sampler2D(metallicRoughnessTex, linear_sampler), uv);
     vec3 ts_normal = (texture(sampler2D(normalTex, linear_sampler), uv).xyz * 2.0 - 1.0);
 
@@ -55,7 +54,12 @@ void real_main(
     float roughness = clamp(metallicRoughness.y, 0.1, 0.9);
     float metallic = 1;//metallicRoughness.z;
 
-    mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
+    vec3 normal = v_normal;
+    if (dot(v_bitangent, v_bitangent) > 0.0) {
+        mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
+        normal = tbn * ts_normal;
+    }
+    normal = normalize(normal);
 
     vec3 albedo =
         texture(sampler2D(albedoTex, linear_sampler), uv).rgb *
@@ -66,7 +70,7 @@ void real_main(
     //roughness = float(v_material_id) * 0.2;
 
     vec4 res = 0.0.xxxx;
-    res.x = pack_normal_11_10_11(normalize(tbn * ts_normal));
+    res.x = pack_normal_11_10_11(normal);
     res.y = roughness * roughness;      // UE4 remap
     //res.z = metallic;
     res.z = uintBitsToFloat(pack_color_888(albedo));

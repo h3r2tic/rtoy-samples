@@ -9,7 +9,7 @@ layout(std140) uniform globals {
     vec4 outputTex_size;
 };
 
-uniform constants {
+layout(std430) buffer constants {
     ViewConstants view_constants;
 };
 

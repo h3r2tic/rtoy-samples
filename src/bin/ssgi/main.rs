@@ -103,7 +103,7 @@ fn main() {
         );
 
         let normal_tex = compute_tex(
-            tex_key.with_format(Format::R8G8B8A8_SRGB).half_res(),
+            tex_key.with_format(Format::R8G8B8A8_SNORM).half_res(),
             load_cs(asset!("shaders/extract_gbuffer_view_normal_rgba8.glsl")),
             shader_uniforms!(
                 // Contains view constants at offset 0
