@@ -77,11 +77,7 @@ async fn build_light_gpu_data(
 fn main() {
     let rtoy = Rendertoy::new();
 
-    let tex_key = TextureKey {
-        width: rtoy.width(),
-        height: rtoy.height(),
-        format: Format::R32G32B32A32_SFLOAT,
-    };
+    let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
     //let scene_file = "assets/meshes/flying_trabant.obj.gz";
     //let scene_file = "assets/meshes/veach-mis-scaled.obj";
@@ -111,6 +107,8 @@ fn main() {
         UnitQuaternion::identity(),
     )];
 
+    let mut time = const_f32(0f32).isolate();
+
     //let mut camera =
     //    CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
@@ -134,11 +132,7 @@ fn main() {
     );
 
     let reprojection_tex = compute_tex(
-        TextureKey {
-            width: rtoy.width(),
-            height: rtoy.height(),
-            format: Format::R16G16B16A16_SFLOAT,
-        },
+        tex_key.with_format(Format::R16G16B16A16_SFLOAT),
         load_cs(asset!("shaders/reproject.glsl")),
         shader_uniforms!(constants: reproj_constants.clone(), inputTex: gbuffer_tex.clone(),),
     );
@@ -149,6 +143,7 @@ fn main() {
             load_cs(asset!("shaders/rt_stochastic_lighting.glsl")),
             shader_uniforms!(
                 constants: constants_buf.clone(),
+                time_seconds: time.clone(),
                 inputTex: gbuffer_tex.clone(),
                 :upload_raster_mesh(make_raster_mesh(scene.clone())),
                 :upload_bvh(bvh.clone()),
@@ -160,10 +155,10 @@ fn main() {
             load_cs(asset!("shaders/rt_stochastic_light_sampling.glsl")),
             shader_uniforms!(
                 constants: constants_buf.clone(),
+                time_seconds: time.clone(),
                 inputTex: gbuffer_tex.clone(),
                 :upload_raster_mesh(make_raster_mesh(scene.clone())),
                 :upload_bvh(bvh.clone()),
-                //"": lights,
                 blue_noise_tex: load_tex_with_params(
                     //asset!("rendertoy::images/noise/blue_noise_2d_toroidal_64.png"), TexParams {
                         asset!("images/bluenoise/256_256/LDR_RGBA_0.png"), TexParams {
@@ -177,6 +172,7 @@ fn main() {
             tex_key,
             load_cs(asset!("shaders/stochastic_light_variance_estimate.glsl")),
             shader_uniforms!(
+                constants: constants_buf.clone(),
                 g_primaryVisTex: gbuffer_tex.clone(),
                 inputTex: out_tex.clone(),
                 historyTex: variance_estimate.clone(),
@@ -191,6 +187,7 @@ fn main() {
                 //"g_frameIndex": frame_index,
                 //"g_mouseX": mouse_x,
                 constants: constants_buf.clone(),
+                time_seconds: time.clone(),
                 g_primaryVisTex: gbuffer_tex,
                 g_lightSamplesTex: out_tex,
                 g_varianceEstimate: variance_estimate,
@@ -216,8 +213,13 @@ fn main() {
         shader_uniforms!(inputTex: out_tex, varianceTex: variance_estimate2,),
     );
 
-    let mut temporal_accum =
-        rtoy_samples::accumulate_reproject_temporally(out_tex, reprojection_tex, tex_key);
+    let mut taa_constants = upload_buffer(Vector2::new(0.0, 0.0)).isolate();
+    let mut temporal_accum = rtoy_samples::accumulate_reproject_temporally(
+        out_tex,
+        reprojection_tex,
+        tex_key,
+        taa_constants.clone(),
+    );
 
     // Finally, chain a post-process sharpening effect to the output.
     let out_tex = compute_tex(
@@ -230,6 +232,7 @@ fn main() {
     );
 
     let mut frame_idx = 0u32;
+    let mut t = 0.0f32;
     let mut prev_world_to_clip = Matrix4::identity();
 
     rtoy.draw_forever(|frame_state| {
@@ -253,6 +256,7 @@ fn main() {
             0.333 * rng.sample::<f32, _>(StandardNormal),
             0.333 * rng.sample::<f32, _>(StandardNormal),
         );
+        taa_constants.rebind(upload_buffer(jitter));
 
         // Calculate the new viewport constants from the latest state
         let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
@@ -268,6 +272,9 @@ fn main() {
             view_constants: ViewConstants::build(&camera, tex_key.width, tex_key.height).finish(),
             prev_world_to_clip,
         }));
+
+        t += frame_state.dt;
+        time.rebind(const_f32(t));
 
         let m = camera.calc_matrices();
         prev_world_to_clip = m.view_to_clip * m.world_to_view;

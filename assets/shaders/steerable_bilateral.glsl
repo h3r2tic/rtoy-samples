@@ -1,8 +1,8 @@
 #include "rendertoy::shaders/random.inc"
 
 uniform restrict writeonly image2D outputTex;
-uniform sampler2D inputTex;
-uniform sampler2D varianceTex;
+uniform texture2D inputTex;
+uniform texture2D varianceTex;
 
 layout(std430) buffer constants {
     float sharpen_amount;

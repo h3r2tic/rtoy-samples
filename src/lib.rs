@@ -50,6 +50,7 @@ pub fn accumulate_reproject_temporally(
     input: SnoozyRef<Texture>,
     reprojection_tex: SnoozyRef<Texture>,
     tex_key: TextureKey,
+    taa_constants: SnoozyRef<Buffer>,
 ) -> TemporalAccumulation {
     let temporal_blend = const_f32(1f32).isolate();
     let mut accum_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
@@ -60,6 +61,7 @@ pub fn accumulate_reproject_temporally(
             inputTex: input,
             historyTex: accum_tex.clone(),
             reprojectionTex: reprojection_tex,
+            constants: taa_constants,
         ),
     ));
 

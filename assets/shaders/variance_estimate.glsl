@@ -1,11 +1,16 @@
 #include "inc/uv.inc"
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform sampler2D inputTex;
-uniform sampler2D historyTex;
-uniform sampler2D reprojectionTex;
+uniform texture2D inputTex;
+uniform texture2D historyTex;
+uniform texture2D reprojectionTex;
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+};
+
+uniform sampler linear_sampler;
 
 float calculate_luma(vec3 col) {
 	return dot(vec3(0.299, 0.587, 0.114), col);
@@ -19,7 +24,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     vec4 contrib = vec4(0.0);
 
     vec4 reproj = texelFetch(reprojectionTex, pix, 0);
-    vec4 history = textureLod(historyTex, uv + reproj.xy, 0);
+    vec4 history = textureLod(sampler2D(historyTex, linear_sampler), uv + reproj.xy, 0);
 
     float ex = calculate_luma(texelFetch(inputTex, pix, 0).rgb);
     ex = sqrt(ex);

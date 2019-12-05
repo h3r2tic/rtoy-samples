@@ -7,11 +7,10 @@
 #include "inc/pack_unpack.inc"
 #include "inc/brdf.inc"
 
-uniform sampler2D inputTex;
-uniform sampler2D blue_noise_tex;
+uniform texture2D inputTex;
+uniform texture2D blue_noise_tex;
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
     ViewConstants view_constants;
@@ -20,6 +19,11 @@ layout(std430) buffer constants {
 
 layout(std430) buffer mesh_vertex_buf {
     VertexPacked vertices[];
+};
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+    float time_seconds;
 };
 
 struct LightTriangle {
@@ -43,24 +47,27 @@ layout(std430) buffer light_count_buf {
     uint tri_light_count;
 };
 
-const uint light_count = 1;
-
+const uint light_count = 3;
 Triangle get_light_source(uint idx) {
-    LightTriangle lt = light_triangles[idx];
-
     Triangle tri;
 
-    //*
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 2.0 + 1.4;
-    //float a = float(idx) * 1.0 / float(light_count) + float(frame_idx) * 0.005 * 0.0 + 0.0;
-    vec3 offset = vec3(cos(a), -0.5, sin(a)) * 300.0;
+    float a = float(idx) * TWO_PI / float(light_count) + float(time_seconds) * 0.5 + 1.4;
+    vec3 offset = vec3(cos(a), 0.0, sin(a)) * 350.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 10.0 * sqrt(2.0) / 2.0;
-    vec3 up = vec3(0.0, 1.0, 0.0) * 300.0;
+    vec3 up = vec3(0.0, 1.0, 0.0) * 400.0;
 
     tri.v = offset;
     tri.e0 = side + up;
     tri.e1 = -side + up;
-    /*/
+
+    return tri;
+}
+
+/*Triangle get_light_source(uint idx) {
+    LightTriangle lt = light_triangles[idx];
+
+    Triangle tri;
+
     vec3 a = vec3(lt.data[0], lt.data[1], lt.data[2]);
     vec3 b = vec3(lt.data[3], lt.data[4], lt.data[5]);
     vec3 c = vec3(lt.data[6], lt.data[7], lt.data[8]);
@@ -68,10 +75,9 @@ Triangle get_light_source(uint idx) {
     tri.v = a;
     tri.e0 = b - a;
     tri.e1 = c - a;
-    //*/
 
     return tri;
-}
+}*/
 
 
 const float light_intensity_scale = 30.0;

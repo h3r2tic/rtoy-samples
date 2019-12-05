@@ -35,21 +35,13 @@ fn main() {
 
     let mut sky_constants = upload_buffer(0u32).isolate();
     let sky_octa_tex = compute_tex(
-        TextureKey::new(
-            128,
-            128,
-            Format::R16G16B16A16_SFLOAT,
-        ),
+        TextureKey::new(128, 128, Format::R16G16B16A16_SFLOAT),
         load_cs(asset!("shaders/sky_octamap.glsl")),
         shader_uniforms!(constants: sky_constants.clone()),
     );
 
     let sky_lambert_tex = compute_tex(
-        TextureKey::new(
-            128,
-            128,
-            Format::R16G16B16A16_SFLOAT,
-        ),
+        TextureKey::new(128, 128, Format::R16G16B16A16_SFLOAT),
         load_cs(asset!("shaders/lambert_convolve_octamap.glsl")),
         shader_uniforms!(input_tex: sky_octa_tex.clone()),
     );
@@ -114,7 +106,9 @@ fn main() {
         );
 
         let reprojected_lighting_tex = compute_tex(
-            tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32).half_res(),
+            tex_key
+                .with_format(Format::B10G11R11_UFLOAT_PACK32)
+                .half_res(),
             load_cs(asset!("shaders/ssgi/reproject_lighting.glsl")),
             shader_uniforms!(
                 lightingTex: taa_output,
@@ -156,8 +150,11 @@ fn main() {
             ),
         );
 
-        let temporal_accum =
-            filter_ssgi_temporally(ssgi_tex, reprojection_tex, tex_key.with_format(Format::R16G16B16A16_SFLOAT));
+        let temporal_accum = filter_ssgi_temporally(
+            ssgi_tex,
+            reprojection_tex,
+            tex_key.with_format(Format::R16G16B16A16_SFLOAT),
+        );
 
         let ssgi_tex = temporal_accum.tex.clone();
 

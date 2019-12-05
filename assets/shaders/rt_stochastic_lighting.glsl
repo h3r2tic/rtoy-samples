@@ -21,6 +21,10 @@ layout(std430) buffer mesh_vertex_buf {
     VertexPacked vertices[];
 };
 
+layout(std140) uniform globals {
+    float time_seconds;
+};
+
 Triangle get_light_source() {
     float size = 2000.0;
     Triangle tri;

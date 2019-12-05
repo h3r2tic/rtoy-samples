@@ -9,28 +9,30 @@
 #include "rtoy-rt::shaders/rt.inc"
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
-uniform float g_mouseX;
-#define iMouse vec4(g_mouseX, 0, 0, 0)
+uniform texture2D g_primaryVisTex;
+uniform texture2D g_lightSamplesTex;
+uniform texture2D g_varianceEstimate;
 
-#define iResolution outputTex_size
-
-uniform sampler2D g_primaryVisTex;
-uniform sampler2D g_lightSamplesTex;
-uniform sampler2D g_varianceEstimate;
+layout(std140) uniform globals {
+    vec4 outputTex_size;
+    float g_mouseX;
+    float time_seconds;
+};
 
 layout(std430) buffer constants {
     ViewConstants view_constants;
     uint frame_idx;
 };
 
-const uint light_count = 3;
+#define iMouse vec4(g_mouseX, 0, 0, 0)
+#define iResolution outputTex_size
 
+const uint light_count = 3;
 Triangle get_light_source(uint idx) {
     Triangle tri;
 
-    float a = float(idx) * TWO_PI / float(light_count) + float(frame_idx) * 0.005 * 0.0;
+    float a = float(idx) * TWO_PI / float(light_count) + float(time_seconds) * 0.5 + 1.4;
     vec3 offset = vec3(cos(a), 0.0, sin(a)) * 350.0;
     vec3 side = vec3(-sin(a), 0.0, cos(a)) * 10.0 * sqrt(2.0) / 2.0;
     vec3 up = vec3(0.0, 1.0, 0.0) * 400.0;
