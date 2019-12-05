@@ -6,19 +6,21 @@
 #include "../inc/brdf.inc"
 #include "../inc/atmosphere.inc"
 
-uniform sampler2D gbuffer;
-uniform vec4 gbuffer_size;
-
-uniform sampler2D aoTex;
-uniform sampler2D shadowsTex;
+uniform texture2D gbuffer;
+uniform texture2D aoTex;
+uniform texture2D shadowsTex;
 
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
     ViewConstants view_constants;
     vec4 light_dir_pad;
     uint frame_idx;
+};
+
+layout(std140) uniform globals {
+    vec4 gbuffer_size;
+    vec4 outputTex_size;
 };
 
 vec3 getSkyColor(vec3 rd) {

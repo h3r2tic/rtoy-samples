@@ -12,12 +12,7 @@ struct Constants {
 
 fn main() {
     let rtoy = Rendertoy::new();
-
-    let tex_key = TextureKey {
-        width: rtoy.width(),
-        height: rtoy.height(),
-        format: Format::R32G32B32A32_SFLOAT,
-    };
+    let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
     let mesh = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
     let bvh = vec![

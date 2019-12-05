@@ -7,14 +7,16 @@
 #include "inc/pack_unpack.inc"
 #include "inc/brdf.inc"
 
-uniform sampler2D inputTex;
-
+uniform texture2D inputTex;
 uniform restrict writeonly image2D outputTex;
-uniform vec4 outputTex_size;
 
 layout(std430) buffer constants {
     ViewConstants view_constants;
     uint frame_idx;
+};
+
+layout(std140) uniform globals {
+    vec4 outputTex_size;
 };
 
 layout(std430) buffer mesh_vertex_buf {
