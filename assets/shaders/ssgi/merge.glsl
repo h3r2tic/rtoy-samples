@@ -79,7 +79,7 @@ void main() {
     {
         uint seed0 = hash(hash(pix.x) ^ pix.y);
         float rnd = rand_float(seed0);
-        result.rgb += (rnd - 0.5) / 256.0;
+        result.rgb += (rnd - 0.5) / 512.0;
     }
 
     imageStore(outputTex, pix, vec4(result, 1));
