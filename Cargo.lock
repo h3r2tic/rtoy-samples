@@ -97,7 +97,6 @@ dependencies = [
 [[package]]
 name = "ash-imgui"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#06f061241cf96ffbba7a9f3d3184d3a32cc517dc"
 dependencies = [
  "arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)",
@@ -1496,12 +1495,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#06f061241cf96ffbba7a9f3d3184d3a32cc517dc"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)",
- "ash-imgui 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
+ "ash-imgui 0.1.0",
  "ash-window 0.1.0 (git+https://github.com/norse-rs/ash-window.git)",
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo_metadata 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1581,7 +1579,7 @@ dependencies = [
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)",
  "half 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
+ "rendertoy 0.1.0",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
  "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
  "static_assertions 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1595,7 +1593,7 @@ dependencies = [
  "futures-preview 0.3.0-alpha.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_distr 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)",
+ "rendertoy 0.1.0",
  "rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
  "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
@@ -2258,7 +2256,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum approx 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f0e60b75072ecd4168020818c0107f2857bb6c4e64252d8d3983f6263b40a5c3"
 "checksum arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
 "checksum ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)" = "<none>"
-"checksum ash-imgui 0.1.0 (git+https://github.com/h3r2tic/rendertoy)" = "<none>"
 "checksum ash-window 0.1.0 (git+https://github.com/norse-rs/ash-window.git)" = "<none>"
 "checksum async-trait 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)" = "8b6dd385bb33043b833ba049048d57bdbb4d654a121ed68c71871ca51ff67070"
 "checksum atty 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)" = "1803c647a3ec87095e7ae7acfca019e98de5ec9a7d01343f611cf3152ed71a90"
@@ -2421,7 +2418,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum regex-automata 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "92b73c2a1770c255c240eaa4ee600df1704a38dc3feaa6e949e7fcd4f8dc09f9"
 "checksum regex-syntax 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)" = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 "checksum relative-path 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bedde000f40f2921ce439ea165c9c53fd629bfa115140c72e22aceacb4a21954"
-"checksum rendertoy 0.1.0 (git+https://github.com/h3r2tic/rendertoy)" = "<none>"
 "checksum rle-decode-fast 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cabe4fa914dec5870285fa7f71f602645da47c486e68486d2b4ceb4a343e90ac"
 "checksum rpmalloc 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "7905258352321550be523d7efe6d23687fc272e980f85fedffcb42509300c715"
 "checksum rpmalloc-sys 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "09db55ff6b15a1f271249e28d37e54a8e5a98e4e6391ad57c4fba85abc990221"

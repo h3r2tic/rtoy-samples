@@ -409,7 +409,8 @@ void main() {
         seed0 = hash(seed0 + 15488981u * uint(pix.x));
         seed0 = seed0 + 1302391u * uint(pix.y);
 
-#define ADAPTIVE true
+// Adaptive doesn't deal with >1 lights right now
+#define ADAPTIVE false
 
         //const uint light_sample_count_sqrt = 1;
         //const uint light_sample_count = light_sample_count_sqrt * light_sample_count_sqrt;
