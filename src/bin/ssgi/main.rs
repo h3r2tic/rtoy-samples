@@ -1,6 +1,3 @@
-#![feature(link_args)]
-rtoy_request_discrete_gpu!();
-
 use rendertoy::*;
 use rtoy_rt::*;
 use rtoy_samples::{rt_shadows::*, taa::*};
