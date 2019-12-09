@@ -98,12 +98,12 @@ impl RtShadows {
             tex_key.with_format(Format::R8_UNORM),
             load_cs(asset!("shaders/hybrid-adaptive-shadows/merge_shadows.glsl")),
             shader_uniforms!(
-                constants: rt_constants_buf.clone(),
+                //constants: rt_constants_buf.clone(),
                 //gbufferTex: gbuffer_tex.clone(),
                 halfresShadowsTex: halfres_shadow_tex.clone(),
                 discontinuityTex: discontinuity_tex.clone(),
                 sparseShadowsTex: sparse_shadow_tex.clone(),
-                :gpu_bvh.clone(),
+                //:gpu_bvh.clone(),
             ),
         );
 

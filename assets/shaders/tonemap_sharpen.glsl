@@ -10,7 +10,6 @@ float calculate_luma(vec3 col) {
 }
 
 float tonemap_curve(float v) {
-    // Similar in shape, but more linear (less compression) in the mids
     float c = v + v*v + 0.5*v*v*v;
     return c / (1.0 + c);
 }

@@ -125,7 +125,7 @@ fn main() {
                 reprojectedLightingTex: reprojected_lighting_tex.clone(),
                 depthTex: depth_tex.clone(),
                 normalTex: normal_tex.clone(),
-                :bvh.clone(),
+                //:bvh.clone(),
             ),
         );
 
@@ -143,10 +143,8 @@ fn main() {
             tex_key.with_format(Format::R16G16B16A16_SFLOAT),
             load_cs(asset!("shaders/ssgi/upsample.glsl")),
             shader_uniforms!(
-                constants: ao_constants_buf.clone(),
                 gbufferTex: gbuffer_tex.clone(),
                 ssgiTex: ssgi_tex,
-                :bvh.clone(),
             ),
         );
 
