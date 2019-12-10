@@ -6,9 +6,8 @@ use rtoy_rt::*;
 #[derive(Clone, Copy)]
 #[repr(C)]
 struct Constants {
-    frame_idx: u32,
-    pad: [u32; 3],
     view_constants: ViewConstants,
+    frame_idx: u32,
 }
 
 fn main() {
@@ -116,7 +115,7 @@ fn main() {
         // Calculate the new viewport constants from the latest state
         let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
-            .finish();
+            .build();
 
         temporal_accum.prepare_frame(&view_constants, frame_state, frame_idx);
 
@@ -126,9 +125,8 @@ fn main() {
         // and causes the next frame to be rendered.
 
         viewport_constants_buf.rebind(upload_buffer(Constants {
-            frame_idx,
-            pad: [0; 3],
             view_constants,
+            frame_idx,
         }));
 
         frame_idx += 1;

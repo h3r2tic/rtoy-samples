@@ -261,7 +261,7 @@ fn main() {
         // Calculate the new viewport constants from the latest state
         let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
-            .finish();
+            .build();
 
         constants_buf.rebind(upload_buffer(Constants {
             view_constants,
@@ -269,7 +269,7 @@ fn main() {
         }));
 
         reproj_constants.rebind(upload_buffer(ReprojConstants {
-            view_constants: ViewConstants::build(&camera, tex_key.width, tex_key.height).finish(),
+            view_constants: ViewConstants::build(&camera, tex_key.width, tex_key.height).build(),
             prev_world_to_clip,
         }));
 

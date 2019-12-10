@@ -7,9 +7,8 @@
 uniform restrict writeonly image2D outputTex;
 
 layout(std430) buffer constants {
-    uint frame_idx;
-    uint pad[3];
     ViewConstants view_constants;
+    uint frame_idx;
 };
 
 layout(std140) uniform globals {
@@ -28,11 +27,11 @@ void main() {
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
     vec4 ray_origin_cs = vec4(uv_to_cs(uv), 1.0, 1.0);
-    vec4 ray_origin_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_origin_cs);
+    vec4 ray_origin_ws = view_constants.view_to_world * (view_constants.sample_to_view * ray_origin_cs);
     ray_origin_ws /= ray_origin_ws.w;
 
     vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
-    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.clip_to_view * ray_dir_cs);
+    vec4 ray_dir_ws = view_constants.view_to_world * (view_constants.sample_to_view * ray_dir_cs);
     vec3 v = -normalize(ray_dir_ws.xyz);
 
     Ray r;

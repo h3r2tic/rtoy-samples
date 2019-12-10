@@ -48,7 +48,7 @@ fn main() {
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
 
-        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).finish();
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).build();
 
         raster_constants_buf.rebind(upload_buffer(view_constants));
 

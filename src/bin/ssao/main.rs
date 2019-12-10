@@ -39,7 +39,7 @@ fn main() {
         camera.update(frame_state);
 
         // Calculate the new viewport constants from the latest state
-        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).finish();
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).build();
 
         ssao.prepare_frame(&view_constants, &frame_state, frame_idx);
 

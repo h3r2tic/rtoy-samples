@@ -259,7 +259,7 @@ fn main() {
 
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
-        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).finish();
+        let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).build();
 
         if (frame_state.mouse.button_mask & 1) != 0 {
             theta += (frame_state.mouse.delta.x / frame_state.window_size_pixels.0 as f32)

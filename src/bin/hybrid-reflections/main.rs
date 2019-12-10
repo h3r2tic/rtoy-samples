@@ -97,7 +97,7 @@ fn main() {
         // Calculate the new viewport constants from the latest state
         let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height)
             .pixel_offset(jitter)
-            .finish();
+            .build();
 
         temporal_accum.prepare_frame(&view_constants, frame_state, frame_idx);
 
