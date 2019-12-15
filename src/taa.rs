@@ -82,7 +82,7 @@ impl Taa {
             load_cs(asset!("shaders/taa.glsl")),
             shader_uniforms!(
                 inputTex: color_tex,
-                historyTex: self.temporal_accum.tex.clone(),
+                historyTex: self.temporal_accum.tex.prev(),
                 reprojectionTex: reprojection_tex,
                 constants: self.taa_constants.clone(),
             ),

@@ -108,7 +108,7 @@ fn main() {
                 .half_res(),
             load_cs(asset!("shaders/ssgi/reproject_lighting.glsl")),
             shader_uniforms!(
-                lightingTex: taa_output,
+                lightingTex: taa_output.prev(),
                 reprojectionTex: reprojection_tex.clone(),
             ),
         );
@@ -303,7 +303,7 @@ fn filter_ssgi_temporally(
         load_cs(asset!("shaders/ssgi/temporal_filter.glsl")),
         shader_uniforms!(
             inputTex: input,
-            historyTex: accum_tex.clone(),
+            historyTex: accum_tex.prev(),
             reprojectionTex: reprojection_tex,
         ),
     ));

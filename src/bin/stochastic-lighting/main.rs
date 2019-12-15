@@ -21,8 +21,8 @@ struct ReprojConstants {
 }
 
 #[snoozy]
-async fn build_light_gpu_data(
-    ctx: Context,
+async fn build_light_gpu_data_snoozy(
+    mut ctx: Context,
     mesh: &SnoozyRef<TriangleMesh>,
 ) -> Result<ShaderUniformBundle> {
     let mesh = ctx.get(mesh).await?;
@@ -175,7 +175,7 @@ fn main() {
                 constants: constants_buf.clone(),
                 g_primaryVisTex: gbuffer_tex.clone(),
                 inputTex: out_tex.clone(),
-                historyTex: variance_estimate.clone(),
+                historyTex: variance_estimate.prev(),
                 reprojectionTex: reprojection_tex.clone(),
             ),
         ));
@@ -202,7 +202,7 @@ fn main() {
         load_cs(asset!("shaders/variance_estimate.glsl")),
         shader_uniforms!(
             inputTex: out_tex.clone(),
-            historyTex: variance_estimate2.clone(),
+            historyTex: variance_estimate2.prev(),
             reprojectionTex: reprojection_tex.clone(),
         ),
     ));

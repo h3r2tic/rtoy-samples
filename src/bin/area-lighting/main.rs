@@ -83,7 +83,7 @@ fn main() {
         load_cs(asset!("shaders/area-lighting/temporal_accum.glsl")),
         shader_uniforms!(
             g_filteredLightingTex: fused_lighting_tex.clone(),
-            g_prevOutputTex: accum_lighting_tex.clone(),
+            g_prevOutputTex: accum_lighting_tex.prev(),
         ),
     ));
 

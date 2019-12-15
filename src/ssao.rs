@@ -12,7 +12,7 @@ fn filter_ssao_temporally(
         load_cs(asset!("shaders/ssao_temporal_filter.glsl")),
         shader_uniforms!(
             inputTex: input,
-            historyTex: accum_tex.clone(),
+            historyTex: accum_tex.prev(),
             reprojectionTex: reprojection_tex,
         ),
     ));

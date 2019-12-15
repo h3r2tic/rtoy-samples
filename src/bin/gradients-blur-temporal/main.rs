@@ -23,17 +23,12 @@ fn main() {
     );
 
     let mut temporal_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
-    /*let mut temporal_tex = compute_tex(
-        tex_key,
-        load_cs(asset!("shaders/gradients.glsl")),
-        shader_uniforms!(),
-    ).isolate();*/
 
     temporal_tex.rebind(compute_tex(
         tex_key,
         load_cs(asset!("shaders/blend.glsl")),
         shader_uniforms!(
-            inputTex1: temporal_tex.clone(),
+            inputTex1: temporal_tex.prev(),
             inputTex2: blurred_tex,
             blendAmount: 0.02f32,
         ),

@@ -97,7 +97,7 @@ dependencies = [
 [[package]]
 name = "ash-imgui"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#5f9614df0e2d8af6a7bde723776fa90dfc370059"
+source = "git+https://github.com/h3r2tic/rendertoy#1667830eb75c9efba918a23bfc52d49e2ab6402e"
 dependencies = [
  "arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ash 0.29.0 (git+https://github.com/MaikKlein/ash.git)",
@@ -1537,7 +1537,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "rendertoy"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rendertoy#5f9614df0e2d8af6a7bde723776fa90dfc370059"
+source = "git+https://github.com/h3r2tic/rendertoy#1667830eb75c9efba918a23bfc52d49e2ab6402e"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1616,7 +1616,7 @@ dependencies = [
 [[package]]
 name = "rtoy-rt"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/rtoy-rt#a206cfc75e5a2f29f903415d0d76a60cb1de423f"
+source = "git+https://github.com/h3r2tic/rtoy-rt#6a53304f2b0e1a7af7d5cacebd44286c63506e93"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1808,7 +1808,7 @@ dependencies = [
 [[package]]
 name = "snoozy"
 version = "0.1.1"
-source = "git+https://github.com/h3r2tic/snoozy#ba5187745cac6afe554b4bbadaa17ec2da2704ae"
+source = "git+https://github.com/h3r2tic/snoozy#d8e75bd8d3bd6505f1f7beb64bd48168bf131ba6"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "async-trait 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1816,6 +1816,7 @@ dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "petgraph 0.4.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "pretty-bytes 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1826,7 +1827,7 @@ dependencies = [
 [[package]]
 name = "snoozy-macros"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/snoozy-macros#450af27de5c23eb40c0cee7bdd06b7045cad4ab6"
+source = "git+https://github.com/h3r2tic/snoozy-macros#d0f1e1d917d81e0eafd932ce4492d630db2e85e0"
 dependencies = [
  "darling 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
