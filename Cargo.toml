@@ -22,11 +22,11 @@ futures-preview = { version = "=0.3.0-alpha.19", features = ["compat"] }
 #[patch."https://github.com/h3r2tic/rtoy-rt"]
 #rtoy-rt = { path = "../rtoy-rt" }
 # 
-#[patch."https://github.com/h3r2tic/rendertoy"]
-#rendertoy = { path = "../rendertoy" }
+[patch."https://github.com/h3r2tic/rendertoy"]
+rendertoy = { path = "../rendertoy" }
 # 
-#[patch."https://github.com/h3r2tic/snoozy"]
-#snoozy = { path = "../snoozy" }
+[patch."https://github.com/h3r2tic/snoozy"]
+snoozy = { path = "../snoozy" }
 # 
 #[patch."https://github.com/h3r2tic/snoozy-macros"]
 #snoozy-macros = { path = "../snoozy-macros" }

@@ -243,11 +243,42 @@ fn main() {
         }
     });
 
-    let out_tex = compute_tex(
+    /*let out_tex = compute_tex(
         tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
         load_cs(asset!("shaders/tonemap_sharpen.glsl")),
         shader_uniforms!(
             inputTex: taa.get_output_tex(),
+            sharpen_amount: 0.4f32,
+        ),
+    );*/
+
+    let out_tex = taa.get_output_tex();
+    let orig_lum_tex = compute_tex(
+        tex_key.with_format(Format::R32G32_SFLOAT),
+        load_cs(asset!("shaders/extract_log_luminance.glsl")),
+        shader_uniforms!(inputTex: out_tex.clone(),),
+    );
+
+    let mut lum_tex = orig_lum_tex.clone();
+
+    for i in 0..7 {
+        lum_tex = compute_tex(
+            tex_key.with_format(Format::R32G32_SFLOAT),
+            load_cs(asset!("shaders/luminance-a-trous.glsl")),
+            shader_uniforms!(
+                inputTex: lum_tex,
+                origInputTex: orig_lum_tex.clone(),
+                px_skip: 1 << (6-i),
+            ),
+        );
+    }
+
+    let out_tex = compute_tex(
+        tex_key,
+        load_cs(asset!("shaders/local_tonemap_sharpen.glsl")),
+        shader_uniforms!(
+            inputTex: out_tex,
+            filteredLogLumTex: lum_tex,
             sharpen_amount: 0.4f32,
         ),
     );

@@ -1,3 +1,6 @@
+#include "rendertoy::shaders/random.inc"
+#include "rendertoy::shaders/sampling.inc"
+
 uniform restrict writeonly layout(binding = 0) image2D outputTex;
 uniform layout(binding = 1) texture2D inputTex;
 layout(std140, binding = 2) uniform globals {
@@ -51,7 +54,41 @@ float sharpen_inv_remap(float l) {
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
-	vec4 col = texelFetch(inputTex, pix, 0);
+
+    float premult = 0.75;
+	vec4 col = texelFetch(inputTex, pix, 0) * premult;
+
+    #if 1
+    float center_lum = calculate_luma(col.rgb);
+    float center_log_lum = log(max(1e-10, calculate_luma(col.rgb)));
+    vec2 local_lum = 0.0.xx;
+
+    uint seed0 = hash(23943241 + pix.x + pix.y * 3842081);
+
+    for (int i = 0; i < 256; ++i) {
+        float r0 = rand_float(seed0);
+        seed0 = hash(seed0);
+        float r1 = rand_float(seed0);
+        seed0 = hash(seed0);
+
+        float theta = r0 * 3.14159265 * 2.0;
+        vec2 off = vec2(cos(theta), sin(theta)) * r1;
+        //vec2 off = vec2(r0, r1) - 0.5;
+
+        float l = log(max(1e-10, calculate_luma(texelFetch(inputTex, pix + ivec2(off * 200.0), 0).rgb) * premult));
+        l = clamp(l, -1, 1);
+        float w = exp2(-r1*r1 * 3.0);
+        float edge = center_log_lum - l;
+        w *= exp2(-edge * edge * 0.2);
+        local_lum += vec2(l, 1) * w;
+    }
+
+    local_lum.x /= local_lum.y;
+    local_lum.x = exp(local_lum.x);
+    float mult = 0.5 / local_lum.x;
+    mult = mix(mult, 1, 0.1);
+    col *= mult;
+    //col *= 100;
 
 #if 1
 	float neighbors = 0;
@@ -82,9 +119,13 @@ void main() {
 	col.rgb *= max(0.0, sharpened_luma / max(1e-5, calculate_luma(col.rgb)));
 #endif
 
+#endif
+
+    //col.rgb *= 1000;
     col.rgb = neutral_tonemap(col.rgb);
     //col.r = col.a * 10.0;
     //col.rgb = 1.0 - exp(-col.rgb);
+    //col.rgb = local_lum.xxx;
 
 	imageStore(outputTex, pix, col);
 }
