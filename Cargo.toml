@@ -17,27 +17,24 @@ snoozy-macros = { git = "https://github.com/h3r2tic/snoozy-macros" }
 rand = { version = "0.7", features = ["small_rng"] }
 rand_distr = "0.2"
 aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }
-futures-preview = { version = "=0.3.0-alpha.19", features = ["compat"] }
+futures = { version = "0.3.5"}
 
-[patch."https://github.com/h3r2tic/rtoy-rt"]
-rtoy-rt = { path = "../rtoy-rt" }
+#[patch."https://github.com/h3r2tic/rtoy-rt"]
+#rtoy-rt = { path = "../rtoy-rt" }
 # 
-[patch."https://github.com/h3r2tic/rendertoy"]
-rendertoy = { path = "../rendertoy" }
+#[patch."https://github.com/h3r2tic/rendertoy"]
+#rendertoy = { path = "../rendertoy" }
 # 
-[patch."https://github.com/h3r2tic/snoozy"]
-snoozy = { path = "../snoozy" }
+#[patch."https://github.com/h3r2tic/snoozy"]
+#snoozy = { path = "../snoozy" }
 # 
 #[patch."https://github.com/h3r2tic/snoozy-macros"]
 #snoozy-macros = { path = "../snoozy-macros" }
 
 [patch.crates-io]
-vk-mem = { git = "https://github.com/h3r2tic/vk-mem-rs.git" }  # Forked for static CRT on Windows
+ash = { git = "https://github.com/MaikKlein/ash.git", rev = "0b68927" }
 spirv-reflect = { git = "https://github.com/h3r2tic/spirv-reflect-rs.git" }  # Fixed a crash
-#spirv-reflect = { git = "https://github.com/gwihlidal/spirv-reflect-rs.git", branch = "pure" }
-rspirv = { git = "https://github.com/gfx-rs/rspirv.git", revision = "07be249" } # Official crate hasn't been updated in a while
-spirv_headers = { git = "https://github.com/gfx-rs/rspirv.git", revision = "07be249" }  # Must match rspirv
-ash = { git = "https://github.com/MaikKlein/ash.git", revision = "0b68927" }
+vk-mem = { git = "https://github.com/h3r2tic/vk-mem-rs.git" }  # Forked for static CRT on Windows
 
 [profile.dev]
 lto = false
