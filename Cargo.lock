@@ -1562,7 +1562,7 @@ dependencies = [
  "shader-prepper 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "shaderc 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "snoozy 0.1.1",
- "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
+ "snoozy-macros 0.1.0",
  "spirv-reflect 0.2.3 (git+https://github.com/h3r2tic/spirv-reflect-rs.git)",
  "spirv_headers 1.4.1 (git+https://github.com/gfx-rs/rspirv.git)",
  "tokio 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1618,7 +1618,7 @@ dependencies = [
  "half 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0",
  "snoozy 0.1.1",
- "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
+ "snoozy-macros 0.1.0",
  "static_assertions 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1633,7 +1633,7 @@ dependencies = [
  "rendertoy 0.1.0",
  "rtoy-rt 0.1.0",
  "snoozy 0.1.1",
- "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
+ "snoozy-macros 0.1.0",
 ]
 
 [[package]]
@@ -1820,7 +1820,6 @@ dependencies = [
 [[package]]
 name = "snoozy-macros"
 version = "0.1.0"
-source = "git+https://github.com/h3r2tic/snoozy-macros#d0f1e1d917d81e0eafd932ce4492d630db2e85e0"
 dependencies = [
  "darling 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2485,7 +2484,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum smallvec 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)" = "f7b0758c52e15a8b5e3691eae6cc559f08eee9406e548a4477ba4e67770a82b6"
 "checksum smallvec 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "44e59e0c9fa00817912ae6e4e6e3c4fe04455e75699d06eedc7d85917ed8e8f4"
 "checksum smithay-client-toolkit 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "2ccb8c57049b2a34d2cc2b203fa785020ba0129d31920ef0d317430adaf748fa"
-"checksum snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)" = "<none>"
 "checksum spirv-reflect 0.2.3 (git+https://github.com/h3r2tic/spirv-reflect-rs.git)" = "<none>"
 "checksum spirv_headers 1.4.1 (git+https://github.com/gfx-rs/rspirv.git)" = "<none>"
 "checksum stable_deref_trait 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "dba1a27d3efae4351c8051072d619e3ade2820635c3958d826bfea39d59b54c8"
