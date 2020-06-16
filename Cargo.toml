@@ -19,17 +19,17 @@ rand_distr = "0.2"
 aliasmethod = { git = "https://github.com/h3r2tic/rust_aliasmethod" }
 futures-preview = { version = "=0.3.0-alpha.19", features = ["compat"] }
 
-#[patch."https://github.com/h3r2tic/rtoy-rt"]
-#rtoy-rt = { path = "../rtoy-rt" }
-# 
-#[patch."https://github.com/h3r2tic/rendertoy"]
-#rendertoy = { path = "../rendertoy" }
-# 
-#[patch."https://github.com/h3r2tic/snoozy"]
-#snoozy = { path = "../snoozy" }
-# 
-#[patch."https://github.com/h3r2tic/snoozy-macros"]
-#snoozy-macros = { path = "../snoozy-macros" }
+[patch."https://github.com/h3r2tic/rtoy-rt"]
+rtoy-rt = { path = "../rtoy-rt" }
+ 
+[patch."https://github.com/h3r2tic/rendertoy"]
+rendertoy = { path = "../rendertoy" }
+ 
+[patch."https://github.com/h3r2tic/snoozy"]
+snoozy = { path = "../snoozy" }
+ 
+[patch."https://github.com/h3r2tic/snoozy-macros"]
+snoozy-macros = { path = "../snoozy-macros" }
 
 [patch.crates-io]
 vk-mem = { git = "https://github.com/h3r2tic/vk-mem-rs.git" }  # Forked for static CRT on Windows
