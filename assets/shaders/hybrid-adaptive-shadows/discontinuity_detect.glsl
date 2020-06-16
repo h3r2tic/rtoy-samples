@@ -12,7 +12,7 @@ void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = get_uv(outputTex_size);
 
-#define METHOD 1
+#define METHOD 2
 
 #if METHOD == 0
 	vec4 col = vec4(0);

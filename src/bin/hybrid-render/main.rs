@@ -106,6 +106,8 @@ fn main() {
 
     let mut frame_idx = 0;
     //let mut light_angle = 1.7f32;
+
+    #[allow(unused_mut)]
     let mut light_angle = 0.0f32;
 
     rtoy.draw_forever(|frame_state| {

@@ -54,7 +54,8 @@ void main() {
     vec4 gbuffer = texelFetch(gbuffer, pix, 0);
 
     vec3 result = vec3(0, 0, 0);
-    vec3 sun_color = sample_quantized_environment_light(light_dir_pad.xyz) * vec3(1.4, 1, 0.8) * 2.0;
+    vec3 sun_color = sample_quantized_environment_light(light_dir_pad.xyz) * vec3(1.3, 1, 0.7) * 2.0;
+    //vec3 sun_color = sample_quantized_environment_light(light_dir_pad.xyz) * 2.0;
 
     if (gbuffer.a == 0.0) {
         result = textureLod(sampler2D(skyTex, linear_sampler), uv, 0.0).rgb;
@@ -64,6 +65,8 @@ void main() {
         vec3 env_color = sample_lambert_convolved_environment_light(normal);
 
         vec4 ssgi = texelFetch(aoTex, pix, 0);
+        //ssgi = vec4(0, 0, 0, 1);
+
         result += albedo * env_color * ssgi.a;
         result += albedo * ssgi.rgb;
 
