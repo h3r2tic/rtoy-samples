@@ -14,13 +14,24 @@ fn main() {
 
     let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
-    let mesh = load_gltf_scene(
+    /*let mesh = load_gltf_scene(
         asset!("meshes/pica_pica_-_mini_diorama_01/scene.gltf"),
         20.0,
-    );
+    );*/
+    //let mesh = load_gltf_scene(asset!("meshes/low_poly_isometric_rooms/scene.gltf"), 50.0);
+    //let mesh = load_gltf_scene(asset!("meshes/unity-pbr-props/Props.gltf"), 100.0);
+    let env_mesh = load_gltf_scene(asset!("meshes/RpgPackLite/RpgPackLite.gltf"), 100.0);
+    let mesh = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 2.0);
+
+    /*let mesh = load_gltf_scene(
+        asset!("meshes/robin_hood_in_sherwood_forest/scene.gltf"),
+        1.0,
+    );*/
+
     //let mesh = load_gltf_scene(asset!("meshes/cornell_box/scene.gltf"), 50.0);
-    let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
-    let bvh = upload_bvh(scene.clone());
+
+    let mut bvh = upload_bvh(vec![]).isolate();
+    let mut raster_scene = upload_dynamic_raster_scene(vec![]).isolate();
 
     let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
@@ -44,8 +55,13 @@ fn main() {
     );
 
     let mut taa = Taa::new(tex_key);
+    #[allow(unused_variables)]
     let taa_output = taa.get_output_tex();
+    let mut merged_ligthing_tex = load_tex(asset!("rendertoy::images/black.png")).isolate();
 
+    #[allow(unused_variables)]
+    let bvh_clone = bvh.clone();
+    let raster_scene_clone = raster_scene.clone();
     taa.setup(|sub_passes| {
         let mut prev_world_to_clip = Matrix4::identity();
 
@@ -69,7 +85,7 @@ fn main() {
             ]),
             shader_uniforms!(
                 constants: raster_constants_buf.clone(),
-                :upload_raster_scene(&scene)
+                :raster_scene_clone
             ),
         );
 
@@ -108,7 +124,7 @@ fn main() {
                 .half_res(),
             load_cs(asset!("shaders/ssgi/reproject_lighting.glsl")),
             shader_uniforms!(
-                lightingTex: taa_output.prev(),
+                lightingTex: merged_ligthing_tex.prev(),
                 reprojectionTex: reprojection_tex.clone(),
             ),
         );
@@ -157,13 +173,13 @@ fn main() {
             .add(RtShadows::new(
                 tex_key,
                 gbuffer_tex.clone(),
-                bvh,
+                bvh.clone(),
                 light_controller.clone(),
             ))
             .get_output_tex();
 
         // lighting_tex.rebind
-        let lighting_tex = compute_tex(
+        merged_ligthing_tex.rebind(compute_tex(
             tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
             load_cs(asset!("shaders/ssgi/merge.glsl")),
             shader_uniforms!(
@@ -174,7 +190,7 @@ fn main() {
             skyTex: sky_tex,
             skyLambertTex: sky_lambert_tex,
             constants: merge_constants_buf.clone()),
-        );
+        ));
 
         /*let out_tex = compute_tex(
             tex_key.with_format(Format::B10G11R11_UFLOAT_PACK32),
@@ -185,7 +201,8 @@ fn main() {
             ),
         );*/
 
-        let out_tex = lighting_tex;
+        //merged_ligthing_tex.rebind(lighting_tex);
+        let out_tex = merged_ligthing_tex.clone();
 
         let light_controller = light_controller.clone();
 
@@ -316,6 +333,22 @@ fn main() {
         taa.prepare_frame(&view_constants, frame_state, frame_idx);
 
         sky_constants.rebind(upload_buffer(light_dir));
+
+        let scene = vec![
+            (
+                env_mesh.clone(),
+                Vector3::zeros(),
+                UnitQuaternion::identity(),
+            ),
+            (
+                mesh.clone(),
+                Vector3::new((frame_idx as f32 * 0.02).sin() * 50.0, 0.0, 0.0),
+                UnitQuaternion::identity(),
+            ),
+        ];
+
+        bvh.rebind(upload_bvh(scene.clone()));
+        raster_scene.rebind(upload_dynamic_raster_scene(scene.clone()));
 
         frame_idx += 1;
         out_tex.clone()

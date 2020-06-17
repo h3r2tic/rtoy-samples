@@ -10,8 +10,8 @@ fn main() {
     let tex = compute_tex!(
         "EV shift",
         tex_key,
-        //#tex: load_tex(asset!("images/cornell_box_render.jpg")),
-        #tex: load_tex(asset!("images/living_room.hdr")),
+        #tex: load_tex(asset!("images/cornell_box_render.jpg")),
+        //#tex: load_tex(asset!("images/living_room.hdr")),
         .rgb = @tex.rgb * exp((#mouse_x - 0.5) * 20.0)
     );
 

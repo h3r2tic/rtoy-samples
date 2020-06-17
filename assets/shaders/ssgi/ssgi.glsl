@@ -30,7 +30,7 @@ layout(std140) uniform globals {
 const float temporal_rotations[] = {60.0, 300.0, 180.0, 240.0, 120.0, 0.0};
 const float temporal_offsets[] = {0.0, 0.5, 0.25, 0.75};
 
-const uint ssgi_half_sample_count = 8;
+const uint ssgi_half_sample_count = 32;
 
 float fast_sqrt(float x) {
     return uintBitsToFloat(0x1fbd1df5 + (floatBitsToUint(x) >> 1u));
@@ -80,7 +80,7 @@ float integrate_arc(float h1, float h2, float n) {
 }
 
 float update_horizion_angle(float prev, float new) {
-    float t = exp(-0.3 * float(ssgi_half_sample_count));
+    float t = min(1.0, 0.5 / float(ssgi_half_sample_count));
     return new > prev ? max(new, prev) : mix(prev, new, t);
     //return new > prev ? max(new, prev) : prev;
 }

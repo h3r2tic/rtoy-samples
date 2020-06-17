@@ -36,7 +36,7 @@ void main() {
                 //w *= exp2(-(orig_val - center) * (orig_val - center) * 0.1 * (1.0 + log2(float(px_skip))));
                 //w *= exp2(-(val - center) * (val - center) * 0.5);
                 float diff = orig_val - center;
-                w *= exp2(-diff * diff * 0.4);
+                w *= exp2(-diff * diff * 0.8);
                 //w *= gaussian_weights[x] * gaussian_weights[y];
                 w *= exp2(-dot(offset, offset) / (80 * 80));
                 result += vec3(val, 1) * w;

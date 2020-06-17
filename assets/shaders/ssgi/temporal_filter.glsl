@@ -12,14 +12,22 @@ layout(std140) uniform globals {
 
 uniform sampler linear_sampler;
 
+//#define LINEAR_TO_WORKING(x) sqrt(x)
+//#define WORKING_TO_LINEAR(x) ((x)*(x))
+
+#define LINEAR_TO_WORKING(x) x
+#define WORKING_TO_LINEAR(x) x
+
 vec4 run_filter(in vec2 fragCoord)
 {
     ivec2 px = ivec2(fragCoord);
     vec2 uv = get_uv(outputTex_size);
     
-    vec4 center = texelFetch(inputTex, px, 0);
+    vec4 center = WORKING_TO_LINEAR(max(0.0.xxxx, texelFetch(inputTex, px, 0)));
     vec4 reproj = texelFetch(reprojectionTex, px, 0);
-    vec4 history = textureLod(sampler2D(historyTex, linear_sampler), uv + reproj.xy, 0);
+    vec4 history = WORKING_TO_LINEAR(max(0.0.xxxx, textureLod(sampler2D(historyTex, linear_sampler), uv + reproj.xy, 0)));
+    //history = 0.0.xxxx;
+    //center = 0.0.xxxx;
     
 	vec4 vsum = 0.0.xxxx;
 	vec4 vsum2 = 0.0.xxxx;
@@ -28,10 +36,10 @@ vec4 run_filter(in vec2 fragCoord)
     vec4 nmin = center;
     vec4 nmax = center;
     
-	const int k = 1;
+	const int k = 2;
     for (int y = -k; y <= k; ++y) {
         for (int x = -k; x <= k; ++x) {
-            vec4 neigh = texelFetch(inputTex, px + ivec2(x, y) * 2, 0);
+            vec4 neigh = WORKING_TO_LINEAR(max(0.0.xxxx, texelFetch(inputTex, px + ivec2(x, y) * 2, 0)));
 			float w = exp(-3.0 * float(x * x + y * y) / float((k+1.) * (k+1.)));
 			vsum += neigh * w;
 			vsum2 += neigh * neigh * w;
@@ -45,11 +53,12 @@ vec4 run_filter(in vec2 fragCoord)
 
     float box_size = mix(0.5, 5.0, smoothstep(0.05, 0.0, length(reproj.xy)));
 
-	nmin = ex - dev * box_size;
+	nmin = max(0.0.xxxx, ex - dev * box_size);
 	nmax = ex + dev * box_size;
     
 	vec4 clamped_history = clamp(history, nmin, nmax);
-	return mix(clamped_history, center, mix(1.0, 1.0 / 16.0, reproj.z));
+    vec4 res = mix(clamped_history, center, mix(1.0, 1.0 / 16.0, reproj.z));
+	return LINEAR_TO_WORKING(res);
 }
 
 layout (local_size_x = 8, local_size_y = 8) in;

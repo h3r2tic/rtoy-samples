@@ -9,6 +9,45 @@ layout(std140) uniform globals {
     vec4 outputTex_size;
 };
 
+// ACES fitted
+// from https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl
+
+const mat3 ACESInputMat = mat3(
+    0.59719, 0.35458, 0.04823,
+    0.07600, 0.90834, 0.01566,
+    0.02840, 0.13383, 0.83777
+);
+
+// ODT_SAT => XYZ => D60_2_D65 => sRGB
+const mat3 ACESOutputMat = mat3(
+     1.60475, -0.53108, -0.07367,
+    -0.10208,  1.10813, -0.00605,
+    -0.00327, -0.07276,  1.07602
+);
+
+vec3 RRTAndODTFit(vec3 v)
+{
+    vec3 a = v * (v + 0.0245786) - 0.000090537;
+    vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
+    return a / b;
+}
+
+vec3 ACESFitted(vec3 color)
+{
+    color = color * ACESInputMat;
+
+    // Apply RRT and ODT
+    color = RRTAndODTFit(color);
+
+    color = color * ACESOutputMat;
+
+    // Clamp to [0, 1]
+    color = clamp(color, 0.0, 1.0);
+
+    return color;
+}
+
+
 // Rec. 709
 float calculate_luma(vec3 col) {
 	return dot(vec3(0.2126, 0.7152, 0.0722), col);
@@ -62,7 +101,29 @@ float sharpen_inv_remap(float l) {
 }
 
 float local_tmo_constrain(float x, float max_compression) {
-    return exp(tanh(log(x) / max_compression) * max_compression);
+    #define local_tmo_constrain_mode 2
+
+    #if local_tmo_constrain_mode == 0
+        return exp(tanh(log(x) / max_compression) * max_compression);
+    #elif local_tmo_constrain_mode == 1
+
+        x = log(x);
+        float s = sign(x);
+        x = sqrt(abs(x));
+        x = tanh(x / max_compression) * max_compression;
+        x = exp(x * x * s);
+
+        return x;
+    #elif local_tmo_constrain_mode == 2
+        float k = 3.0 * max_compression;
+        x = 1.0 / x;
+        x = tonemap_curve(x / k, 0.2) * k;
+        x = 1.0 / x;
+        x = tonemap_curve(x / k, 0.2) * k;
+        return x;
+    #else
+        return x;
+    #endif
 }
 
 vec3 piecewise(vec3 threshold, vec3 a, vec3 b) {
@@ -80,8 +141,8 @@ void main() {
     float filtered_luminance_high = texelFetch(filteredLogLumTex, pix, 0).y;
 
     if (!true) {
-        vec3 col = neutral_tonemap(filtered_luminance_high.xxx, 0.0);
-        //col -= neutral_tonemap(filtered_luminance.xxx);
+        vec3 col = neutral_tonemap(filtered_luminance_high.xxx, 0.3);
+        //col -= neutral_tonemap(filtered_luminance.xxx, 0.3);
         imageStore(outputTex, pix, col.rgbg);
         return;
     }
@@ -98,8 +159,9 @@ void main() {
 
     if (!true) {
         col *= 0.333 / avg_luminance;
-        col.rgb = 1.0 - exp(-col.rgb);
-        //col.rgb = neutral_tonemap(col.rgb, 0.3);
+        //col.rgb = 1.0 - exp(-col.rgb);
+        col.rgb = neutral_tonemap(col.rgb, 0.3);
+        //col.rgb = ACESFitted(col.rgb);
         imageStore(outputTex, pix, col);
         return;
     }
@@ -118,7 +180,13 @@ void main() {
     col.rgb = neutral_tonemap(col.rgb, lin_part);
     //col.r = col.a * 10.0;
     //col.rgb = 1.0 - exp(-col.rgb);
+    //col.rgb = relative_mult.xxx;
     //col.rgb = lin_part.xxx;
+
+    //col.rgb /= filtered_luminance.xxx;
+    //col.rgb = 1.0 - exp(-col.rgb);
+    //col.rgb = calculate_luma(col.rgb).xxx;
+    //col.rgb *= col.rgb;
 
 	imageStore(outputTex, pix, col);
 }
