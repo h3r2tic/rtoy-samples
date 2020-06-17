@@ -175,6 +175,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "bvh"
 version = "0.3.0"
+source = "git+https://github.com/h3r2tic/bvh?branch=immutable-build#bc803a17a1addf92c6418b598636020d36ef0121"
 dependencies = [
  "glam 0.8.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1436,10 +1437,11 @@ dependencies = [
 [[package]]
 name = "rtoy-rt"
 version = "0.1.0"
+source = "git+https://github.com/h3r2tic/rtoy-rt#ff23643a89f1c4133aac4585bfc788c770b93a21"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "abomonation_derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bvh 0.3.0",
+ "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)",
  "half 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
@@ -1456,7 +1458,7 @@ dependencies = [
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_distr 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0",
- "rtoy-rt 0.1.0",
+ "rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)",
  "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
  "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
 ]
@@ -2107,6 +2109,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum bincode 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5753e2a71534719bf3f4e57006c3a4f0d2c672a4b676eec84161f763eca87dbf"
 "checksum bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 "checksum block 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
+"checksum bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)" = "<none>"
 "checksum bytemuck 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "37fa13df2292ecb479ec23aa06f4507928bef07839be9ef15281411076629431"
 "checksum byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 "checksum bytes 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)" = "130aac562c0dd69c56b3b1cc8ffd2e17be31d0b6c25b61c96b76231aa23e39e1"
@@ -2251,6 +2254,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum rpmalloc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8dae55d27fc56f399aec2583434bf22c7100fe983b2115bbc1d961ec4f7df5db"
 "checksum rpmalloc-sys 0.2.0+c4d2c05 (registry+https://github.com/rust-lang/crates.io-index)" = "9c0a44672448b9514eecd10fdcea583624a485fb10fa6506c81cdecf710d029b"
 "checksum rspirv 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "84ea8e0da5a60f55281d6d756c2fb3cf6954a96547137ebf973d0511fe8e0259"
+"checksum rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)" = "<none>"
 "checksum rustc-demangle 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "4c691c0e608126e00913e33f0ccf3727d5fc84573623b8d65b2df340b5201783"
 "checksum rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
 "checksum rusttype 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)" = "310942406a39981bed7e12b09182a221a29e0990f3e7e0c971f131922ed135d5"
