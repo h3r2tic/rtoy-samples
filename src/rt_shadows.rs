@@ -4,11 +4,11 @@ pub use std::rc::Rc;
 
 #[derive(Clone, Copy)]
 pub struct DirectionalLightState {
-    pub direction: Vector3,
+    pub direction: Vec3,
 }
 
 impl DirectionalLightState {
-    pub fn new(direction: Vector3) -> Self {
+    pub fn new(direction: Vec3) -> Self {
         Self { direction }
     }
 }
@@ -131,12 +131,12 @@ impl RenderPass for RtShadows {
         #[repr(C)]
         struct Constants {
             view_constants: ViewConstants,
-            light_dir: Vector4,
+            light_dir: Vec4,
         }
 
         self.rt_constants_buf.rebind(upload_buffer(Constants {
             view_constants: *view_constants,
-            light_dir: self.light_controller.get().direction.to_homogeneous(),
+            light_dir: self.light_controller.get().direction.extend(0.0),
         }));
     }
 }

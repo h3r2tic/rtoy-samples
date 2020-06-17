@@ -13,14 +13,14 @@ fn main() {
         "fizz",
         tex_key,
         #tex: tex1.prev(),
-        .rgb = vec3(float(fract(pix.x / 256.0 + #time)), 1.0 - @tex.y, 0.0)
+        .rgb = vec3(float(fract(pix.x() / 256.0 + #time)), 1.0 - @tex.y(), 0.0)
     ));
 
     tex1.rebind(compute_tex!(
         "buzz",
         tex_key,
         #tex: tex0.prev(),
-        .rgb = vec3(float(fract(pix.x / 256.0 + #time)), 1.0 - @tex.y, 0.0)
+        .rgb = vec3(float(fract(pix.x() / 256.0 + #time)), 1.0 - @tex.y(), 0.0)
     ));
 
     let tex_diff = compute_tex!(

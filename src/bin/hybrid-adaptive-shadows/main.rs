@@ -9,14 +9,10 @@ fn main() {
 
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
     let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let bvh = vec![(
-        scene.clone(),
-        Vector3::new(0.0, 0.0, 0.0),
-        UnitQuaternion::identity(),
-    )];
+    let bvh = vec![(scene.clone(), Vec3::zero(), Quat::identity())];
     let gpu_bvh = upload_bvh(bvh);
 
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
+    let mut camera = FirstPersonCamera::new(Vec3::new(0.0, 200.0, 800.0));
 
     let mut raster_constants_buf = upload_buffer(0u32).isolate();
 
@@ -28,12 +24,12 @@ fn main() {
         ]),
         shader_uniforms!(
             constants: raster_constants_buf.clone(),
-            instance_transform: raster_mesh_transform(Vector3::zeros(), UnitQuaternion::identity()),
+            instance_transform: raster_mesh_transform(Vec3::zero(), Quat::identity()),
             :upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );
 
-    let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
+    let light_controller = Rc::new(Cell::new(DirectionalLightState::new(Vec3::unit_x())));
     let mut rt_shadows = RtShadows::new(tex_key, gbuffer_tex, gpu_bvh, light_controller.clone());
 
     let out_tex = compute_tex!(
@@ -53,7 +49,7 @@ fn main() {
         raster_constants_buf.rebind(upload_buffer(view_constants));
 
         light_controller.set(DirectionalLightState::new(
-            Vector3::new(light_angle.cos(), 0.5, light_angle.sin()).normalize(),
+            Vec3::new(light_angle.cos(), 0.5, light_angle.sin()).normalize(),
         ));
         rt_shadows.prepare_frame(&view_constants, frame_state, 0);
 

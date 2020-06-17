@@ -5,10 +5,10 @@ fn main() {
     let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
     let mesh = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
+    let scene = vec![(mesh.clone(), Vec3::zero(), Quat::identity())];
 
     let mut camera =
-        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0)));
+        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Vec3::new(0.0, 200.0, 800.0)));
 
     let mut raster_constants_buf = upload_buffer(0u32).isolate();
 

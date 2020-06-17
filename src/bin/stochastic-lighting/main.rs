@@ -17,7 +17,7 @@ struct Constants {
 #[repr(C)]
 struct ReprojConstants {
     view_constants: ViewConstants,
-    prev_world_to_clip: Matrix4,
+    prev_world_to_clip: Mat4,
 }
 
 #[snoozy]
@@ -35,11 +35,11 @@ async fn build_light_gpu_data_snoozy(
         let mat = &mesh.materials[mat_id as usize];
 
         if mat.emissive != [0.0, 0.0, 0.0] {
-            let p0 = Point3::from(mesh.positions[tri[0] as usize]);
-            let p1 = Point3::from(mesh.positions[tri[1] as usize]);
-            let p2 = Point3::from(mesh.positions[tri[2] as usize]);
+            let p0 = Vec3::from(mesh.positions[tri[0] as usize]);
+            let p1 = Vec3::from(mesh.positions[tri[1] as usize]);
+            let p2 = Vec3::from(mesh.positions[tri[2] as usize]);
 
-            let area = (p1 - p0).cross(&(p2 - p0)).norm() * 0.5;
+            let area = (p1 - p0).cross(p2 - p0).length() * 0.5;
             weights.push(area as f64);
 
             tris.push((
@@ -101,17 +101,13 @@ fn main() {
     //let scene = load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0);
 
     //let lights = build_light_gpu_data(scene);
-    let bvh = vec![(
-        scene.clone(),
-        Vector3::new(0.0, 0.0, 0.0),
-        UnitQuaternion::identity(),
-    )];
+    let bvh = vec![(scene.clone(), Vec3::zero(), Quat::identity())];
 
     let mut time = const_f32(0f32).isolate();
 
     //let mut camera =
-    //    CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
+    //    CameraConvergenceEnforcer::new(FirstPersonCamera::new(Vec3::new(0.0, 100.0, 500.0)));
+    let mut camera = FirstPersonCamera::new(Vec3::new(0.0, 100.0, 500.0));
     camera.move_smoothness = 3.0;
     camera.look_smoothness = 3.0;
 
@@ -126,7 +122,7 @@ fn main() {
         ]),
         shader_uniforms!(
             constants: constants_buf.clone(),
-            instance_transform: raster_mesh_transform(Vector3::zeros(), UnitQuaternion::identity()),
+            instance_transform: raster_mesh_transform(Vec3::zero(), Quat::identity()),
             :upload_raster_mesh(make_raster_mesh(scene.clone()))
         ),
     );
@@ -213,7 +209,7 @@ fn main() {
         shader_uniforms!(inputTex: out_tex, varianceTex: variance_estimate2,),
     );
 
-    let mut taa_constants = upload_buffer(Vector2::new(0.0, 0.0)).isolate();
+    let mut taa_constants = upload_buffer(Vec2::new(0.0, 0.0)).isolate();
     let mut temporal_accum = rtoy_samples::accumulate_reproject_temporally(
         out_tex,
         reprojection_tex,
@@ -233,7 +229,7 @@ fn main() {
 
     let mut frame_idx = 0u32;
     let mut t = 0.0f32;
-    let mut prev_world_to_clip = Matrix4::identity();
+    let mut prev_world_to_clip = Mat4::identity();
 
     rtoy.draw_forever(|frame_state| {
         camera.update(frame_state);
@@ -252,7 +248,7 @@ fn main() {
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post
         // filter perceptually sharpens it whilst keeping the image alias-free.
         let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
-        let jitter = Vector2::new(
+        let jitter = Vec2::new(
             0.333 * rng.sample::<f32, _>(StandardNormal),
             0.333 * rng.sample::<f32, _>(StandardNormal),
         );

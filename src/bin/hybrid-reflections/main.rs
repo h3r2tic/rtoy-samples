@@ -18,18 +18,14 @@ fn main() {
     let bvh = vec![
         (
             mesh.clone(),
-            Vector3::new(-150.0, 0.0, 0.0),
-            UnitQuaternion::from_axis_angle(&Vector3::y_axis(), 90.0f32.to_radians()),
+            Vec3::new(-150.0, 0.0, 0.0),
+            Quat::from_axis_angle(Vec3::unit_y(), 90.0f32.to_radians()),
         ),
-        (
-            mesh.clone(),
-            Vector3::new(150.0, 0.0, 0.0),
-            UnitQuaternion::identity(),
-        ),
+        (mesh.clone(), Vec3::new(150.0, 0.0, 0.0), Quat::identity()),
     ];
 
     let mut camera =
-        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
+        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Vec3::new(0.0, 100.0, 500.0)));
 
     let mut constants_buf = upload_buffer(0u32).isolate();
 
@@ -41,12 +37,12 @@ fn main() {
         ]),
         vec![
             shader_uniform_bundle!(
-                instance_transform: raster_mesh_transform(Vector3::new(-150.0, 0.0, 0.0), UnitQuaternion::from_axis_angle(&Vector3::y_axis(), 90.0f32.to_radians())),
+                instance_transform: raster_mesh_transform(Vec3::new(-150.0, 0.0, 0.0), Quat::from_axis_angle(Vec3::unit_y(), 90.0f32.to_radians())),
                 constants: constants_buf.clone(),
                 :upload_raster_mesh(make_raster_mesh(mesh.clone()))
             ),
             shader_uniform_bundle!(
-                instance_transform: raster_mesh_transform(Vector3::new(150.0, 0.0, 0.0), UnitQuaternion::identity()),
+                instance_transform: raster_mesh_transform(Vec3::new(150.0, 0.0, 0.0), Quat::identity()),
                 constants: constants_buf.clone(),
                 :upload_raster_mesh(make_raster_mesh(mesh.clone()))
             ),
@@ -89,7 +85,7 @@ fn main() {
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post
         // filter perceptually sharpens it whilst keeping the image alias-free.
         let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
-        let jitter = Vector2::new(
+        let jitter = Vec2::new(
             0.5 * rng.sample::<f32, _>(StandardNormal) as f32,
             0.5 * rng.sample::<f32, _>(StandardNormal) as f32,
         );

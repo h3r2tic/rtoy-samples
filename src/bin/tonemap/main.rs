@@ -26,7 +26,7 @@ fn main() {
     let window_width = rtoy.width();
 
     rtoy.draw_forever(|frame_state| {
-        mouse_x.rebind(const_f32(frame_state.mouse.pos.x / window_width as f32));
+        mouse_x.rebind(const_f32(frame_state.mouse.pos.x() / window_width as f32));
         tex.clone()
     });
 }

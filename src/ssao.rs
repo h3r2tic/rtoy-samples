@@ -27,7 +27,7 @@ pub struct Ssao {
     temporal_accum: crate::TemporalAccumulation,
     ao_constants_buf: SnoozyRef<Buffer>,
     reproj_constants: SnoozyRef<Buffer>,
-    prev_world_to_clip: Matrix4,
+    prev_world_to_clip: Mat4,
 }
 
 impl Ssao {
@@ -82,7 +82,7 @@ impl Ssao {
             temporal_accum,
             ao_constants_buf,
             reproj_constants,
-            prev_world_to_clip: Matrix4::identity(),
+            prev_world_to_clip: Mat4::identity(),
         }
     }
 
@@ -117,7 +117,7 @@ impl RenderPass for Ssao {
         #[repr(C)]
         struct ReprojConstants {
             view_constants: ViewConstants,
-            prev_world_to_clip: Matrix4,
+            prev_world_to_clip: Mat4,
         }
 
         self.reproj_constants.rebind(upload_buffer(ReprojConstants {

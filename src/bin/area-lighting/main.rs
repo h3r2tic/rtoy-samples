@@ -109,7 +109,7 @@ fn main() {
         t += 0.01;
         fidx += 1;
         time.rebind(const_f32(t));
-        mouse_x.rebind(const_f32(frame_state.mouse.pos.x));
+        mouse_x.rebind(const_f32(frame_state.mouse.pos.x()));
         frame_index.rebind(const_u32(fidx));
 
         final_tex.clone()

@@ -19,10 +19,10 @@ pub struct Taa {
     taa_constants: SnoozyRef<Buffer>,
     temporal_accum: crate::TemporalAccumulation,
     reproj_constants: SnoozyRef<Buffer>,
-    prev_world_to_clip: Matrix4,
+    prev_world_to_clip: Mat4,
     sub_passes: RenderPassList,
     tex_key: TextureKey,
-    samples: Vec<Vector2>,
+    samples: Vec<Vec2>,
 }
 
 pub struct TaaInput {
@@ -44,7 +44,7 @@ impl Taa {
 
         let samples = (0..16)
             .map(|i| {
-                Vector2::new(
+                Vec2::new(
                     radical_inverse(i % 16 + 1, 2) - 0.5,
                     radical_inverse(i % 16 + 1, 3) - 0.5,
                 )
@@ -55,7 +55,7 @@ impl Taa {
             taa_constants,
             temporal_accum,
             reproj_constants,
-            prev_world_to_clip: Matrix4::identity(),
+            prev_world_to_clip: Mat4::identity(),
             sub_passes: Vec::new(),
             tex_key,
             samples,
@@ -118,7 +118,7 @@ impl RenderPass for Taa {
         }
 
         let jitter = self.samples[frame_idx as usize % self.samples.len()];
-        //let jitter = Vector2::new(0.5, 0.5);
+        //let jitter = Vec2::new(0.5, 0.5);
 
         let unjittered_view_constants = *view_constants;
 
@@ -141,14 +141,14 @@ impl RenderPass for Taa {
         }
 
         self.taa_constants.rebind(upload_buffer(TaaConstants {
-            jitter: (jitter.x, jitter.y),
+            jitter: (jitter.x(), jitter.y()),
         }));
 
         #[derive(Clone, Copy)]
         #[repr(C)]
         struct ReprojConstants {
             view_constants: ViewConstants,
-            prev_world_to_clip: Matrix4,
+            prev_world_to_clip: Mat4,
         }
 
         self.reproj_constants.rebind(upload_buffer(ReprojConstants {

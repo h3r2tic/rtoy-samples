@@ -22,7 +22,7 @@ fn main() {
     // This comes in handy because the raytracer resets accumulation upon movement,
     // and the camera uses exponential smoothing.
     let mut camera =
-        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0)));
+        CameraConvergenceEnforcer::new(FirstPersonCamera::new(Vec3::new(0.0, 100.0, 500.0)));
 
     let mut bvh = upload_bvh(vec![]).isolate();
 
@@ -61,16 +61,15 @@ fn main() {
         camera.update(frame_state);
 
         // Animate so we get motion blur!
-        let dredd_rot =
-            na::UnitQuaternion::from_axis_angle(&Vector3::y_axis(), frame_idx as f32 * 0.05 * 0.0);
-        //let dredd_pos = Vector3::new(150.0, 0.0, 0.0);
+        let dredd_rot = Quat::from_axis_angle(Vec3::unit_y(), frame_idx as f32 * 0.05 * 0.0);
+        //let dredd_pos = Vec3::new(150.0, 0.0, 0.0);
 
         /*let scene = vec![
             (dredd.clone(), dredd_pos, dredd_rot),
             (
                 lighthouse.clone(),
-                Vector3::new(-250.0, -50.0, -100.0),
-                UnitQuaternion::identity(),
+                Vec3::new(-250.0, -50.0, -100.0),
+                Quat::identity(),
             ),
         ];*/
 
@@ -78,12 +77,12 @@ fn main() {
             .map(|i| {
                 (
                     dredd.clone(),
-                    Vector3::new(
+                    Vec3::new(
                         -300.0 * 8.0 + 300.0 * (i % 16) as f32,
                         600.0 * (((frame_idx * 0 + i * 1234567) % (314 * 2)) as f32 * 0.01).sin(),
                         -300.0 * 8.0 + 300.0 * (i / 16) as f32,
                     ),
-                    //UnitQuaternion::identity(),
+                    //Quat::identity(),
                     dredd_rot,
                 )
             })
@@ -91,8 +90,8 @@ fn main() {
 
         /*scene.push((
             lighthouse.clone(),
-            Vector3::new(0.0, -50.0, -300.0),
-            UnitQuaternion::identity(),
+            Vec3::new(0.0, -50.0, -300.0),
+            Quat::identity(),
         ));*/
 
         // Build a BVH and acquire a bundle of GPU buffers.
@@ -107,7 +106,7 @@ fn main() {
         // a post-process sharpen too. The Gaussian kernel eliminates jaggies, and then the post
         // filter perceptually sharpens it whilst keeping the image alias-free.
         let mut rng = SmallRng::seed_from_u64(frame_idx as u64);
-        let jitter = Vector2::new(
+        let jitter = Vec2::new(
             0.5 * rng.sample::<f32, _>(StandardNormal),
             0.5 * rng.sample::<f32, _>(StandardNormal),
         );

@@ -8,17 +8,17 @@ fn main() {
     let scene = vec![
         (
             load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0),
-            Vector3::new(-300.0, 0.0, 0.0),
-            UnitQuaternion::identity(),
+            Vec3::new(-300.0, 0.0, 0.0),
+            Quat::identity(),
         ),
         (
             load_gltf_scene(asset!("meshes/dredd/scene.gltf"), 5.0),
-            Vector3::new(300.0, 0.0, 0.0),
-            UnitQuaternion::identity(),
+            Vec3::new(300.0, 0.0, 0.0),
+            Quat::identity(),
         ),
     ];
 
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 100.0, 500.0));
+    let mut camera = FirstPersonCamera::new(Vec3::new(0.0, 100.0, 500.0));
 
     let mut viewport_constants_buf = upload_buffer(0u32).isolate();
 

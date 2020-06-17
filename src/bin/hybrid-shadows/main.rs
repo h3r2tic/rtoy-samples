@@ -5,7 +5,7 @@ use rtoy_rt::*;
 #[derive(Clone, Copy)]
 struct Constants {
     view_constants: ViewConstants,
-    light_dir: Vector4,
+    light_dir: Vec4,
 }
 
 fn main() {
@@ -15,14 +15,10 @@ fn main() {
 
     //let scene_file = "assets/meshes/lighthouse.obj.gz";
     let scene = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let bvh = vec![(
-        scene.clone(),
-        Vector3::new(0.0, 0.0, 0.0),
-        UnitQuaternion::identity(),
-    )];
+    let bvh = vec![(scene.clone(), Vec3::zero(), Quat::identity())];
     let gpu_bvh = upload_bvh(bvh);
 
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
+    let mut camera = FirstPersonCamera::new(Vec3::new(0.0, 200.0, 800.0));
 
     let mut rt_constants_buf = upload_buffer(0u32).isolate();
     let mut raster_constants_buf = upload_buffer(0u32).isolate();
@@ -35,7 +31,7 @@ fn main() {
         ]),
         shader_uniforms!(
             constants: raster_constants_buf.clone(),
-            instance_transform: raster_mesh_transform(Vector3::zeros(), UnitQuaternion::identity()),
+            instance_transform: raster_mesh_transform(Vec3::zero(), Quat::identity()),
             :upload_raster_mesh(make_raster_mesh(scene))
         ),
     );
@@ -63,7 +59,7 @@ fn main() {
 
         rt_constants_buf.rebind(upload_buffer(Constants {
             view_constants,
-            light_dir: Vector4::new(light_angle.cos(), 0.5, light_angle.sin(), 0.0),
+            light_dir: Vec4::new(light_angle.cos(), 0.5, light_angle.sin(), 0.0),
         }));
 
         shadowed_tex.clone()

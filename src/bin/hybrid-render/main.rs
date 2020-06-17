@@ -18,13 +18,13 @@ fn main() {
     //let mesh = load_gltf_scene(asset!("meshes/honda_scrambler/scene.gltf"), 10.0);
     //let mesh = load_gltf_scene(asset!("meshes/helmetconcept/scene.gltf"), 100.0);
     //let mesh = load_gltf_scene(asset!("meshes/the_lighthouse/scene.gltf"), 1.0);
-    let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
+    let scene = vec![(mesh.clone(), Vec3::zero(), Quat::identity())];
 
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
+    let mut camera = FirstPersonCamera::new(Vec3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
     camera.fov = 55.0;
 
-    let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
+    let light_controller = Rc::new(Cell::new(DirectionalLightState::new(Vec3::unit_x())));
 
     let mut taa = Taa::new(tex_key);
     taa.setup(|sub_passes| {
@@ -77,13 +77,13 @@ fn main() {
                 #[repr(C)]
                 struct MergeConstants {
                     view_constants: ViewConstants,
-                    light_dir: Vector4,
+                    light_dir: Vec4,
                     frame_idx: u32,
                 }
 
                 merge_constants_buf.rebind(upload_buffer(MergeConstants {
                     view_constants: *view_constants,
-                    light_dir: light_controller.get().direction.to_homogeneous(),
+                    light_dir: light_controller.get().direction.extend(0.0),
                     frame_idx,
                 }));
             },
@@ -118,7 +118,7 @@ fn main() {
 
         //light_angle += 0.01;
         light_controller.set(DirectionalLightState::new(
-            Vector3::new(
+            Vec3::new(
                 light_angle.cos(),
                 //1.0 - frame_state.mouse.pos.y / frame_state.window_size_pixels.1 as f32,
                 0.025,

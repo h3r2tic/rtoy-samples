@@ -2,11 +2,11 @@ use rendertoy::*;
 use rtoy_rt::*;
 use rtoy_samples::{rt_shadows::*, taa::*};
 
-fn spherical_to_cartesian(theta: f32, phi: f32) -> Vector3 {
+fn spherical_to_cartesian(theta: f32, phi: f32) -> Vec3 {
     let x = phi.sin() * theta.cos();
     let y = phi.cos();
     let z = phi.sin() * theta.sin();
-    Vector3::new(x, y, z)
+    Vec3::new(x, y, z)
 }
 
 fn main() {
@@ -19,15 +19,15 @@ fn main() {
         20.0,
     );
     //let mesh = load_gltf_scene(asset!("meshes/cornell_box/scene.gltf"), 50.0);
-    let scene = vec![(mesh.clone(), Vector3::zeros(), UnitQuaternion::identity())];
+    let scene = vec![(mesh.clone(), Vec3::zero(), Quat::identity())];
     let bvh = upload_bvh(scene.clone());
 
-    let mut camera = FirstPersonCamera::new(Point3::new(0.0, 200.0, 800.0));
+    let mut camera = FirstPersonCamera::new(Vec3::new(0.0, 200.0, 800.0));
     camera.aspect = rtoy.width() as f32 / rtoy.height() as f32;
     //camera.fov = 55.0;
     let mut camera = CameraConvergenceEnforcer::new(camera);
 
-    let light_controller = Rc::new(Cell::new(DirectionalLightState::new(*Vector3::x_axis())));
+    let light_controller = Rc::new(Cell::new(DirectionalLightState::new(Vec3::unit_x())));
     //let mut light_angle = 1.0f32;
 
     let mut sky_constants = upload_buffer(0u32).isolate();
@@ -47,7 +47,7 @@ fn main() {
     let taa_output = taa.get_output_tex();
 
     taa.setup(|sub_passes| {
-        let mut prev_world_to_clip = Matrix4::identity();
+        let mut prev_world_to_clip = Mat4::identity();
 
         let mut raster_constants_buf = upload_buffer(0u32).isolate();
         let mut merge_constants_buf = upload_buffer(0u32).isolate();
@@ -211,13 +211,13 @@ fn main() {
                 #[repr(C)]
                 struct MergeConstants {
                     view_constants: ViewConstants,
-                    light_dir: Vector4,
+                    light_dir: Vec4,
                     frame_idx: u32,
                 }
 
                 merge_constants_buf.rebind(upload_buffer(MergeConstants {
                     view_constants: view_constants,
-                    light_dir: light_controller.get().direction.to_homogeneous(),
+                    light_dir: light_controller.get().direction.extend(0.0),
                     frame_idx,
                 }));
 
@@ -225,7 +225,7 @@ fn main() {
                 #[repr(C)]
                 struct ReprojConstants {
                     view_constants: ViewConstants,
-                    prev_world_to_clip: Matrix4,
+                    prev_world_to_clip: Mat4,
                 }
 
                 reproj_constants.rebind(upload_buffer(ReprojConstants {
@@ -262,10 +262,10 @@ fn main() {
         let view_constants = ViewConstants::build(&camera, tex_key.width, tex_key.height).build();
 
         if (frame_state.mouse.button_mask & 1) != 0 {
-            theta += (frame_state.mouse.delta.x / frame_state.window_size_pixels.0 as f32)
+            theta += (frame_state.mouse.delta.x() / frame_state.window_size_pixels.0 as f32)
                 * std::f32::consts::PI
                 * -2.0;
-            phi += (frame_state.mouse.delta.y / frame_state.window_size_pixels.1 as f32)
+            phi += (frame_state.mouse.delta.y() / frame_state.window_size_pixels.1 as f32)
                 * std::f32::consts::PI
                 * 0.5;
         }
