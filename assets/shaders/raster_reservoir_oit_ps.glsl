@@ -15,7 +15,7 @@ layout(location = 7) in flat uint v_material_id;
 uniform texture2D blue_noise_tex;
 
 layout(rgba32ui) uniform coherent uimage2D rwtex;
-layout(rgba32ui) uniform coherent uimage2D rwtex2;
+//layout(rgba32ui) uniform coherent uimage2D rwtex2;
 
 layout(std430) buffer frag_constants {
     ViewConstants view_constants;
@@ -41,14 +41,17 @@ float depth_diff_penalty(float a, float b) {
     //return 0.001 * abs(a - b);    // bullshit scale
 }
 
-uvec4 resolve_fragment_against_reservoir(float opacity, uvec2 color_packed, float depth, uvec4 prev_oit, float urand) {
+uvec2 resolve_fragment_against_reservoir(float opacity, uint color_packed, float depth, uvec2 prev_oit, float urand) {
+    UnpackedSample unpck = unpack_oit(prev_oit);
+
     float p = opacity;
-    float p_prev = uintBitsToFloat(prev_oit.w);
+    float p_prev = unpck.p;
     float p_sum = p_prev + p;
     float p_total = 1 - (1 - p_prev) * (1 - p);
-    float depth_prev = uintBitsToFloat(prev_oit.z);
+    float depth_prev = unpck.depth;
 
-    uvec4 result = uvec4(prev_oit.xyz, floatBitsToUint(p_total));
+    // TODO: pack just p_total
+    uvec2 result = uvec2(prev_oit.x, pack_oit_depth_p(depth_prev, p_total));
 
     if (depth > depth_prev) {
         // New fragment is closer than the old one
@@ -58,7 +61,7 @@ uvec4 resolve_fragment_against_reservoir(float opacity, uvec2 color_packed, floa
         // (1 - p) * (1 - p_prev): no pixel
 
         if (urand * p_total < p) {
-            result = uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(p_total));
+            result = uvec2(color_packed, pack_oit_depth_p(depth, p_total));
         }
     } else {
         // New fragment is farther than the old one
@@ -68,7 +71,7 @@ uvec4 resolve_fragment_against_reservoir(float opacity, uvec2 color_packed, floa
         // (1 - p_prev) * (1 - p): no pixel
 
         if (urand * p_total < (1 - p_prev) * p) {
-            result = uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(p_total));
+            result = uvec2(color_packed, pack_oit_depth_p(depth, p_total));
         }
     }
 
@@ -98,7 +101,7 @@ void main() {
     opacity *= 0.6; // adjust for two-sided rendering
     //opacity = 0.75;
 
-    uvec2 color_packed = pack_color(color);
+    uint color_packed = float3_to_rgb9e5(color);
     float l = calculate_luma(color);
 
     // ----
@@ -112,24 +115,30 @@ void main() {
     
     beginInvocationInterlockARB();
 
-    uvec4 prev_oit1 = imageLoad(rwtex, ivec2(pix));
-    uvec4 prev_oit2 = imageLoad(rwtex2, ivec2(pix));
-    float p_prev1 = uintBitsToFloat(prev_oit1.w);
-    float p_prev2 = uintBitsToFloat(prev_oit2.w);
+    uvec4 prev_oit12 = imageLoad(rwtex, ivec2(pix));
+    uvec2 prev_oit1 = prev_oit12.xy;
+    uvec2 prev_oit2 = prev_oit12.zw;
+
+    float p_prev1 = unpack_oit(prev_oit1).p;
+    float p_prev2 = unpack_oit(prev_oit2).p;
 
     if (p_prev1 == 0.0) {
-        imageStore(rwtex, ivec2(pix), uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(opacity)));
+        uvec4 result = prev_oit12;
+        result.xy = uvec2(color_packed, pack_oit_depth_p(depth, opacity));
+        imageStore(rwtex, ivec2(pix), result);
     } else if (p_prev2 == 0.0) {
-        imageStore(rwtex2, ivec2(pix), uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(opacity)));
+        uvec4 result = prev_oit12;
+        result.zw = uvec2(color_packed, pack_oit_depth_p(depth, opacity));
+        imageStore(rwtex, ivec2(pix), result);
     } else {
-        vec3 prev_oit1_color = unpack_color(prev_oit1.xy);
-        vec3 prev_oit2_color = unpack_color(prev_oit2.xy);
+        vec3 prev_oit1_color = unpack_oit(prev_oit1).color;
+        vec3 prev_oit2_color = unpack_oit(prev_oit2).color;
 
         float l1 = calculate_luma(prev_oit1_color);
         float l2 = calculate_luma(prev_oit2_color);
 
-        float depth1 = uintBitsToFloat(prev_oit1.z);
-        float depth2 = uintBitsToFloat(prev_oit2.z);
+        float depth1 = unpack_oit(prev_oit1).depth;
+        float depth2 = unpack_oit(prev_oit2).depth;
 
         float p = opacity;
         float p_total1 = 1 - (1 - p_prev1) * (1 - p);
@@ -141,20 +150,25 @@ void main() {
         float err3 = abs(l1 - l2) + depth_diff_penalty(depth1, depth2);
 
         if (err3 < min(err1, err2)) {
-            imageStore(rwtex2, ivec2(pix), resolve_fragment_against_reservoir(
-                p_prev1, prev_oit1.xy, depth1, prev_oit2, u.x
-            ));
-
-            imageStore(rwtex, ivec2(pix), uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(p)));
+            uvec4 result;
+            result.xy = uvec2(color_packed, pack_oit_depth_p(depth, p));
+            result.zw = resolve_fragment_against_reservoir(
+                p_prev1, prev_oit1.x, depth1, prev_oit2, u.x
+            );
+            imageStore(rwtex, ivec2(pix), result);
         } else {
             if (err1 < err2) {  // Less noisy, but noise varies
-                imageStore(rwtex, ivec2(pix), resolve_fragment_against_reservoir(
+                uvec4 result = prev_oit12;
+                result.xy = resolve_fragment_against_reservoir(
                     opacity, color_packed, depth, prev_oit1, u.x
-                ));
+                );
+                imageStore(rwtex, ivec2(pix), result);
             } else {
-                imageStore(rwtex2, ivec2(pix), resolve_fragment_against_reservoir(
+                uvec4 result = prev_oit12;
+                result.zw = resolve_fragment_against_reservoir(
                     opacity, color_packed, depth, prev_oit2, u.x
-                ));
+                );
+                imageStore(rwtex, ivec2(pix), result);
             }
         }
     }

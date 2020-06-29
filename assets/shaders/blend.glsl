@@ -13,8 +13,8 @@ layout (local_size_x = 8, local_size_y = 8) in;
 void main() {
 	ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
     #if 0
-        float blendAmount = 0.03;
-        //float blendAmount = 1.0;
+        //float blendAmount = 0.03;
+        float blendAmount = 1.0;
 
     	vec4 a = texelFetch(inputTex1, pix, 0);
     	vec4 b = texelFetch(inputTex2, pix, 0);
