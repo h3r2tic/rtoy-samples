@@ -183,6 +183,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "byte-slice-cast"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "bytemuck"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -275,6 +280,11 @@ dependencies = [
 [[package]]
 name = "color_quant"
 version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "com-rs"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -650,6 +660,17 @@ version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "hassle-rs"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "com-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "hdrldr"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -824,6 +845,15 @@ dependencies = [
 name = "libflate_lz77"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "libloading"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
+ "winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "libloading"
@@ -1366,11 +1396,14 @@ dependencies = [
  "ash-imgui 0.1.0",
  "ash-window 0.1.0 (git+https://github.com/norse-rs/ash-window.git?rev=9b6ab4d03b015ecae8ec9c771461e80446487ad4)",
  "bincode 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byte-slice-cast 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo_metadata 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "glam 0.8.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "gltf 0.15.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hassle-rs 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hdrldr 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.22.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "imgui 0.3.0-pre (git+https://github.com/Gekkio/imgui-rs.git?rev=ffff82d)",
@@ -1382,15 +1415,14 @@ dependencies = [
  "regex 1.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "relative-path 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rpmalloc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rspirv 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rspirv 0.6.0",
  "serde 1.0.112 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.112 (registry+https://github.com/rust-lang/crates.io-index)",
  "shader-prepper 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "shaderc 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
+ "shaderc 0.6.2 (git+https://github.com/google/shaderc-rs.git?rev=a3bc824)",
+ "snoozy 0.1.1",
  "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
- "spirv-reflect 0.2.3 (git+https://github.com/h3r2tic/spirv-reflect-rs.git)",
- "spirv_headers 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spirv-reflect 0.2.5 (git+https://github.com/h3r2tic/spirv-reflect-rs.git?rev=246a700)",
  "tokio 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing-subscriber 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1426,12 +1458,11 @@ dependencies = [
 [[package]]
 name = "rspirv"
 version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "derive_more 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "spirv_headers 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spirv_headers 1.4.2",
 ]
 
 [[package]]
@@ -1444,7 +1475,7 @@ dependencies = [
  "bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)",
  "half 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0",
- "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
+ "snoozy 0.1.1",
  "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
  "static_assertions 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1459,7 +1490,7 @@ dependencies = [
  "rand_distr 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rendertoy 0.1.0",
  "rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)",
- "snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)",
+ "snoozy 0.1.1",
  "snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)",
 ]
 
@@ -1570,16 +1601,16 @@ dependencies = [
 [[package]]
 name = "shaderc"
 version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/google/shaderc-rs.git?rev=a3bc824#a3bc824acb028546c18fa58833cee273121dfa35"
 dependencies = [
  "libc 0.2.71 (registry+https://github.com/rust-lang/crates.io-index)",
- "shaderc-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "shaderc-sys 0.6.2 (git+https://github.com/google/shaderc-rs.git?rev=a3bc824)",
 ]
 
 [[package]]
 name = "shaderc-sys"
 version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/google/shaderc-rs.git?rev=a3bc824#a3bc824acb028546c18fa58833cee273121dfa35"
 dependencies = [
  "cmake 0.1.44 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.71 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1639,7 +1670,6 @@ dependencies = [
 [[package]]
 name = "snoozy"
 version = "0.1.1"
-source = "git+https://github.com/h3r2tic/snoozy#47d9b763beff1705459567c7d0b4423b76ecb639"
 dependencies = [
  "abomonation 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "async-trait 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1651,6 +1681,7 @@ dependencies = [
  "pretty-bytes 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.112 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.112 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "twox-hash 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1669,21 +1700,28 @@ dependencies = [
 
 [[package]]
 name = "spirv-reflect"
-version = "0.2.3"
-source = "git+https://github.com/h3r2tic/spirv-reflect-rs.git#47636b8053d4014b429c3bc40d2a08c3bf2cdf54"
+version = "0.2.5"
+source = "git+https://github.com/h3r2tic/spirv-reflect-rs.git?rev=246a700#246a70031579283791a034fbd1470646fa83aa15"
 dependencies = [
  "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.112 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.112 (registry+https://github.com/rust-lang/crates.io-index)",
- "spirv_headers 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spirv_headers 1.4.2 (git+https://github.com/Traverse-Research/rspirv.git?rev=fe9dd29)",
 ]
 
 [[package]]
 name = "spirv_headers"
 version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/Traverse-Research/rspirv.git?rev=fe9dd29#fe9dd296f8b4507ebb6d46af9db5b662e32f4880"
+dependencies = [
+ "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "spirv_headers"
+version = "1.4.2"
 dependencies = [
  "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2110,6 +2148,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 "checksum block 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 "checksum bvh 0.3.0 (git+https://github.com/h3r2tic/bvh?branch=immutable-build)" = "<none>"
+"checksum byte-slice-cast 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "b0a5e3906bcbf133e33c1d4d95afc664ad37fbdb9f6568d8043e7ea8c27d93d3"
 "checksum bytemuck 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "37fa13df2292ecb479ec23aa06f4507928bef07839be9ef15281411076629431"
 "checksum byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 "checksum bytes 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)" = "130aac562c0dd69c56b3b1cc8ffd2e17be31d0b6c25b61c96b76231aa23e39e1"
@@ -2122,6 +2161,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cmake 0.1.44 (registry+https://github.com/rust-lang/crates.io-index)" = "0e56268c17a6248366d66d4a47a3381369d068cce8409bb1716ed77ea32163bb"
 "checksum cocoa 0.18.5 (registry+https://github.com/rust-lang/crates.io-index)" = "1706996401131526e36b3b49f0c4d912639ce110996f3ca144d78946727bce54"
 "checksum color_quant 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0dbbb57365263e881e805dc77d94697c9118fd94d8da011240555aa7b23445bd"
+"checksum com-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "bf43edc576402991846b093a7ca18a3477e0ef9c588cde84964b5d3e43016642"
 "checksum core-foundation 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)" = "25b9e03f145fd4f2bf705e07b900cd41fc636598fe5dc452fd0db1441c3f496d"
 "checksum core-foundation-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e7ca8a5221364ef15ce201e8ed2f609fc312682a8f4e0e3d4aa5879764e0fa3b"
 "checksum core-graphics 0.17.3 (registry+https://github.com/rust-lang/crates.io-index)" = "56790968ab1c8a1202a102e6de05fc6e1ec87da99e4e93e9a7d13efbfc1e95a9"
@@ -2165,6 +2205,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum gltf-derive 0.15.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f6636de7bf52227363554f1ca2d9cd180fc666129ddd0933097e1f227dfa7293"
 "checksum gltf-json 0.15.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e3fc3deb81e6fa04bf808f6be7c3983229552a95b77f687ad96af00f6d3e7d6c"
 "checksum half 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d36fab90f82edc3c747f9d438e06cf0a491055896f2a279638bb5beed6c40177"
+"checksum hassle-rs 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0e45f2cba62c749d0017e6c6f9710a53872d87a4fd38846267cd20244b12bc69"
 "checksum hdrldr 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "b6cb717c5ebe824622289dc405a0415152ce835d162d43bf05fd902e394d5609"
 "checksum hermit-abi 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)" = "b9586eedd4ce6b3c498bc3b4dd92fc9f11166aa908a914071953768066c67909"
 "checksum ident_case 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
@@ -2187,6 +2228,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum libc 0.2.71 (registry+https://github.com/rust-lang/crates.io-index)" = "9457b06509d27052635f90d6466700c65095fdf75409b3fbdd903e988b886f49"
 "checksum libflate 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "784f4ec5908a9d7f4e53658906386667e8b02e9389a47cfebf45d324ba9e8d25"
 "checksum libflate_lz77 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3286f09f7d4926fc486334f28d8d2e6ebe4f7f9994494b6dab27ddfad2c9b11b"
+"checksum libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f2b111a074963af1d37a139918ac6d49ad1d0d5e47f72fd55388619691a7d753"
 "checksum libloading 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "2cadb8e769f070c45df05c78c7520eb4cd17061d4ab262e43cfc68b4d00ac71c"
 "checksum line_drawing 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5cc7ad3d82c845bdb5dde34ffdcc7a5fb4d2996e1e1ee0f19c33bc80e15196b9"
 "checksum lock_api 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "c4da24a77a3d8a6d4862d95f72e6fdb9c09a643ecdb402d754004a557f2bec75"
@@ -2253,7 +2295,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum rle-decode-fast 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cabe4fa914dec5870285fa7f71f602645da47c486e68486d2b4ceb4a343e90ac"
 "checksum rpmalloc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8dae55d27fc56f399aec2583434bf22c7100fe983b2115bbc1d961ec4f7df5db"
 "checksum rpmalloc-sys 0.2.0+c4d2c05 (registry+https://github.com/rust-lang/crates.io-index)" = "9c0a44672448b9514eecd10fdcea583624a485fb10fa6506c81cdecf710d029b"
-"checksum rspirv 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "84ea8e0da5a60f55281d6d756c2fb3cf6954a96547137ebf973d0511fe8e0259"
 "checksum rtoy-rt 0.1.0 (git+https://github.com/h3r2tic/rtoy-rt)" = "<none>"
 "checksum rustc-demangle 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "4c691c0e608126e00913e33f0ccf3727d5fc84573623b8d65b2df340b5201783"
 "checksum rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
@@ -2269,18 +2310,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum serde_derive 1.0.112 (registry+https://github.com/rust-lang/crates.io-index)" = "bf0343ce212ac0d3d6afd9391ac8e9c9efe06b533c8d33f660f6390cc4093f57"
 "checksum serde_json 1.0.55 (registry+https://github.com/rust-lang/crates.io-index)" = "ec2c5d7e739bc07a3e73381a39d61fdb5f671c60c1df26a130690665803d8226"
 "checksum shader-prepper 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "19f530c403254fa44c549a4a877dce231768a068d8aec3bb8d57f890293e5c0e"
-"checksum shaderc 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "ed344938df2d7fa3cc6bfb4af0b578f00f9b389d5fe7be0250fa657c442a8281"
-"checksum shaderc-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "30075c712b08798cb2b5e54e4434970a4a3a3a3e838b0642590c74605d3cc528"
+"checksum shaderc 0.6.2 (git+https://github.com/google/shaderc-rs.git?rev=a3bc824)" = "<none>"
+"checksum shaderc-sys 0.6.2 (git+https://github.com/google/shaderc-rs.git?rev=a3bc824)" = "<none>"
 "checksum sharded-slab 0.0.9 (registry+https://github.com/rust-lang/crates.io-index)" = "06d5a3f5166fb5b42a5439f2eee8b9de149e235961e3eb21c5808fc3ea17ff3e"
 "checksum shared_library 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)" = "5a9e7e0f2bfae24d8a5b5a66c5b257a83c7412304311512a0c054cd5e619da11"
 "checksum slab 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 "checksum smallvec 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)" = "f7b0758c52e15a8b5e3691eae6cc559f08eee9406e548a4477ba4e67770a82b6"
 "checksum smallvec 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c7cb5678e1615754284ec264d9bb5b4c27d2018577fd90ac0ceb578591ed5ee4"
 "checksum smithay-client-toolkit 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "2ccb8c57049b2a34d2cc2b203fa785020ba0129d31920ef0d317430adaf748fa"
-"checksum snoozy 0.1.1 (git+https://github.com/h3r2tic/snoozy)" = "<none>"
 "checksum snoozy-macros 0.1.0 (git+https://github.com/h3r2tic/snoozy-macros)" = "<none>"
-"checksum spirv-reflect 0.2.3 (git+https://github.com/h3r2tic/spirv-reflect-rs.git)" = "<none>"
-"checksum spirv_headers 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "3f1418983d16481227ffa3ab3cf44ef92eebc9a76c092fbcd4c51a64ff032622"
+"checksum spirv-reflect 0.2.5 (git+https://github.com/h3r2tic/spirv-reflect-rs.git?rev=246a700)" = "<none>"
+"checksum spirv_headers 1.4.2 (git+https://github.com/Traverse-Research/rspirv.git?rev=fe9dd29)" = "<none>"
 "checksum static_assertions 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 "checksum stb_truetype 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f77b6b07e862c66a9f3e62a07588fee67cd90a9135a2b942409f195507b4fb51"
 "checksum strsim 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"

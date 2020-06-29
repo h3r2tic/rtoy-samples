@@ -5,11 +5,7 @@ use rtoy_samples::{rt_shadows::*, ssao::*, taa::*};
 fn main() {
     let rtoy = Rendertoy::new();
 
-    let tex_key = TextureKey {
-        width: rtoy.width(),
-        height: rtoy.height(),
-        format: 0,
-    };
+    let tex_key = TextureKey::fullscreen(&rtoy, Format::R32G32B32A32_SFLOAT);
 
     let mesh = load_gltf_scene(
         asset!("meshes/flying_trabant_final_takeoff/scene.gltf"),

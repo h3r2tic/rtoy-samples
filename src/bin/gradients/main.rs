@@ -8,7 +8,7 @@ fn main() {
 
     let gradients_tex = compute_tex(
         tex_key,
-        load_cs(asset!("shaders/gradients.glsl")),
+        load_cs(asset!("shaders/gradients.hlsl")),
         shader_uniforms!(time: time.clone()),
     );
 

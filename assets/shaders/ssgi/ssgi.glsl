@@ -30,7 +30,7 @@ layout(std140) uniform globals {
 const float temporal_rotations[] = {60.0, 300.0, 180.0, 240.0, 120.0, 0.0};
 const float temporal_offsets[] = {0.0, 0.5, 0.25, 0.75};
 
-const uint ssgi_half_sample_count = 32;
+const uint ssgi_half_sample_count = 16;
 
 float fast_sqrt(float x) {
     return uintBitsToFloat(0x1fbd1df5 + (floatBitsToUint(x) >> 1u));
@@ -170,7 +170,7 @@ void main() {
     mat3 basis = mat3(basis0, basis1, normal);
 
     vec4 col = 0.0.xxxx;
-    float ao_radius = 80.0;
+    float ao_radius = 0.5;
 
     if (gbuffer.a != 0.0) {
         vec4 ray_dir_cs = vec4(uv_to_cs(uv), 0.0, 1.0);
