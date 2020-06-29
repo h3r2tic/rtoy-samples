@@ -1,14 +1,8 @@
+#include "stochastic_transparency_common.glsl"
+
 uniform utexture2D inputTex;
 uniform utexture2D inputTex2;
 uniform restrict writeonly image2D outputTex;
-
-uvec2 pack_color(vec3 color) {
-    return uvec2(packHalf2x16(color.rg), floatBitsToUint(color.b));
-}
-
-vec3 unpack_color(uvec2 packed) {
-    return vec3(unpackHalf2x16(packed.x), uintBitsToFloat(packed.y));
-}
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main() {

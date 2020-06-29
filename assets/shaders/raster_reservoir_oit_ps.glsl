@@ -4,6 +4,7 @@
 #include "inc/color.inc"
 #include "rendertoy::shaders/view_constants.inc"
 #include "rendertoy::shaders/random.inc"
+#include "stochastic_transparency_common.glsl"
 
 layout(location = 0) out vec4 out_color;
 layout(location = 0) in vec3 v_normal;
@@ -25,14 +26,6 @@ in vec4 gl_FragCoord;
 
 vec2 uv_to_cs(vec2 uv) {
 	return (uv - 0.5.xx) * vec2(2, -2);
-}
-
-uvec2 pack_color(vec3 color) {
-    return uvec2(packHalf2x16(color.rg), floatBitsToUint(color.b));
-}
-
-vec3 unpack_color(uvec2 packed) {
-    return vec3(unpackHalf2x16(packed.x), uintBitsToFloat(packed.y));
 }
 
 float sqr(float x) {
@@ -105,6 +98,9 @@ void main() {
     opacity *= 0.6; // adjust for two-sided rendering
     //opacity = 0.75;
 
+    uvec2 color_packed = pack_color(color);
+    float l = calculate_luma(color);
+
     // ----
 
     float depth = gl_FragCoord.z;
@@ -122,14 +118,13 @@ void main() {
     float p_prev2 = uintBitsToFloat(prev_oit2.w);
 
     if (p_prev1 == 0.0) {
-        imageStore(rwtex, ivec2(pix), uvec4(pack_color(color), floatBitsToUint(depth), floatBitsToUint(opacity)));
+        imageStore(rwtex, ivec2(pix), uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(opacity)));
     } else if (p_prev2 == 0.0) {
-        imageStore(rwtex2, ivec2(pix), uvec4(pack_color(color), floatBitsToUint(depth), floatBitsToUint(opacity)));
+        imageStore(rwtex2, ivec2(pix), uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(opacity)));
     } else {
         vec3 prev_oit1_color = unpack_color(prev_oit1.xy);
         vec3 prev_oit2_color = unpack_color(prev_oit2.xy);
 
-        float l = calculate_luma(color);
         float l1 = calculate_luma(prev_oit1_color);
         float l2 = calculate_luma(prev_oit2_color);
 
@@ -150,15 +145,15 @@ void main() {
                 p_prev1, prev_oit1.xy, depth1, prev_oit2, u.x
             ));
 
-            imageStore(rwtex, ivec2(pix), uvec4(pack_color(color), floatBitsToUint(depth), floatBitsToUint(p)));
+            imageStore(rwtex, ivec2(pix), uvec4(color_packed, floatBitsToUint(depth), floatBitsToUint(p)));
         } else {
             if (err1 < err2) {  // Less noisy, but noise varies
                 imageStore(rwtex, ivec2(pix), resolve_fragment_against_reservoir(
-                    opacity, pack_color(color), depth, prev_oit1, u.x
+                    opacity, color_packed, depth, prev_oit1, u.x
                 ));
             } else {
                 imageStore(rwtex2, ivec2(pix), resolve_fragment_against_reservoir(
-                    opacity, pack_color(color), depth, prev_oit2, u.x
+                    opacity, color_packed, depth, prev_oit2, u.x
                 ));
             }
         }
